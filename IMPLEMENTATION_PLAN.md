@@ -199,11 +199,11 @@ dot-advert-erp-mockup/
 ---
 
 ## 5. Verification & Acceptance Criteria
-- [ ] **Zero Backend Dependency**: App builds and runs completely statically or locally via `npm run dev`.
-- [ ] **Data Persistence**: Refreshing the browser preserves newly created orders, stock changes, invoices, and payments.
-- [ ] **Data Reset**: Clicking "Reset Demo Data" restores pristine factory demo datasets instantly.
-- [ ] **Dual Invoicing Integrity**: VAT invoices apply exactly 15% to net taxable amount; Non-VAT invoices record valid exemption reason.
-- [ ] **Order Profitability Accuracy**:
+- [x] **Zero Backend Dependency**: App builds and runs completely statically or locally via `npm run dev`.
+- [x] **Data Persistence**: Refreshing the browser preserves newly created orders, stock changes, invoices, and payments in `localStorage`.
+- [x] **Data Reset**: Clicking "Reset Demo" restores pristine factory demo datasets instantly.
+- [x] **Dual Invoicing Integrity**: VAT invoices apply exactly 15% to net taxable amount; Non-VAT invoices record valid statutory exemption reason.
+- [x] **Order Profitability Accuracy**:
   $$\text{Net Margin \%} = \frac{\text{Net Invoice Amount} - \text{Total Allocated Job Cost}}{\text{Net Invoice Amount}} \times 100$$
-- [ ] **Ethiopian Payment Options**: Seamless collection modal featuring Telebirr, Chapa, and Bank Transfers.
-- [ ] **Golden Story Validation**: Ability to complete the 7-step demo story without any missing links.
+- [x] **Ethiopian Payment Options**: Seamless collection modal featuring Telebirr, Chapa, and Bank Transfers.
+- [x] **Golden Story Validation**: Ability to complete the 7-step demo story without any missing links.
