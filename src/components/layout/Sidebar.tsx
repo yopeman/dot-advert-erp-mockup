@@ -82,7 +82,7 @@ export default function Sidebar() {
   return (
     <aside
       style={{
-        width: '260px',
+        width: '275px',
         background: 'var(--bg-sidebar)',
         borderRight: '1px solid var(--border-subtle)',
         display: 'flex',
