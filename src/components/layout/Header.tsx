@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useErp } from '@/context/ErpDataContext';
 import { ErpRole } from '@/types/erp';
 import {
@@ -10,6 +11,7 @@ import {
   AlertTriangle,
   UserCheck,
   LayoutGrid,
+  LayoutDashboard,
   Layers,
   CheckCircle2,
 } from 'lucide-react';
@@ -19,6 +21,9 @@ interface HeaderProps {
 }
 
 export default function Header({ onOpenGoldenStory }: HeaderProps) {
+  const pathname = usePathname();
+  const isNoSidebarPage = pathname === '/modules' || pathname === '/forms';
+
   const {
     currentRole,
     setCurrentRole,
@@ -69,31 +74,75 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
     >
       {/* Left: Organization & Currency */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div
+        {isNoSidebarPage ? (
+          <Link
+            href="/"
             style={{
-              width: '10px',
-              height: '10px',
-              borderRadius: '50%',
-              background: '#10b981',
-              boxShadow: '0 0 10px #10b981',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              textDecoration: 'none',
             }}
-          />
-          <span style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-main)' }}>
-            Dot Advert & Print Solutions PLC
-          </span>
-          <span
-            style={{
-              fontSize: '0.7rem',
-              color: 'var(--text-dim)',
-              background: 'rgba(255,255,255,0.06)',
-              padding: '2px 8px',
-              borderRadius: '4px',
-            }}
+            title="Return to Executive Dashboard"
           >
-            Addis Ababa • ETB (15% VAT)
-          </span>
-        </div>
+            <div
+              style={{
+                width: '34px',
+                height: '34px',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(79, 70, 229, 0.4)',
+              }}
+            >
+              <div
+                style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  background: '#ffffff',
+                }}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.95rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>
+                DOT ADVERT
+              </div>
+              <div style={{ fontSize: '0.62rem', fontWeight: 600, color: '#818cf8', letterSpacing: '0.08em' }}>
+                SYSTEM DIRECTORY
+              </div>
+            </div>
+          </Link>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div
+              style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                background: '#10b981',
+                boxShadow: '0 0 10px #10b981',
+              }}
+            />
+            <span style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-main)' }}>
+              Dot Advert & Print Solutions PLC
+            </span>
+          </div>
+        )}
+
+        <span
+          style={{
+            fontSize: '0.7rem',
+            color: 'var(--text-dim)',
+            background: 'rgba(255,255,255,0.06)',
+            padding: '2px 8px',
+            borderRadius: '4px',
+          }}
+        >
+          Addis Ababa • ETB (15% VAT)
+        </span>
       </div>
 
       {/* Right Controls: Role Switcher, Guided Story, Reset */}
@@ -148,20 +197,36 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
           </select>
         </div>
 
-        {/* Modules Directory CTA */}
-        <Link
-          href="/modules"
-          className="btn btn-secondary btn-sm"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}
-          title="Browse all 8 modules and operational forms"
-        >
-          <LayoutGrid size={14} />
-          <span>Modules Hub</span>
-        </Link>
+        {/* Dynamic Navigation CTA: Return to Dashboard when on Directory, or Open Directory when on modules */}
+        {isNoSidebarPage ? (
+          <Link
+            href="/"
+            className="btn btn-secondary btn-sm"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+            title="Return to Executive Dashboard"
+          >
+            <LayoutDashboard size={14} />
+            <span>Dashboard</span>
+          </Link>
+        ) : (
+          <Link
+            href="/modules"
+            className="btn btn-secondary btn-sm"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+            title="Browse all 8 modules and operational forms"
+          >
+            <LayoutGrid size={14} />
+            <span>Modules Directory</span>
+          </Link>
+        )}
 
         {/* Golden Story Walkthrough CTA */}
         <button

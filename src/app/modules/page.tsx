@@ -674,124 +674,143 @@ export default function ModulesDirectoryPage() {
           overflow: 'hidden',
         }}
       >
-        <div style={{ maxWidth: '840px', position: 'relative', zIndex: 1 }}>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '6px 14px',
-              background: 'rgba(99, 102, 241, 0.15)',
-              borderRadius: '20px',
-              border: '1px solid var(--border-glow)',
-              marginBottom: '16px',
-              fontSize: '12px',
-              fontWeight: 600,
-              color: 'var(--primary-light)',
-            }}
-          >
-            <Sparkles size={14} />
-            <span>DOT ADVERT ERP OPERATIONS DIRECTORY</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
+          <div style={{ maxWidth: '840px' }}>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '6px 14px',
+                background: 'rgba(99, 102, 241, 0.15)',
+                borderRadius: '20px',
+                border: '1px solid var(--border-glow)',
+                marginBottom: '16px',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: 'var(--primary-light)',
+              }}
+            >
+              <Sparkles size={14} />
+              <span>DOT ADVERT ERP OPERATIONS DIRECTORY</span>
+            </div>
+
+            <h1
+              style={{
+                fontSize: '28px',
+                fontWeight: 800,
+                color: 'var(--text-main)',
+                letterSpacing: '-0.02em',
+                marginBottom: '10px',
+              }}
+            >
+              System Modules & Forms Directory
+            </h1>
+            <p
+              style={{
+                fontSize: '14px',
+                lineHeight: 1.6,
+                color: 'var(--text-muted)',
+              }}
+            >
+              Direct navigation hub for all 8 business modules, operational workflows, and transactional forms.
+              Designed specifically for advertising production, large-format printing, and custom fabrication in Ethiopia.
+            </p>
           </div>
 
-          <h1
+          <Link
+            href="/"
+            className="btn btn-secondary"
             style={{
-              fontSize: '28px',
-              fontWeight: 800,
-              color: 'var(--text-main)',
-              letterSpacing: '-0.02em',
-              marginBottom: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 18px',
+              fontSize: '13px',
+              fontWeight: 600,
+              zIndex: 2,
             }}
           >
-            System Modules & Forms Directory
-          </h1>
-          <p
-            style={{
-              fontSize: '14px',
-              lineHeight: 1.6,
-              color: 'var(--text-muted)',
-              marginBottom: '24px',
-            }}
-          >
-            Direct navigation hub for all 8 business modules, operational workflows, and transactional forms.
-            Designed specifically for advertising production, large-format printing, and custom fabrication in Ethiopia.
-          </p>
+            <LayoutDashboard size={16} />
+            <span>Open Dashboard</span>
+          </Link>
+        </div>
 
-          {/* Quick Metrics Bar */}
+        {/* Quick Metrics Bar */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: '16px',
+            marginTop: '8px',
+          }}
+        >
           <div
             style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-              gap: '16px',
+              background: 'rgba(20, 30, 51, 0.8)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-md)',
+              padding: '12px 16px',
             }}
           >
-            <div
-              style={{
-                background: 'rgba(20, 30, 51, 0.8)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 'var(--radius-md)',
-                padding: '12px 16px',
-              }}
-            >
-              <div style={{ fontSize: '11px', color: 'var(--text-dim)', fontWeight: 600, textTransform: 'uppercase' }}>
-                System Architecture
-              </div>
-              <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)', marginTop: '4px' }}>
-                8 Core Modules
-              </div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>24 Workflows & Forms</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-dim)', fontWeight: 600, textTransform: 'uppercase' }}>
+              System Architecture
             </div>
+            <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)', marginTop: '4px' }}>
+              8 Core Modules
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>24 Workflows & Forms</div>
+          </div>
 
-            <div
-              style={{
-                background: 'rgba(20, 30, 51, 0.8)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 'var(--radius-md)',
-                padding: '12px 16px',
-              }}
-            >
-              <div style={{ fontSize: '11px', color: 'var(--text-dim)', fontWeight: 600, textTransform: 'uppercase' }}>
-                Tax & Compliance
-              </div>
-              <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--emerald)', marginTop: '4px' }}>
-                Dual Invoicing
-              </div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>15% VAT & Statutory Exempt</div>
+          <div
+            style={{
+              background: 'rgba(20, 30, 51, 0.8)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-md)',
+              padding: '12px 16px',
+            }}
+          >
+            <div style={{ fontSize: '11px', color: 'var(--text-dim)', fontWeight: 600, textTransform: 'uppercase' }}>
+              Tax & Compliance
             </div>
+            <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--emerald)', marginTop: '4px' }}>
+              Dual Invoicing
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>15% VAT & Statutory Exempt</div>
+          </div>
 
-            <div
-              style={{
-                background: 'rgba(20, 30, 51, 0.8)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 'var(--radius-md)',
-                padding: '12px 16px',
-              }}
-            >
-              <div style={{ fontSize: '11px', color: 'var(--text-dim)', fontWeight: 600, textTransform: 'uppercase' }}>
-                Manufacturing Engine
-              </div>
-              <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--cyan)', marginTop: '4px' }}>
-                BOM & Job Costing
-              </div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Live Margin Waterfalls</div>
+          <div
+            style={{
+              background: 'rgba(20, 30, 51, 0.8)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-md)',
+              padding: '12px 16px',
+            }}
+          >
+            <div style={{ fontSize: '11px', color: 'var(--text-dim)', fontWeight: 600, textTransform: 'uppercase' }}>
+              Manufacturing Engine
             </div>
+            <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--cyan)', marginTop: '4px' }}>
+              BOM & Job Costing
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Live Margin Waterfalls</div>
+          </div>
 
-            <div
-              style={{
-                background: 'rgba(20, 30, 51, 0.8)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 'var(--radius-md)',
-                padding: '12px 16px',
-              }}
-            >
-              <div style={{ fontSize: '11px', color: 'var(--text-dim)', fontWeight: 600, textTransform: 'uppercase' }}>
-                Local Payments
-              </div>
-              <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--amber)', marginTop: '4px' }}>
-                Telebirr & CBE
-              </div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Instant Credit Release</div>
+          <div
+            style={{
+              background: 'rgba(20, 30, 51, 0.8)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-md)',
+              padding: '12px 16px',
+            }}
+          >
+            <div style={{ fontSize: '11px', color: 'var(--text-dim)', fontWeight: 600, textTransform: 'uppercase' }}>
+              Local Payments
             </div>
+            <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--amber)', marginTop: '4px' }}>
+              Telebirr & CBE
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Instant Credit Release</div>
           </div>
         </div>
       </div>
