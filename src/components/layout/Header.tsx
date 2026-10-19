@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useErp } from '@/context/ErpDataContext';
 import { ErpRole } from '@/types/erp';
 import {
@@ -8,7 +9,7 @@ import {
   RotateCcw,
   AlertTriangle,
   UserCheck,
-  Shield,
+  LayoutGrid,
   Layers,
   CheckCircle2,
 } from 'lucide-react';
@@ -146,6 +147,21 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
             ))}
           </select>
         </div>
+
+        {/* Modules Directory CTA */}
+        <Link
+          href="/modules"
+          className="btn btn-secondary btn-sm"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+          }}
+          title="Browse all 8 modules and operational forms"
+        >
+          <LayoutGrid size={14} />
+          <span>Modules Hub</span>
+        </Link>
 
         {/* Golden Story Walkthrough CTA */}
         <button

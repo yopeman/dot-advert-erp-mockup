@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useErp } from '@/context/ErpDataContext';
 import {
   LayoutDashboard,
+  LayoutGrid,
   Boxes,
   ShoppingCart,
   Cog,
@@ -14,8 +15,6 @@ import {
   Users,
   PieChart,
   TrendingUp,
-  FileText,
-  BadgeAlert,
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -30,6 +29,13 @@ export default function Sidebar() {
       label: 'Executive Overview',
       href: '/',
       icon: LayoutDashboard,
+    },
+    {
+      label: 'Modules & Forms Hub',
+      href: '/modules',
+      icon: LayoutGrid,
+      badge: '24 Hub',
+      badgeType: 'emerald',
     },
     {
       label: 'Inventory & Stores',
@@ -155,7 +161,9 @@ export default function Sidebar() {
 
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive =
+              pathname === item.href ||
+              (item.href === '/modules' && (pathname === '/modules' || pathname === '/forms'));
 
             return (
               <Link
