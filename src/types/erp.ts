@@ -222,6 +222,10 @@ export interface Lead {
   siteSurvey?: SiteSurvey;
   notes?: string;
   convertedCustomerId?: string;
+  lostReason?: string;
+  lostNotes?: string;
+  lostDate?: string;
+  competitorName?: string;
 }
 
 export interface Customer {

@@ -604,6 +604,10 @@ export const INITIAL_LEADS: Lead[] = [
     expectedCloseDate: '2026-10-15',
     assignedTo: 'Kalkidan Mengistu',
     siteSurveys: [],
+    lostReason: 'competitor_price',
+    lostNotes: 'Lost to external vinyl supplier offering lower price per square meter. Follow up for holiday promo.',
+    lostDate: '2026-10-15',
+    competitorName: 'Sinotec Print & Vinyl',
     notes: 'Lost to external vinyl supplier offering lower price per square meter.',
   },
 ];

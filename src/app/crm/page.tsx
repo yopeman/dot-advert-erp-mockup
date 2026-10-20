@@ -44,6 +44,9 @@ import {
   Plus,
   Box,
   Maximize2,
+  XCircle,
+  RotateCcw,
+  FileQuestion,
 } from 'lucide-react';
 
 interface DraftSurvey {
@@ -110,6 +113,8 @@ function CrmContent() {
     orders,
     createLead,
     updateLead,
+    markLeadAsLost,
+    reopenLead,
     createCustomer,
     updateCustomer,
     convertLeadToCustomer,
@@ -148,6 +153,10 @@ function CrmContent() {
   const [quickAddTargetType, setQuickAddTargetType] = useState<'lead' | 'customer'>('lead');
   const [quickAddTargetId, setQuickAddTargetId] = useState<string>('');
   const [convertModalLead, setConvertModalLead] = useState<Lead | null>(null);
+  const [lostModalLead, setLostModalLead] = useState<Lead | null>(null);
+  const [lostReason, setLostReason] = useState<string>('competitor_price');
+  const [lostNotes, setLostNotes] = useState<string>('');
+  const [competitorName, setCompetitorName] = useState<string>('');
   const [selectedCustomerProfile, setSelectedCustomerProfile] = useState<Customer | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -226,6 +235,16 @@ function CrmContent() {
     expo_booth: 'Exhibition & Trade Booth',
     indoor_pos: 'Indoor Retail POS Branding',
     other: 'Custom Fabrication',
+  };
+
+  const lostReasonLabels: Record<string, string> = {
+    competitor_price: 'Competitor Price (Underbid Quote)',
+    budget_cancelled: 'Client Budget Cancelled / Postponed',
+    timeline_conflict: 'Delivery Timeline Conflict (Urgent Capacity)',
+    tender_lost: 'Tender Awarded to Another Vendor',
+    unresponsive: 'Client Ceased Communication / Ghosted',
+    spec_mismatch: 'Material Specs / Dimensions Out of Scope',
+    other: 'Other Commercial Reason',
   };
 
   const stageColumns: { stage: LeadStage; label: string; color: string }[] = [
@@ -622,6 +641,31 @@ function CrmContent() {
     const newCust = convertLeadToCustomer(convertModalLead.id);
     setConvertModalLead(null);
     showToast(`Lead won! Created Customer profile ${newCust.code} (${newCust.name})!`);
+  };
+
+  const handleOpenLostModal = (lead: Lead) => {
+    setLostModalLead(lead);
+    setLostReason(lead.lostReason || 'competitor_price');
+    setLostNotes(lead.lostNotes || '');
+    setCompetitorName(lead.competitorName || '');
+  };
+
+  const handleConfirmMarkLost = () => {
+    if (!lostModalLead) return;
+    markLeadAsLost(lostModalLead.id, {
+      reason: lostReason,
+      notes: lostNotes.trim() || undefined,
+      competitorName: competitorName.trim() || undefined,
+      date: new Date().toISOString().split('T')[0],
+    });
+    showToast(`Opportunity ${lostModalLead.leadNumber} marked as Closed / Lost`);
+    setLostModalLead(null);
+  };
+
+  const handleReopenLead = (lead: Lead, targetStage: LeadStage = 'negotiation') => {
+    reopenLead(lead.id, targetStage);
+    const targetCol = stageColumns.find((c) => c.stage === targetStage);
+    showToast(`Opportunity ${lead.leadNumber} restored to "${targetCol?.label || targetStage}"!`);
   };
 
   return (
@@ -1227,40 +1271,84 @@ function CrmContent() {
                             {/* Stage Progression Buttons */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
                               {lead.stage === 'new' && (
-                                <button
-                                  onClick={() => handleStageChange(lead.id, 'site_visit')}
-                                  className="btn btn-secondary btn-sm"
-                                  style={{ flex: 1, padding: '4px 6px', fontSize: '11px' }}
-                                >
-                                  Book Site Survey →
-                                </button>
+                                <>
+                                  <button
+                                    onClick={() => handleStageChange(lead.id, 'site_visit')}
+                                    className="btn btn-secondary btn-sm"
+                                    style={{ flex: 1, padding: '4px 6px', fontSize: '11px' }}
+                                  >
+                                    Book Site Survey →
+                                  </button>
+                                  <button
+                                    onClick={() => handleOpenLostModal(lead)}
+                                    className="btn btn-secondary btn-sm"
+                                    style={{ padding: '4px 8px', fontSize: '11px', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)' }}
+                                    title="Mark opportunity as Closed / Lost"
+                                  >
+                                    <XCircle size={12} />
+                                    <span>Lost</span>
+                                  </button>
+                                </>
                               )}
                               {lead.stage === 'site_visit' && (
-                                <button
-                                  onClick={() => handleStageChange(lead.id, 'quoted')}
-                                  className="btn btn-secondary btn-sm"
-                                  style={{ flex: 1, padding: '4px 6px', fontSize: '11px' }}
-                                >
-                                  Issue Quote →
-                                </button>
+                                <>
+                                  <button
+                                    onClick={() => handleStageChange(lead.id, 'quoted')}
+                                    className="btn btn-secondary btn-sm"
+                                    style={{ flex: 1, padding: '4px 6px', fontSize: '11px' }}
+                                  >
+                                    Issue Quote →
+                                  </button>
+                                  <button
+                                    onClick={() => handleOpenLostModal(lead)}
+                                    className="btn btn-secondary btn-sm"
+                                    style={{ padding: '4px 8px', fontSize: '11px', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)' }}
+                                    title="Mark opportunity as Closed / Lost"
+                                  >
+                                    <XCircle size={12} />
+                                    <span>Lost</span>
+                                  </button>
+                                </>
                               )}
                               {lead.stage === 'quoted' && (
-                                <button
-                                  onClick={() => handleStageChange(lead.id, 'negotiation')}
-                                  className="btn btn-secondary btn-sm"
-                                  style={{ flex: 1, padding: '4px 6px', fontSize: '11px' }}
-                                >
-                                  In Negotiation →
-                                </button>
+                                <>
+                                  <button
+                                    onClick={() => handleStageChange(lead.id, 'negotiation')}
+                                    className="btn btn-secondary btn-sm"
+                                    style={{ flex: 1, padding: '4px 6px', fontSize: '11px' }}
+                                  >
+                                    In Negotiation →
+                                  </button>
+                                  <button
+                                    onClick={() => handleOpenLostModal(lead)}
+                                    className="btn btn-secondary btn-sm"
+                                    style={{ padding: '4px 8px', fontSize: '11px', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)' }}
+                                    title="Mark opportunity as Closed / Lost"
+                                  >
+                                    <XCircle size={12} />
+                                    <span>Lost</span>
+                                  </button>
+                                </>
                               )}
                               {lead.stage === 'negotiation' && (
-                                <button
-                                  onClick={() => setConvertModalLead(lead)}
-                                  className="btn btn-primary btn-sm"
-                                  style={{ flex: 1, padding: '4px 6px', fontSize: '11px', background: 'var(--emerald)' }}
-                                >
-                                  Mark Won & Convert ✓
-                                </button>
+                                <>
+                                  <button
+                                    onClick={() => setConvertModalLead(lead)}
+                                    className="btn btn-primary btn-sm"
+                                    style={{ flex: 1, padding: '4px 6px', fontSize: '11px', background: 'var(--emerald)' }}
+                                  >
+                                    Mark Won & Convert ✓
+                                  </button>
+                                  <button
+                                    onClick={() => handleOpenLostModal(lead)}
+                                    className="btn btn-secondary btn-sm"
+                                    style={{ padding: '4px 8px', fontSize: '11px', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)' }}
+                                    title="Mark opportunity as Closed / Lost"
+                                  >
+                                    <XCircle size={12} />
+                                    <span>Lost</span>
+                                  </button>
+                                </>
                               )}
                               {lead.stage === 'won' && (
                                 <div
@@ -1278,6 +1366,74 @@ function CrmContent() {
                                 >
                                   <CheckCircle2 size={13} />
                                   <span>Converted to Customer</span>
+                                </div>
+                              )}
+                              {lead.stage === 'lost' && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'space-between',
+                                      fontSize: '11px',
+                                      fontWeight: 700,
+                                      color: '#f43f5e',
+                                      background: 'rgba(244, 63, 94, 0.1)',
+                                      padding: '4px 8px',
+                                      borderRadius: 'var(--radius-sm)',
+                                    }}
+                                  >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      <XCircle size={13} />
+                                      <span>Closed / Lost</span>
+                                    </div>
+                                    {lead.lostReason && (
+                                      <span style={{ fontSize: '10px', color: 'var(--text-dim)', fontWeight: 500 }}>
+                                        {lostReasonLabels[lead.lostReason] || lead.lostReason}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {(lead.lostNotes || lead.competitorName) && (
+                                    <div
+                                      style={{
+                                        fontSize: '11px',
+                                        color: 'var(--text-dim)',
+                                        lineHeight: 1.35,
+                                        padding: '6px 8px',
+                                        background: 'rgba(255, 255, 255, 0.03)',
+                                        borderRadius: 'var(--radius-sm)',
+                                        borderLeft: '2px solid #f43f5e',
+                                      }}
+                                    >
+                                      {lead.competitorName && (
+                                        <div style={{ fontWeight: 600, color: '#fca5a5', marginBottom: '2px' }}>
+                                          Competitor: {lead.competitorName}
+                                        </div>
+                                      )}
+                                      {lead.lostNotes && <div>&ldquo;{lead.lostNotes}&rdquo;</div>}
+                                    </div>
+                                  )}
+
+                                  <button
+                                    onClick={() => handleReopenLead(lead)}
+                                    className="btn btn-secondary btn-sm"
+                                    style={{
+                                      width: '100%',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      gap: '6px',
+                                      padding: '5px',
+                                      fontSize: '11px',
+                                      color: '#818cf8',
+                                      border: '1px solid rgba(129, 140, 248, 0.3)',
+                                    }}
+                                    title="Reopen deal back to Active Pipeline"
+                                  >
+                                    <RotateCcw size={12} />
+                                    <span>Reopen Opportunity</span>
+                                  </button>
                                 </div>
                               )}
                             </div>
@@ -1328,14 +1484,31 @@ function CrmContent() {
                           <span
                             className="badge"
                             style={{
-                              background: 'rgba(255,255,255,0.08)',
+                              background: lead.stage === 'lost' ? 'rgba(244, 63, 94, 0.15)' : 'rgba(255,255,255,0.08)',
                               color: stageColumns.find((c) => c.stage === lead.stage)?.color || '#fff',
                               fontSize: '11px',
                               fontWeight: 700,
                             }}
+                            title={lead.stage === 'lost' && lead.lostReason ? lostReasonLabels[lead.lostReason] || lead.lostReason : undefined}
                           >
-                            {lead.stage.toUpperCase()}
+                            {lead.stage === 'lost' ? 'CLOSED / LOST' : lead.stage.toUpperCase()}
                           </span>
+                          {lead.stage === 'lost' && lead.lostReason && (
+                            <div
+                              style={{
+                                fontSize: '10px',
+                                color: '#f43f5e',
+                                marginTop: '2px',
+                                maxWidth: '140px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                              title={lead.lostNotes || lostReasonLabels[lead.lostReason]}
+                            >
+                              {lostReasonLabels[lead.lostReason] || lead.lostReason}
+                            </div>
+                          )}
                         </td>
                         <td>
                           {(() => {
@@ -1394,14 +1567,41 @@ function CrmContent() {
                               <Ruler size={13} />
                             </button>
                             {lead.stage !== 'won' && lead.stage !== 'lost' && (
+                              <>
+                                <button
+                                  onClick={() => setConvertModalLead(lead)}
+                                  className="btn btn-primary btn-sm"
+                                  style={{ background: 'var(--emerald)' }}
+                                  title="Convert to Customer"
+                                >
+                                  Convert
+                                </button>
+                                <button
+                                  onClick={() => handleOpenLostModal(lead)}
+                                  className="btn btn-secondary btn-sm"
+                                  style={{ color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)' }}
+                                  title="Mark as Closed / Lost"
+                                >
+                                  <XCircle size={13} />
+                                  <span>Lost</span>
+                                </button>
+                              </>
+                            )}
+                            {lead.stage === 'lost' && (
                               <button
-                                onClick={() => setConvertModalLead(lead)}
-                                className="btn btn-primary btn-sm"
-                                style={{ background: 'var(--emerald)' }}
-                                title="Convert to Customer"
+                                onClick={() => handleReopenLead(lead)}
+                                className="btn btn-secondary btn-sm"
+                                style={{ color: 'var(--primary-light)', border: '1px solid rgba(129, 140, 248, 0.3)' }}
+                                title="Reopen Closed Deal"
                               >
-                                Convert
+                                <RotateCcw size={12} />
+                                <span>Reopen</span>
                               </button>
+                            )}
+                            {lead.stage === 'won' && (
+                              <span className="badge badge-emerald" style={{ fontSize: '10px' }}>
+                                Won ✓
+                              </span>
                             )}
                           </div>
                         </td>
@@ -2972,6 +3172,188 @@ function CrmContent() {
                 style={{ background: 'var(--emerald)' }}
               >
                 Confirm Onboarding
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4B: MARK LEAD AS CLOSED / LOST */}
+      {lostModalLead && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '520px' }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div
+                  style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '8px',
+                    background: 'rgba(244, 63, 94, 0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid rgba(244, 63, 94, 0.3)',
+                  }}
+                >
+                  <XCircle size={20} color="#f43f5e" />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-main)' }}>
+                    Mark Opportunity as Closed / Lost
+                  </h3>
+                  <div style={{ fontSize: '12px', color: 'var(--text-dim)' }}>
+                    Move deal to Stage 6 (Closed / Lost) with loss reasoning
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setLostModalLead(null)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', margin: '16px 0' }}>
+              {/* Deal Snapshot Box */}
+              <div
+                style={{
+                  background: 'var(--bg-app)',
+                  border: '1px solid rgba(244, 63, 94, 0.25)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '14px 16px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-dim)', fontWeight: 600 }}>
+                    {lostModalLead.leadNumber} • {lostModalLead.city}
+                  </div>
+                  <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px' }}>
+                    {lostModalLead.companyName}
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    Contact: {lostModalLead.contactPerson} ({lostModalLead.phone})
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--cyan)', marginTop: '4px' }}>
+                    📐 {getLeadSurveys(lostModalLead).length} Signboards ({calculateSurveysArea(getLeadSurveys(lostModalLead)).toFixed(1)} m²)
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Opportunity Budget</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#f43f5e', marginTop: '2px' }}>
+                    {formatETB(lostModalLead.estimatedBudget)}
+                  </div>
+                  <span
+                    className="badge"
+                    style={{
+                      background: 'rgba(244, 63, 94, 0.12)',
+                      color: '#f43f5e',
+                      fontSize: '10px',
+                      padding: '2px 8px',
+                      marginTop: '4px',
+                      display: 'inline-block',
+                    }}
+                  >
+                    Current: {lostModalLead.stage.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Loss Form Controls */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '12px', marginBottom: '6px', display: 'block' }}>
+                    Primary Reason for Loss *
+                  </label>
+                  <select
+                    className="form-select"
+                    value={lostReason}
+                    onChange={(e) => setLostReason(e.target.value)}
+                    style={{ width: '100%', padding: '9px 12px', fontSize: '13px' }}
+                  >
+                    {Object.entries(lostReasonLabels).map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '12px', marginBottom: '6px', display: 'block' }}>
+                    Winning Competitor (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={competitorName}
+                    onChange={(e) => setCompetitorName(e.target.value)}
+                    placeholder="e.g. Al-Sam Advert, Sinotec, Printech Ethiopia, etc."
+                    style={{ width: '100%', padding: '9px 12px', fontSize: '13px' }}
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '12px', marginBottom: '6px', display: 'block' }}>
+                    Commercial Feedback & Surveyor Notes
+                  </label>
+                  <textarea
+                    className="form-textarea"
+                    rows={3}
+                    value={lostNotes}
+                    onChange={(e) => setLostNotes(e.target.value)}
+                    placeholder="Detail client feedback (e.g., price difference, delivery timeline issues, or recommended date for future re-engagement)..."
+                    style={{ width: '100%', padding: '10px 12px', fontSize: '13px', resize: 'vertical' }}
+                  />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px dashed var(--border-subtle)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '10px 12px',
+                  fontSize: '11px',
+                  color: 'var(--text-dim)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <RotateCcw size={14} color="var(--primary-light)" />
+                <span>
+                  Closed / Lost opportunities can always be reopened and restored back into the active pipeline at any time.
+                </span>
+              </div>
+            </div>
+
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => setLostModalLead(null)}
+                className="btn btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmMarkLost}
+                className="btn btn-primary"
+                style={{
+                  background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
+                  boxShadow: '0 2px 10px rgba(244, 63, 94, 0.35)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <XCircle size={14} />
+                <span>Confirm Closed / Lost</span>
               </button>
             </div>
           </div>

@@ -22,6 +22,7 @@ import {
   PaymentMethod,
   OrderStatus,
   Lead,
+  LeadStage,
   SiteSurvey,
 } from '@/types/erp';
 import {
@@ -89,6 +90,8 @@ interface ErpContextType {
   // CRM & Customer Actions
   createLead: (lead: Omit<Lead, 'id' | 'leadNumber' | 'date'>) => Lead;
   updateLead: (leadId: string, updates: Partial<Lead>) => void;
+  markLeadAsLost: (leadId: string, lostData: { reason: string; notes?: string; competitorName?: string; date?: string }) => void;
+  reopenLead: (leadId: string, targetStage?: LeadStage) => void;
   createCustomer: (customer: Omit<Customer, 'id' | 'code' | 'outstandingBalance'>) => Customer;
   updateCustomer: (customerId: string, updates: Partial<Customer>) => void;
   convertLeadToCustomer: (leadId: string, customerData?: Partial<Customer>) => Customer;
@@ -528,6 +531,50 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     (leadId: string, updates: Partial<Lead>) => {
       setLeads((prev) =>
         prev.map((lead) => (lead.id === leadId ? { ...lead, ...updates } : lead))
+      );
+    },
+    []
+  );
+
+  // CRM: Mark Lead as Closed / Lost
+  const markLeadAsLost = useCallback(
+    (
+      leadId: string,
+      lostData: { reason: string; notes?: string; competitorName?: string; date?: string }
+    ) => {
+      setLeads((prev) =>
+        prev.map((lead) =>
+          lead.id === leadId
+            ? {
+                ...lead,
+                stage: 'lost',
+                probabilityPercent: 0,
+                lostReason: lostData.reason,
+                lostNotes: lostData.notes,
+                competitorName: lostData.competitorName,
+                lostDate: lostData.date || new Date().toISOString().split('T')[0],
+              }
+            : lead
+        )
+      );
+    },
+    []
+  );
+
+  // CRM: Reopen Lost Lead
+  const reopenLead = useCallback(
+    (leadId: string, targetStage?: LeadStage) => {
+      setLeads((prev) =>
+        prev.map((lead) =>
+          lead.id === leadId
+            ? {
+                ...lead,
+                stage: targetStage || 'negotiation',
+                probabilityPercent: 50,
+                lostDate: undefined,
+              }
+            : lead
+        )
       );
     },
     []
@@ -1061,6 +1108,8 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         setCurrentRole,
         createLead,
         updateLead,
+        markLeadAsLost,
+        reopenLead,
         createCustomer,
         updateCustomer,
         convertLeadToCustomer,
