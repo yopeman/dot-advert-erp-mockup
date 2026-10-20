@@ -22,6 +22,7 @@ import {
   PaymentMethod,
   OrderStatus,
   Lead,
+  SiteSurvey,
 } from '@/types/erp';
 import {
   INITIAL_ITEMS,
@@ -91,6 +92,14 @@ interface ErpContextType {
   createCustomer: (customer: Omit<Customer, 'id' | 'code' | 'outstandingBalance'>) => Customer;
   updateCustomer: (customerId: string, updates: Partial<Customer>) => void;
   convertLeadToCustomer: (leadId: string, customerData?: Partial<Customer>) => Customer;
+
+  // Site Survey & Measurement Actions (Multiple per Lead/Customer)
+  addSiteSurveyToLead: (leadId: string, survey: Omit<SiteSurvey, 'id'>) => SiteSurvey;
+  updateLeadSiteSurvey: (leadId: string, surveyId: string, updates: Partial<SiteSurvey>) => void;
+  deleteLeadSiteSurvey: (leadId: string, surveyId: string) => void;
+  addSiteSurveyToCustomer: (customerId: string, survey: Omit<SiteSurvey, 'id'>) => SiteSurvey;
+  updateCustomerSiteSurvey: (customerId: string, surveyId: string, updates: Partial<SiteSurvey>) => void;
+  deleteCustomerSiteSurvey: (customerId: string, surveyId: string) => void;
 
   createPurchaseOrder: (po: Omit<PurchaseOrder, 'id' | 'poNumber' | 'date' | 'status'>) => void;
   receivePurchaseOrder: (poId: string, storeId: string) => void;
@@ -165,8 +174,35 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       setItems(getStored('items', INITIAL_ITEMS));
       setStores(getStored('stores', INITIAL_STORES));
       setSuppliers(getStored('suppliers', INITIAL_SUPPLIERS));
-      setLeads(getStored('leads', INITIAL_LEADS));
-      setCustomers(getStored('customers', INITIAL_CUSTOMERS));
+
+      const loadedLeads: Lead[] = getStored('leads', INITIAL_LEADS);
+      const normalizedLeads = loadedLeads.map((l) => {
+        if ((!l.siteSurveys || l.siteSurveys.length === 0) && l.siteSurvey) {
+          const s = l.siteSurvey;
+          return {
+            ...l,
+            siteSurveys: [
+              {
+                ...s,
+                id: s.id || `srv-${l.id}-1`,
+                title: s.title || `${l.companyName} Primary Signage`,
+                leadId: l.id,
+              },
+            ],
+          };
+        }
+        return l;
+      });
+      setLeads(normalizedLeads);
+
+      const loadedCustomers: Customer[] = getStored('customers', INITIAL_CUSTOMERS);
+      const normalizedCustomers = loadedCustomers.map((c) => {
+        if (!c.siteSurveys) {
+          return { ...c, siteSurveys: [] };
+        }
+        return c;
+      });
+      setCustomers(normalizedCustomers);
       setOrders(getStored('orders', INITIAL_ORDERS));
       setWorkOrders(getStored('workOrders', INITIAL_WORK_ORDERS));
       setInvoices(getStored('invoices', INITIAL_INVOICES));
@@ -530,12 +566,33 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       if (!targetLead) throw new Error('Lead not found');
 
       const cleanCode = targetLead.companyName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase();
+      const newCustId = `cust-${Date.now()}`;
+
+      const leadSurveys = (targetLead.siteSurveys && targetLead.siteSurveys.length > 0)
+        ? targetLead.siteSurveys
+        : targetLead.siteSurvey
+        ? [{
+            ...targetLead.siteSurvey,
+            id: targetLead.siteSurvey.id || `srv-${newCustId}-1`,
+            title: targetLead.siteSurvey.title || `${targetLead.companyName} Primary Signage`,
+          }]
+        : [];
+
+      const customerSurveys: SiteSurvey[] = leadSurveys.map((s, idx) => ({
+        ...s,
+        id: s.id || `srv-${newCustId}-${idx + 1}`,
+        customerId: newCustId,
+        leadId: targetLead.id,
+      }));
+
+      const primaryAddress = customerSurveys[0]?.locationAddress || targetLead.siteSurvey?.locationAddress || `${targetLead.city}, Ethiopia`;
+
       const newCustomer: Customer = {
-        id: `cust-${Date.now()}`,
+        id: newCustId,
         code: `CUST-${cleanCode || 'NEW'}`,
         name: targetLead.companyName,
         tin: targetLead.tin || '0000000000',
-        address: targetLead.siteSurvey?.locationAddress || `${targetLead.city}, Ethiopia`,
+        address: primaryAddress,
         phone: targetLead.phone,
         email: targetLead.email || `info@${cleanCode.toLowerCase() || 'client'}.com`,
         customerType: 'business',
@@ -543,6 +600,8 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         outstandingBalance: 0,
         paymentTerms: '30 Days Net',
         isVatRegistered: true,
+        contactPerson: targetLead.contactPerson,
+        siteSurveys: customerSurveys,
         ...customerData,
       };
 
@@ -556,6 +615,121 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       return newCustomer;
     },
     [leads]
+  );
+
+  // CRM: Site Survey Mutators for Leads
+  const addSiteSurveyToLead = useCallback(
+    (leadId: string, surveyData: Omit<SiteSurvey, 'id'>): SiteSurvey => {
+      const newSurvey: SiteSurvey = {
+        ...surveyData,
+        id: `srv-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        leadId,
+      };
+      setLeads((prev) =>
+        prev.map((lead) => {
+          if (lead.id !== leadId) return lead;
+          const currentSurveys = lead.siteSurveys || (lead.siteSurvey ? [lead.siteSurvey] : []);
+          return {
+            ...lead,
+            siteSurveys: [...currentSurveys, newSurvey],
+            siteSurvey: currentSurveys.length === 0 ? newSurvey : lead.siteSurvey,
+          };
+        })
+      );
+      return newSurvey;
+    },
+    []
+  );
+
+  const updateLeadSiteSurvey = useCallback(
+    (leadId: string, surveyId: string, updates: Partial<SiteSurvey>) => {
+      setLeads((prev) =>
+        prev.map((lead) => {
+          if (lead.id !== leadId) return lead;
+          const currentSurveys = lead.siteSurveys || (lead.siteSurvey ? [lead.siteSurvey] : []);
+          const updated = currentSurveys.map((s) => (s.id === surveyId ? { ...s, ...updates } : s));
+          return {
+            ...lead,
+            siteSurveys: updated,
+            siteSurvey: updated[0] || undefined,
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const deleteLeadSiteSurvey = useCallback(
+    (leadId: string, surveyId: string) => {
+      setLeads((prev) =>
+        prev.map((lead) => {
+          if (lead.id !== leadId) return lead;
+          const currentSurveys = lead.siteSurveys || (lead.siteSurvey ? [lead.siteSurvey] : []);
+          const remaining = currentSurveys.filter((s) => s.id !== surveyId);
+          return {
+            ...lead,
+            siteSurveys: remaining,
+            siteSurvey: remaining[0] || undefined,
+          };
+        })
+      );
+    },
+    []
+  );
+
+  // CRM: Site Survey Mutators for Customers
+  const addSiteSurveyToCustomer = useCallback(
+    (customerId: string, surveyData: Omit<SiteSurvey, 'id'>): SiteSurvey => {
+      const newSurvey: SiteSurvey = {
+        ...surveyData,
+        id: `srv-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        customerId,
+      };
+      setCustomers((prev) =>
+        prev.map((cust) => {
+          if (cust.id !== customerId) return cust;
+          const current = cust.siteSurveys || [];
+          return {
+            ...cust,
+            siteSurveys: [...current, newSurvey],
+          };
+        })
+      );
+      return newSurvey;
+    },
+    []
+  );
+
+  const updateCustomerSiteSurvey = useCallback(
+    (customerId: string, surveyId: string, updates: Partial<SiteSurvey>) => {
+      setCustomers((prev) =>
+        prev.map((cust) => {
+          if (cust.id !== customerId) return cust;
+          const current = cust.siteSurveys || [];
+          return {
+            ...cust,
+            siteSurveys: current.map((s) => (s.id === surveyId ? { ...s, ...updates } : s)),
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const deleteCustomerSiteSurvey = useCallback(
+    (customerId: string, surveyId: string) => {
+      setCustomers((prev) =>
+        prev.map((cust) => {
+          if (cust.id !== customerId) return cust;
+          const current = cust.siteSurveys || [];
+          return {
+            ...cust,
+            siteSurveys: current.filter((s) => s.id !== surveyId),
+          };
+        })
+      );
+    },
+    []
   );
 
   // MUTATOR: Create Customer Order
@@ -890,6 +1064,12 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         createCustomer,
         updateCustomer,
         convertLeadToCustomer,
+        addSiteSurveyToLead,
+        updateLeadSiteSurvey,
+        deleteLeadSiteSurvey,
+        addSiteSurveyToCustomer,
+        updateCustomerSiteSurvey,
+        deleteCustomerSiteSurvey,
         addStockMovement,
         recordWastage,
         createPurchaseOrder,

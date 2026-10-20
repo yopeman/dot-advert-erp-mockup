@@ -182,15 +182,22 @@ export type SignageType =
   | 'other';
 
 export interface SiteSurvey {
+  id: string;
+  title: string; // e.g. "Main Facade 3D Acrylic Lettering", "Rooftop Sky Sign", "Driveway Pylon"
+  signageType?: SignageType;
   locationAddress: string;
   widthMeters: number;
   heightMeters: number;
-  installationHeightMeters: number;
+  depthMeters?: number; // 3D letter or box depth in meters (e.g. 0.15 = 15cm)
+  installationHeightMeters: number; // ground clearance / elevation in meters
   powerSourceAvailable: boolean;
   indoorOutdoor: 'indoor' | 'outdoor';
   surveyDate?: string;
   surveyorName?: string;
   notes?: string;
+  status?: 'scheduled' | 'completed' | 'verified';
+  leadId?: string;
+  customerId?: string;
 }
 
 export interface Lead {
@@ -210,6 +217,8 @@ export interface Lead {
   probabilityPercent: number; // 10 - 100%
   expectedCloseDate: string;
   assignedTo: string;
+  siteSurveys?: SiteSurvey[];
+  /** @deprecated backwards compatibility for single survey */
   siteSurvey?: SiteSurvey;
   notes?: string;
   convertedCustomerId?: string;
@@ -228,6 +237,8 @@ export interface Customer {
   outstandingBalance: number;
   paymentTerms: string;
   isVatRegistered: boolean;
+  contactPerson?: string;
+  siteSurveys?: SiteSurvey[];
 }
 
 export type OrderStatus = 'pending' | 'in_production' | 'delivered' | 'invoiced' | 'paid' | 'cancelled';
