@@ -22,7 +22,7 @@ interface HeaderProps {
 
 export default function Header({ onOpenGoldenStory }: HeaderProps) {
   const pathname = usePathname();
-  const isNoSidebarPage = pathname === '/modules' || pathname === '/forms';
+  const isNoSidebarPage = pathname === '/' || pathname === '/modules' || pathname === '/forms';
 
   const {
     currentRole,
@@ -76,7 +76,7 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         {isNoSidebarPage ? (
           <Link
-            href="/"
+            href="/dashboard"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -200,7 +200,7 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
         {/* Dynamic Navigation CTA: Return to Dashboard when on Directory, or Open Directory when on modules */}
         {isNoSidebarPage ? (
           <Link
-            href="/"
+            href="/dashboard"
             className="btn btn-secondary btn-sm"
             style={{
               display: 'flex',
@@ -214,7 +214,7 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
           </Link>
         ) : (
           <Link
-            href="/modules"
+            href="/"
             className="btn btn-secondary btn-sm"
             style={{
               display: 'flex',

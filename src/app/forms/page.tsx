@@ -1,5 +1,1 @@
-import ModulesDirectoryPage from '@/app/modules/page';
-
-export default function FormsPage() {
-  return <ModulesDirectoryPage />;
-}
+export { default } from '@/app/page';

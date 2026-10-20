@@ -27,60 +27,60 @@ export default function Sidebar() {
   const navItems = [
     {
       label: 'Executive Overview',
-      href: '/',
+      href: '/dashboard',
       icon: LayoutDashboard,
     },
     {
       label: 'Modules & Forms Hub',
-      href: '/modules',
+      href: '/',
       icon: LayoutGrid,
       badge: '24 Hub',
       badgeType: 'emerald',
     },
     {
       label: 'Inventory & Stores',
-      href: '/inventory',
+      href: '/dashboard/inventory',
       icon: Boxes,
       badge: lowStockItems.length > 0 ? `${lowStockItems.length} Low` : undefined,
       badgeType: 'amber',
     },
     {
       label: 'Procurement & POs',
-      href: '/procurement',
+      href: '/dashboard/procurement',
       icon: ShoppingCart,
     },
     {
       label: 'Production & Orders',
-      href: '/orders',
+      href: '/dashboard/orders',
       icon: Cog,
       badge: activeOrders.length > 0 ? `${activeOrders.length} Active` : 'Core',
       badgeType: 'primary',
     },
     {
       label: 'Sales & Invoicing',
-      href: '/sales',
+      href: '/dashboard/sales',
       icon: Receipt,
       badge: unpaidInvoices.length > 0 ? `${unpaidInvoices.length} Due` : undefined,
       badgeType: 'rose',
     },
     {
       label: 'Collections & Credit',
-      href: '/collections',
+      href: '/dashboard/collections',
       icon: Wallet,
     },
     {
       label: 'Payroll & Labor',
-      href: '/payroll',
+      href: '/dashboard/payroll',
       icon: Users,
     },
     {
       label: 'Expenses & Overhead',
-      href: '/expenses',
+      href: '/dashboard/expenses',
       icon: PieChart,
     },
     {
       label: 'Finance & Profitability',
-      href: '/finance',
+      href: '/dashboard/finance',
       icon: TrendingUp,
     },
   ];
@@ -163,7 +163,8 @@ export default function Sidebar() {
             const Icon = item.icon;
             const isActive =
               pathname === item.href ||
-              (item.href === '/modules' && (pathname === '/modules' || pathname === '/forms'));
+              (item.href === '/' && (pathname === '/' || pathname === '/modules' || pathname === '/forms')) ||
+              (item.href !== '/' && pathname.startsWith(item.href));
 
             return (
               <Link

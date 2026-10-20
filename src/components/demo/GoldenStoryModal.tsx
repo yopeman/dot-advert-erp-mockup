@@ -32,7 +32,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
       title: 'Procure & Receive Raw Materials',
       icon: ShoppingCart,
       color: '#6366f1',
-      moduleLink: '/procurement',
+      moduleLink: '/dashboard/procurement',
       moduleName: 'Procurement & POs',
       summary:
         'Purchase orders are raised for items like Glossy Vinyl and Acrylic Sheets from local suppliers with TIN tracking.',
@@ -48,7 +48,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
       title: 'Customer Job & Work Order (BOM)',
       icon: Cog,
       color: '#3b82f6',
-      moduleLink: '/orders',
+      moduleLink: '/dashboard/orders',
       moduleName: 'Production & Work Orders',
       summary:
         'Awash Bank requests a 3D Illuminated Rooftop Signage (ORD-2026-081) for 480,000 ETB net.',
@@ -64,7 +64,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
       title: 'Issue Materials & Log Production Wastage',
       icon: Trash2,
       color: '#f59e0b',
-      moduleLink: '/inventory',
+      moduleLink: '/dashboard/inventory',
       moduleName: 'Inventory & Stores',
       summary:
         'Materials are transferred to the production floor; any cracked or scrap material is tracked.',
@@ -80,7 +80,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
       title: 'Complete Production & Dispatch',
       icon: CheckCircle,
       color: '#10b981',
-      moduleLink: '/orders',
+      moduleLink: '/dashboard/orders',
       moduleName: 'Production & Work Orders',
       summary:
         '3D Channel Letters are completed, QA-inspected, and transferred to Finished Goods for installation.',
@@ -96,7 +96,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
       title: 'Generate Official 15% VAT Invoice',
       icon: Receipt,
       color: '#a855f7',
-      moduleLink: '/sales',
+      moduleLink: '/dashboard/sales',
       moduleName: 'Sales & Invoicing',
       summary:
         'Commercial team generates an official Ethiopian VAT invoice with net revenue separation.',
@@ -112,7 +112,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
       title: 'Collect Payment (Telebirr / Bank Transfer)',
       icon: Wallet,
       color: '#06b6d4',
-      moduleLink: '/collections',
+      moduleLink: '/dashboard/collections',
       moduleName: 'Collections & Credit',
       summary:
         'Cash is collected through modern payment channels: Telebirr, Chapa, or CBE Bank Transfer.',
@@ -128,7 +128,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
       title: 'Unveil Exact Order Profitability',
       icon: TrendingUp,
       color: '#10b981',
-      moduleLink: '/orders',
+      moduleLink: '/dashboard/orders',
       moduleName: 'Order Profitability',
       summary:
         'The ultimate destination: Factory management sees exactly what this job made down to the cent.',

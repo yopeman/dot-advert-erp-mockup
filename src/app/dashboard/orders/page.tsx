@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useErp } from '@/context/ErpDataContext';
 import {
   Cog,
@@ -969,14 +970,14 @@ export default function OrdersPage() {
               )}
 
               {/* Link to generate invoice in Sales */}
-              <a
-                href="/sales"
+              <Link
+                href="/dashboard/sales"
                 className="btn btn-primary btn-sm"
                 style={{ marginLeft: 'auto' }}
               >
                 <span>Proceed to Invoicing</span>
                 <ArrowRight size={13} />
-              </a>
+              </Link>
             </div>
 
             {/* Sub-Section: Materials Issued in BOM */}

@@ -152,7 +152,7 @@ export default function CrmHeader() {
 
         {/* Return to Main ERP Dashboard */}
         <Link
-          href="/"
+          href="/dashboard"
           className="btn btn-secondary btn-sm"
           style={{
             display: 'flex',
@@ -168,7 +168,7 @@ export default function CrmHeader() {
 
         {/* Modules Directory Hub */}
         <Link
-          href="/modules"
+          href="/"
           className="btn btn-secondary btn-sm"
           style={{
             display: 'flex',

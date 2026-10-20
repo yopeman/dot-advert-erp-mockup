@@ -72,17 +72,17 @@ function CrmSidebarContent() {
   const crossNavItems = [
     {
       label: 'Proformas & Quotes',
-      href: '/sales',
+      href: '/dashboard/sales',
       icon: FileText,
     },
     {
       label: 'Factory Work Orders',
-      href: '/orders',
+      href: '/dashboard/orders',
       icon: Cog,
     },
     {
       label: 'Payment Collections',
-      href: '/collections',
+      href: '/dashboard/collections',
       icon: Wallet,
     },
   ];
@@ -276,7 +276,7 @@ function CrmSidebarContent() {
 
         {/* Return to Main ERP */}
         <Link
-          href="/"
+          href="/dashboard"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -305,7 +305,7 @@ function CrmSidebarContent() {
 
         {/* Modules Directory Link */}
         <Link
-          href="/modules"
+          href="/"
           style={{
             display: 'flex',
             alignItems: 'center',

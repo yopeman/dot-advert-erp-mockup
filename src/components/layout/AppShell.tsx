@@ -14,7 +14,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const isCrmPage = pathname.startsWith('/crm');
-  const isNoSidebarPage = pathname === '/modules' || pathname === '/forms';
+  const isNoSidebarPage = pathname === '/' || pathname === '/modules' || pathname === '/forms';
 
   return (
     <ErpDataProvider>

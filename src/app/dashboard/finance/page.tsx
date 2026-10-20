@@ -112,7 +112,7 @@ export default function FinancePage() {
             <span>Print Financial Report</span>
           </button>
           <Link
-            href="/orders"
+            href="/dashboard/orders"
             className="btn btn-primary btn-sm"
             style={{
               background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
