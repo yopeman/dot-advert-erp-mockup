@@ -3615,11 +3615,11 @@ function CrmContent() {
                   </div>
 
                   <div className="modal-footer">
-                    <Link href="/dashboard/orders" className="btn btn-secondary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Link href="/orders" className="btn btn-secondary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <ShoppingBag size={13} />
                       <span>Create Order</span>
                     </Link>
-                    <Link href="/dashboard/sales" className="btn btn-primary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Link href="/sales" className="btn btn-primary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <span>Issue Invoice →</span>
                     </Link>
                   </div>

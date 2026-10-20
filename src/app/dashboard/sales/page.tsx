@@ -120,6 +120,38 @@ export default function SalesPage() {
 
   return (
     <div>
+      {/* Banner linking to dedicated /sales module */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(124, 58, 237, 0.1) 100%)',
+          border: '1px solid rgba(168, 85, 247, 0.4)',
+          borderRadius: 'var(--radius-md)',
+          padding: '12px 18px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Receipt size={20} color="#c084fc" />
+          <div style={{ fontSize: '0.85rem', color: '#e9d5ff' }}>
+            <strong>Dedicated Sales Desk Launched:</strong> The Sales module now has its own dedicated sidebar and topbar with Proformas & Quotations and MoR VAT Compliance at <strong>/sales</strong>.
+          </div>
+        </div>
+        <Link
+          href="/sales"
+          className="btn btn-primary btn-sm"
+          style={{
+            background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <span>Open /sales Desk →</span>
+        </Link>
+      </div>
+
       {/* Top Header */}
       <div
         style={{

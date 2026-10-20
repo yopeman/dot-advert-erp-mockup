@@ -9,6 +9,8 @@ import CrmSidebar from '@/components/crm/CrmSidebar';
 import CrmHeader from '@/components/crm/CrmHeader';
 import OrdersSidebar from '@/components/orders/OrdersSidebar';
 import OrdersHeader from '@/components/orders/OrdersHeader';
+import SalesSidebar from '@/components/sales/SalesSidebar';
+import SalesHeader from '@/components/sales/SalesHeader';
 import GoldenStoryModal from '@/components/demo/GoldenStoryModal';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -17,6 +19,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const isCrmPage = pathname.startsWith('/crm');
   const isOrdersPage = pathname.startsWith('/orders');
+  const isSalesPage = pathname.startsWith('/sales');
   const isNoSidebarPage = pathname === '/' || pathname === '/modules' || pathname === '/forms';
 
   return (
@@ -26,6 +29,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <CrmSidebar />
         ) : isOrdersPage ? (
           <OrdersSidebar />
+        ) : isSalesPage ? (
+          <SalesSidebar />
         ) : (
           !isNoSidebarPage && <Sidebar />
         )}
@@ -34,6 +39,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <CrmHeader />
           ) : isOrdersPage ? (
             <OrdersHeader />
+          ) : isSalesPage ? (
+            <SalesHeader />
           ) : (
             <Header onOpenGoldenStory={() => setIsGoldenStoryOpen(true)} />
           )}

@@ -48,7 +48,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
       title: 'Customer Job & Work Order (BOM)',
       icon: Cog,
       color: '#3b82f6',
-      moduleLink: '/dashboard/orders',
+      moduleLink: '/orders',
       moduleName: 'Production & Work Orders',
       summary:
         'Awash Bank requests a 3D Illuminated Rooftop Signage (ORD-2026-081) for 480,000 ETB net.',
@@ -80,7 +80,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
       title: 'Complete Production & Dispatch',
       icon: CheckCircle,
       color: '#10b981',
-      moduleLink: '/dashboard/orders',
+      moduleLink: '/orders',
       moduleName: 'Production & Work Orders',
       summary:
         '3D Channel Letters are completed, QA-inspected, and transferred to Finished Goods for installation.',
@@ -96,7 +96,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
       title: 'Generate Official 15% VAT Invoice',
       icon: Receipt,
       color: '#a855f7',
-      moduleLink: '/dashboard/sales',
+      moduleLink: '/sales',
       moduleName: 'Sales & Invoicing',
       summary:
         'Commercial team generates an official Ethiopian VAT invoice with net revenue separation.',

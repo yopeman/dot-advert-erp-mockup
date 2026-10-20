@@ -28,6 +28,8 @@ import {
   DesignRevision,
   DesignStatus,
   WorkOrderBomItem,
+  ProformaInvoice,
+  ProformaStatus,
 } from '@/types/erp';
 import {
   INITIAL_ITEMS,
@@ -39,6 +41,7 @@ import {
   INITIAL_WORK_ORDERS,
   INITIAL_DESIGN_PROOFS,
   INITIAL_INVOICES,
+  INITIAL_PROFORMAS,
   INITIAL_COLLECTIONS,
   INITIAL_EMPLOYEES,
   INITIAL_EXPENSES,
@@ -60,6 +63,7 @@ interface ErpContextType {
   workOrders: WorkOrder[];
   designProofs: DesignProof[];
   invoices: Invoice[];
+  proformas: ProformaInvoice[];
   collections: Collection[];
   employees: Employee[];
   expenses: Expense[];
@@ -130,6 +134,9 @@ interface ErpContextType {
   addBomItemToWorkOrder: (woId: string, item: Omit<WorkOrderBomItem, 'totalCost'>) => void;
 
   createInvoice: (inv: Omit<Invoice, 'id' | 'invoiceNumber' | 'date' | 'paidAmount' | 'balanceDue' | 'paymentStatus'>) => Invoice;
+  createProforma: (proforma: Omit<ProformaInvoice, 'id' | 'proformaNumber' | 'date' | 'status'>) => ProformaInvoice;
+  updateProformaStatus: (proformaId: string, status: ProformaStatus) => void;
+  convertProformaToInvoice: (proformaId: string) => Invoice | null;
   recordCollection: (params: {
     invoiceId: string;
     amountReceived: number;
@@ -178,6 +185,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>(INITIAL_WORK_ORDERS);
   const [designProofs, setDesignProofs] = useState<DesignProof[]>(INITIAL_DESIGN_PROOFS);
   const [invoices, setInvoices] = useState<Invoice[]>(INITIAL_INVOICES);
+  const [proformas, setProformas] = useState<ProformaInvoice[]>(INITIAL_PROFORMAS);
   const [collections, setCollections] = useState<Collection[]>(INITIAL_COLLECTIONS);
   const [employees, setEmployees] = useState<Employee[]>(INITIAL_EMPLOYEES);
   const [expenses, setExpenses] = useState<Expense[]>(INITIAL_EXPENSES);
@@ -230,6 +238,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       setWorkOrders(getStored('workOrders', INITIAL_WORK_ORDERS));
       setDesignProofs(getStored('designProofs', INITIAL_DESIGN_PROOFS));
       setInvoices(getStored('invoices', INITIAL_INVOICES));
+      setProformas(getStored('proformas', INITIAL_PROFORMAS));
       setCollections(getStored('collections', INITIAL_COLLECTIONS));
       setEmployees(getStored('employees', INITIAL_EMPLOYEES));
       setExpenses(getStored('expenses', INITIAL_EXPENSES));
@@ -297,6 +306,11 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isHydrated) return;
+    save('proformas', proformas);
+  }, [proformas, isHydrated, save]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
     save('collections', collections);
   }, [collections, isHydrated, save]);
 
@@ -337,6 +351,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     setWorkOrders(INITIAL_WORK_ORDERS);
     setDesignProofs(INITIAL_DESIGN_PROOFS);
     setInvoices(INITIAL_INVOICES);
+    setProformas(INITIAL_PROFORMAS);
     setCollections(INITIAL_COLLECTIONS);
     setEmployees(INITIAL_EMPLOYEES);
     setExpenses(INITIAL_EXPENSES);
@@ -1073,6 +1088,64 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     [updateOrderStatus]
   );
 
+  // MUTATOR: Create Proforma
+  const createProforma = useCallback(
+    (data: Omit<ProformaInvoice, 'id' | 'proformaNumber' | 'date' | 'status'>) => {
+      const newProforma: ProformaInvoice = {
+        ...data,
+        id: `prof-${Date.now()}`,
+        proformaNumber: `PROF-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+        date: new Date().toISOString().split('T')[0],
+        status: 'sent',
+      };
+      setProformas((prev) => [newProforma, ...prev]);
+      return newProforma;
+    },
+    []
+  );
+
+  // MUTATOR: Update Proforma Status
+  const updateProformaStatus = useCallback((proformaId: string, status: ProformaStatus) => {
+    setProformas((prev) =>
+      prev.map((p) => (p.id === proformaId ? { ...p, status } : p))
+    );
+  }, []);
+
+  // MUTATOR: Convert Proforma to Official Tax Invoice
+  const convertProformaToInvoice = useCallback(
+    (proformaId: string) => {
+      const prof = proformas.find((p) => p.id === proformaId);
+      if (!prof) return null;
+
+      const newInv = createInvoice({
+        customerOrderId: prof.customerOrderId || `ord-ref-${Date.now()}`,
+        orderNumber: prof.orderNumber || `ORD-REF-${prof.proformaNumber}`,
+        customerId: prof.customerId,
+        customerName: prof.customerName,
+        customerTin: prof.customerTin,
+        customerAddress: prof.customerAddress,
+        invoiceType: prof.invoiceType,
+        dueDate: prof.validUntil || new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
+        items: prof.items,
+        subtotalNet: prof.subtotalNet,
+        vatAmount: prof.vatAmount,
+        grandTotal: prof.grandTotal,
+        notes: `Converted from Proforma ${prof.proformaNumber}. ${prof.notes || ''}`.trim(),
+      });
+
+      setProformas((prev) =>
+        prev.map((p) =>
+          p.id === proformaId
+            ? { ...p, status: 'converted', convertedInvoiceId: newInv.id }
+            : p
+        )
+      );
+
+      return newInv;
+    },
+    [proformas, createInvoice]
+  );
+
   // MUTATOR: Record Collection (Telebirr, Chapa, CBE, Cash)
   const recordCollection = useCallback(
     ({
@@ -1359,6 +1432,10 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         recordWorkOrderScrap,
         addBomItemToWorkOrder,
         createInvoice,
+        proformas,
+        createProforma,
+        updateProformaStatus,
+        convertProformaToInvoice,
         recordCollection,
         recordExpense,
         calculateOrderProfitability,

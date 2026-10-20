@@ -72,7 +72,7 @@ function CrmSidebarContent() {
   const crossNavItems = [
     {
       label: 'Proformas & Quotes',
-      href: '/dashboard/sales',
+      href: '/sales',
       icon: FileText,
     },
     {

@@ -164,8 +164,8 @@ export default function ModulesDirectoryPage() {
         },
         tags: ['Official Proformas', '15% VAT Compliant', 'Non-VAT Exempt', 'Telebirr & CBE', 'Receipts Ledger'],
         quickActions: [
-          { label: 'Proforma Register', href: '/dashboard/sales' },
-          { label: 'Tax Invoices', href: '/dashboard/sales' },
+          { label: 'Proforma Register', href: '/sales?tab=proformas' },
+          { label: 'Tax Invoices', href: '/sales?tab=invoices' },
           { label: 'Collections Desk', href: '/dashboard/collections' },
         ],
       },

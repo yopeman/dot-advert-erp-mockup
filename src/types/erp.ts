@@ -385,6 +385,29 @@ export interface Invoice {
   notes?: string;
 }
 
+export type ProformaStatus = 'draft' | 'sent' | 'accepted' | 'converted';
+
+export interface ProformaInvoice {
+  id: string;
+  proformaNumber: string;
+  date: string;
+  validUntil: string;
+  customerOrderId?: string;
+  orderNumber?: string;
+  customerId: string;
+  customerName: string;
+  customerTin: string;
+  customerAddress: string;
+  invoiceType: InvoiceType;
+  items: InvoiceItem[];
+  subtotalNet: number;
+  vatAmount: number;
+  grandTotal: number;
+  status: ProformaStatus;
+  convertedInvoiceId?: string;
+  notes?: string;
+}
+
 export type PaymentMethod = 'telebirr' | 'chapa' | 'bank_transfer' | 'cash' | 'cheque';
 
 export interface Collection {

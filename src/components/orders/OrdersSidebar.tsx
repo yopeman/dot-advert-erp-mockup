@@ -78,7 +78,7 @@ function OrdersSidebarContent() {
     },
     {
       label: 'Sales & Proforma Invoices',
-      href: '/dashboard/sales',
+      href: '/sales',
       icon: FileText,
     },
     {

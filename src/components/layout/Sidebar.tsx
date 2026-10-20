@@ -51,14 +51,14 @@ export default function Sidebar() {
     },
     {
       label: 'Production & Orders',
-      href: '/dashboard/orders',
+      href: '/orders',
       icon: Cog,
       badge: activeOrders.length > 0 ? `${activeOrders.length} Active` : 'Core',
       badgeType: 'primary',
     },
     {
       label: 'Sales & Invoicing',
-      href: '/dashboard/sales',
+      href: '/sales',
       icon: Receipt,
       badge: unpaidInvoices.length > 0 ? `${unpaidInvoices.length} Due` : undefined,
       badgeType: 'rose',

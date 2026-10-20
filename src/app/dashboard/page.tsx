@@ -109,11 +109,11 @@ export default function DashboardPage() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Link href="/dashboard/orders" className="btn btn-secondary btn-sm">
+          <Link href="/orders" className="btn btn-secondary btn-sm">
             <Cog size={14} />
             <span>Work Orders</span>
           </Link>
-          <Link href="/dashboard/sales" className="btn btn-secondary btn-sm">
+          <Link href="/sales" className="btn btn-secondary btn-sm">
             <Receipt size={14} />
             <span>Generate Invoice</span>
           </Link>

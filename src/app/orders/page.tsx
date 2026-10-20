@@ -1821,7 +1821,7 @@ function OrdersPageContent() {
                 )}
 
                 <Link
-                  href="/dashboard/sales"
+                  href="/sales"
                   className="btn btn-primary btn-sm"
                   style={{ marginLeft: 'auto' }}
                 >
