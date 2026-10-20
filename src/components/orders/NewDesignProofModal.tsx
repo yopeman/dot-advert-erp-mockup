@@ -6,16 +6,18 @@ import { CustomerOrder, DesignProof } from '@/types/erp';
 
 interface NewDesignProofModalProps {
   orders: CustomerOrder[];
+  initialOrderId?: string;
   onClose: () => void;
   onCreateProof: (proofData: Omit<DesignProof, 'id' | 'designNumber' | 'createdDate' | 'revisions' | 'revisionCount'>) => void;
 }
 
 export default function NewDesignProofModal({
   orders,
+  initialOrderId,
   onClose,
   onCreateProof,
 }: NewDesignProofModalProps) {
-  const [customerOrderId, setCustomerOrderId] = useState(orders[0]?.id || '');
+  const [customerOrderId, setCustomerOrderId] = useState(initialOrderId || orders[0]?.id || '');
   const [title, setTitle] = useState('');
   const [designerName, setDesignerName] = useState('Natnael Haile (Senior Graphic Artist)');
   const [widthMeters, setWidthMeters] = useState(4.0);

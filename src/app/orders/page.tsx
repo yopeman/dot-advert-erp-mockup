@@ -30,6 +30,9 @@ import {
   Ruler,
   RefreshCw,
   Filter,
+  Receipt,
+  Check,
+  ShieldCheck,
 } from 'lucide-react';
 import {
   CustomerOrder,
@@ -39,6 +42,7 @@ import {
   DesignStatus,
   WastageReason,
   WorkOrderBomItem,
+  Expense,
 } from '@/types/erp';
 import DesignProofCard, { getStatusBadge } from '@/components/orders/DesignProofCard';
 import DesignSpecsModal from '@/components/orders/DesignSpecsModal';
@@ -47,6 +51,8 @@ import RequestRevisionModal from '@/components/orders/RequestRevisionModal';
 import NewDesignProofModal from '@/components/orders/NewDesignProofModal';
 import LogScrapModal from '@/components/orders/LogScrapModal';
 import WorkOrderCard from '@/components/orders/WorkOrderCard';
+import LogOrderExpenseModal from '@/components/orders/LogOrderExpenseModal';
+import LogOrderWastageModal from '@/components/orders/LogOrderWastageModal';
 
 function OrdersPageContent() {
   const router = useRouter();
@@ -68,6 +74,8 @@ function OrdersPageContent() {
     updateWorkOrder,
     advanceWorkOrderStatus,
     recordWorkOrderScrap,
+    recordWastage,
+    recordExpense,
     addBomItemToWorkOrder,
     updateOrderStatus,
     createDesignProof,
@@ -115,6 +123,11 @@ function OrdersPageContent() {
   const [approvingProof, setApprovingProof] = useState<DesignProof | null>(null);
   const [revisingProof, setRevisingProof] = useState<DesignProof | null>(null);
   const [showNewDesignModal, setShowNewDesignModal] = useState(false);
+  const [newDesignTargetOrderId, setNewDesignTargetOrderId] = useState<string | undefined>(undefined);
+
+  // Expense & Wastage Modal State
+  const [showLogExpenseModal, setShowLogExpenseModal] = useState(false);
+  const [showLogWastageModal, setShowLogWastageModal] = useState(false);
 
   // Scrap Modal State
   const [scrapTargetWo, setScrapTargetWo] = useState<WorkOrder | null>(null);
@@ -176,9 +189,18 @@ function OrdersPageContent() {
     ? calculateOrderProfitability(selectedOrderId)
     : null;
   const selectedWOs = workOrders.filter((w) => w.customerOrderId === selectedOrderId);
-  const selectedProof = designProofs.find(
+  const orderDesigns = designProofs.filter(
     (d) => d.customerOrderId === selectedOrderId || d.id === selectedOrder?.designProofId
   );
+  const orderExpenses = expenses.filter((e) => e.orderId === selectedOrderId);
+  const orderWastages = wastages.filter((w) => w.orderId === selectedOrderId);
+
+  // Design approval breakdown for this specific order
+  const orderApprovedDesignsCount = orderDesigns.filter((d) => d.status === 'approved').length;
+  const orderPendingDesignsCount = orderDesigns.filter((d) => d.status === 'client_proofing').length;
+  const orderRevisionDesignsCount = orderDesigns.filter((d) => d.status === 'revision_requested').length;
+  const allOrderDesignsApproved =
+    orderDesigns.length > 0 && orderDesigns.every((d) => d.status === 'approved');
 
   // Customer Credit Limit check for New Order
   const targetCustomer = customers.find((c) => c.id === newOrderForm.customerId);
@@ -349,6 +371,36 @@ function OrdersPageContent() {
     recordWorkOrderScrap(woId, scrapData);
     const wo = workOrders.find((w) => w.id === woId);
     showToast(`Recorded ${scrapData.quantity} scrap on ${wo?.workOrderNumber}. Factory cost updated!`);
+  };
+
+  // Handle Direct Order Expense Confirmation
+  const handleConfirmOrderExpense = (
+    expenseData: Omit<Expense, 'id' | 'expenseNumber' | 'date' | 'status'>
+  ) => {
+    recordExpense(expenseData);
+    showToast(
+      `Direct expense of ${formatETB(expenseData.amountNet)} logged for ${expenseData.orderNumber || 'order'}! Profitability recalculated.`
+    );
+  };
+
+  // Handle Direct Order Wastage Confirmation
+  const handleConfirmOrderWastage = (params: {
+    itemId: string;
+    quantity: number;
+    storeId: string;
+    reason: WastageReason;
+    orderId: string;
+    notes?: string;
+    workOrderId?: string;
+  }) => {
+    recordWastage(params);
+    if (params.workOrderId) {
+      const wo = workOrders.find((w) => w.id === params.workOrderId);
+      if (wo) {
+        updateWorkOrder(params.workOrderId, { scrapQty: wo.scrapQty + params.quantity });
+      }
+    }
+    showToast(`Order wastage recorded! Deducted directly from order profit margin.`);
   };
 
   // Filtered Orders
@@ -819,49 +871,475 @@ function OrdersPageContent() {
                 </select>
               </div>
 
-              {/* Linked Artwork Proof Banner */}
-              {selectedProof && (
+              {/* ========================================================= */}
+              {/* 4-STAGE ORDER LIFECYCLE PIPELINE TRACKER                 */}
+              {/* Lead/Client -> Order -> Design -> Production             */}
+              {/* ========================================================= */}
+              <div
+                style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: '14px 16px',
+                  marginBottom: '20px',
+                }}
+              >
                 <div
                   style={{
-                    background: 'rgba(56, 189, 248, 0.08)',
-                    border: '1px solid rgba(56, 189, 248, 0.25)',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '12px 16px',
-                    marginBottom: '18px',
+                    fontSize: '0.725rem',
+                    fontWeight: 700,
+                    color: 'var(--text-dim)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    marginBottom: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <Sparkles size={13} color="#38bdf8" />
+                  <span>Order Lifecycle Progress Pipeline</span>
+                </div>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(4, 1fr)',
+                    gap: '8px',
+                  }}
+                >
+                  {/* Step 1: Lead / Client */}
+                  <div
+                    style={{
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '10px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                      <CheckCircle2 size={14} color="#10b981" />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#34d399' }}>
+                        1. Lead / Client
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#ffffff', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {selectedOrder.customerName}
+                    </div>
+                    <div style={{ fontSize: '0.675rem', color: 'var(--text-muted)' }}>
+                      Surveys & CRM Profile
+                    </div>
+                  </div>
+
+                  {/* Step 2: Contracted Order */}
+                  <div
+                    style={{
+                      background: 'rgba(56, 189, 248, 0.1)',
+                      border: '1px solid rgba(56, 189, 248, 0.3)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '10px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                      <CheckCircle2 size={14} color="#38bdf8" />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#38bdf8' }}>
+                        2. Order Placed
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#ffffff', fontWeight: 600 }}>
+                      {selectedOrder.orderNumber}
+                    </div>
+                    <div style={{ fontSize: '0.675rem', color: 'var(--text-muted)' }}>
+                      {formatETB(selectedOrder.totalAgreedPrice)} Contract
+                    </div>
+                  </div>
+
+                  {/* Step 3: Design & Customer Approval Gate */}
+                  <div
+                    style={{
+                      background: allOrderDesignsApproved
+                        ? 'rgba(16, 185, 129, 0.1)'
+                        : orderRevisionDesignsCount > 0
+                        ? 'rgba(244, 63, 94, 0.1)'
+                        : 'rgba(245, 158, 11, 0.1)',
+                      border: allOrderDesignsApproved
+                        ? '1px solid rgba(16, 185, 129, 0.35)'
+                        : orderRevisionDesignsCount > 0
+                        ? '1px solid rgba(244, 63, 94, 0.35)'
+                        : '1px solid rgba(245, 158, 11, 0.35)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '10px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                      {allOrderDesignsApproved ? (
+                        <ShieldCheck size={14} color="#10b981" />
+                      ) : orderRevisionDesignsCount > 0 ? (
+                        <AlertTriangle size={14} color="#fb7185" />
+                      ) : (
+                        <Clock size={14} color="#fbbf24" />
+                      )}
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          color: allOrderDesignsApproved
+                            ? '#34d399'
+                            : orderRevisionDesignsCount > 0
+                            ? '#fb7185'
+                            : '#fbbf24',
+                        }}
+                      >
+                        3. Design Proofs
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#ffffff', fontWeight: 600 }}>
+                      {orderApprovedDesignsCount} / {orderDesigns.length} Approved
+                    </div>
+                    <div style={{ fontSize: '0.675rem', color: 'var(--text-muted)' }}>
+                      Customer Approval Gate
+                    </div>
+                  </div>
+
+                  {/* Step 4: Shopfloor Production */}
+                  <div
+                    style={{
+                      background:
+                        selectedWOs.length > 0 ? 'rgba(129, 140, 248, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                      border:
+                        selectedWOs.length > 0
+                          ? '1px solid rgba(129, 140, 248, 0.35)'
+                          : '1px solid var(--border-subtle)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '10px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                      <Cog
+                        size={14}
+                        color={selectedWOs.length > 0 ? '#818cf8' : 'var(--text-dim)'}
+                        className={selectedWOs.some((w) => w.status === 'in_progress') ? 'spin' : ''}
+                      />
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          color: selectedWOs.length > 0 ? '#a5b4fc' : 'var(--text-dim)',
+                        }}
+                      >
+                        4. Production
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#ffffff', fontWeight: 600 }}>
+                      {selectedWOs.length} Work Orders
+                    </div>
+                    <div style={{ fontSize: '0.675rem', color: 'var(--text-muted)' }}>
+                      Roland & CNC Routing
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ========================================================= */}
+              {/* ORDER GRAPHIC DESIGNS & CUSTOMER APPROVAL GATE SECTION   */}
+              {/* (Order has MULTIPLE designs with customer sign-off)      */}
+              {/* ========================================================= */}
+              <div
+                style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: '18px 20px',
+                  marginBottom: '20px',
+                }}
+              >
+                <div
+                  style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
+                    marginBottom: '14px',
                     flexWrap: 'wrap',
                     gap: '10px',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Palette size={18} color="#38bdf8" />
+                    <div
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '8px',
+                        background: 'rgba(168, 85, 247, 0.15)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#c084fc',
+                      }}
+                    >
+                      <Palette size={18} />
+                    </div>
                     <div>
-                      <div style={{ fontSize: '0.825rem', fontWeight: 600, color: '#ffffff' }}>
-                        Linked Design: {selectedProof.designNumber} — {selectedProof.title}
-                      </div>
+                      <h3 style={{ fontSize: '1rem', margin: 0, color: '#ffffff' }}>
+                        Order Designs & Customer Approval Gate ({orderDesigns.length})
+                      </h3>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        {selectedProof.widthMeters}m × {selectedProof.heightMeters}m • {selectedProof.materialSpec}
+                        Client approval is required before fabrication release. Multiple designs supported per order.
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span className={getStatusBadge(selectedProof.status).className} style={{ fontSize: '0.7rem' }}>
-                      {getStatusBadge(selectedProof.status).label}
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    style={{ fontSize: '0.75rem', color: '#c084fc', borderColor: 'rgba(168, 85, 247, 0.3)' }}
+                    onClick={() => {
+                      setNewDesignTargetOrderId(selectedOrder.id);
+                      setShowNewDesignModal(true);
+                    }}
+                  >
+                    <PlusCircle size={13} />
+                    <span>+ Add Another Design to Order</span>
+                  </button>
+                </div>
+
+                {/* Overall Customer Approval Banner */}
+                {orderDesigns.length === 0 ? (
+                  <div
+                    style={{
+                      background: 'rgba(56, 189, 248, 0.08)',
+                      border: '1px solid rgba(56, 189, 248, 0.25)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '12px 16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: '14px',
+                    }}
+                  >
+                    <span style={{ fontSize: '0.8rem', color: '#7dd3fc' }}>
+                      No design proofs attached to this order yet.
                     </span>
                     <button
-                      className="btn btn-secondary btn-sm"
-                      style={{ fontSize: '0.72rem', padding: '4px 8px' }}
-                      onClick={() => setInspectingProof(selectedProof)}
+                      className="btn btn-primary btn-sm"
+                      style={{ fontSize: '0.72rem' }}
+                      onClick={() => {
+                        setNewDesignTargetOrderId(selectedOrder.id);
+                        setShowNewDesignModal(true);
+                      }}
                     >
-                      <Eye size={12} />
-                      <span>Inspect Artwork</span>
+                      Upload Artwork Proof
                     </button>
                   </div>
-                </div>
-              )}
+                ) : allOrderDesignsApproved ? (
+                  <div
+                    style={{
+                      background: 'rgba(16, 185, 129, 0.12)',
+                      border: '1px solid rgba(16, 185, 129, 0.35)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '10px 14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      marginBottom: '14px',
+                    }}
+                  >
+                    <ShieldCheck size={18} color="#10b981" />
+                    <span style={{ fontSize: '0.825rem', color: '#a7f3d0', fontWeight: 600 }}>
+                      Customer Approval Certified: All {orderDesigns.length} artwork design proofs approved by {selectedOrder.customerName}. Workshop production released!
+                    </span>
+                  </div>
+                ) : orderRevisionDesignsCount > 0 ? (
+                  <div
+                    style={{
+                      background: 'rgba(244, 63, 94, 0.12)',
+                      border: '1px solid rgba(244, 63, 94, 0.35)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '10px 14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      marginBottom: '14px',
+                    }}
+                  >
+                    <AlertTriangle size={18} color="#fb7185" />
+                    <span style={{ fontSize: '0.825rem', color: '#fecdd3', fontWeight: 600 }}>
+                      Customer Action Required: {orderRevisionDesignsCount} design(s) have client revision requests pending designer updates.
+                    </span>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      background: 'rgba(245, 158, 11, 0.12)',
+                      border: '1px solid rgba(245, 158, 11, 0.35)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '10px 14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      marginBottom: '14px',
+                    }}
+                  >
+                    <Clock size={18} color="#fbbf24" />
+                    <span style={{ fontSize: '0.825rem', color: '#fde68a', fontWeight: 600 }}>
+                      Awaiting Customer Approval: {orderPendingDesignsCount} of {orderDesigns.length} artwork proofs pending client digital sign-off.
+                    </span>
+                  </div>
+                )}
+
+                {/* Grid of Attached Designs */}
+                {orderDesigns.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {orderDesigns.map((proof) => {
+                      const badge = getStatusBadge(proof.status);
+                      const isApproved = proof.status === 'approved';
+
+                      return (
+                        <div
+                          key={proof.id}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            border: isApproved
+                              ? '1px solid rgba(16, 185, 129, 0.25)'
+                              : '1px solid var(--border-subtle)',
+                            borderRadius: 'var(--radius-md)',
+                            padding: '14px 16px',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: '12px',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flex: '1 1 300px' }}>
+                            {proof.mockupUrl ? (
+                              <img
+                                src={proof.mockupUrl}
+                                alt={proof.title}
+                                style={{
+                                  width: '56px',
+                                  height: '56px',
+                                  borderRadius: '6px',
+                                  objectFit: 'cover',
+                                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                                }}
+                              />
+                            ) : (
+                              <div
+                                style={{
+                                  width: '56px',
+                                  height: '56px',
+                                  borderRadius: '6px',
+                                  background: 'rgba(168, 85, 247, 0.1)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: '#c084fc',
+                                }}
+                              >
+                                <Palette size={22} />
+                              </div>
+                            )}
+
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: '#c084fc', fontWeight: 700 }}>
+                                  {proof.designNumber}
+                                </span>
+                                <span className={badge.className} style={{ fontSize: '0.675rem' }}>
+                                  {badge.label}
+                                </span>
+                              </div>
+                              <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#ffffff', marginTop: '2px' }}>
+                                {proof.title}
+                              </div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                📐 {proof.widthMeters}m × {proof.heightMeters}m • {proof.materialSpec}
+                              </div>
+                              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                                Artist: {proof.designerName} • Profile: {proof.colorProfile} ({proof.resolutionDpi} DPI)
+                              </div>
+
+                              {/* Customer Approval Note / Feedback */}
+                              {isApproved && proof.approvedBy && (
+                                <div
+                                  style={{
+                                    marginTop: '6px',
+                                    padding: '6px 10px',
+                                    background: 'rgba(16, 185, 129, 0.08)',
+                                    borderRadius: '4px',
+                                    fontSize: '0.72rem',
+                                    color: '#a7f3d0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                  }}
+                                >
+                                  <Check size={12} color="#10b981" />
+                                  <span>
+                                    Signed off by <strong>{proof.approvedBy}</strong> ({proof.approvedDate || 'Approved'}). {proof.clientFeedback ? `"${proof.clientFeedback}"` : ''}
+                                  </span>
+                                </div>
+                              )}
+
+                              {proof.status === 'revision_requested' && proof.clientFeedback && (
+                                <div
+                                  style={{
+                                    marginTop: '6px',
+                                    padding: '6px 10px',
+                                    background: 'rgba(244, 63, 94, 0.08)',
+                                    borderRadius: '4px',
+                                    fontSize: '0.72rem',
+                                    color: '#fca5a5',
+                                  }}
+                                >
+                                  <strong>Customer Revision:</strong> {proof.clientFeedback}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Action Buttons for this design */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <button
+                              className="btn btn-secondary btn-sm"
+                              style={{ fontSize: '0.72rem', padding: '5px 9px' }}
+                              onClick={() => setInspectingProof(proof)}
+                            >
+                              <Eye size={12} />
+                              <span>Specs & CAD</span>
+                            </button>
+
+                            {!isApproved && (
+                              <button
+                                className="btn btn-primary btn-sm"
+                                style={{
+                                  fontSize: '0.72rem',
+                                  padding: '5px 10px',
+                                  background: '#10b981',
+                                  borderColor: '#059669',
+                                }}
+                                onClick={() => setApprovingProof(proof)}
+                              >
+                                <CheckCircle2 size={12} />
+                                <span>Customer Sign-off</span>
+                              </button>
+                            )}
+
+                            {proof.status !== 'revision_requested' && (
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                style={{ fontSize: '0.72rem', padding: '5px 9px', color: '#fda4af' }}
+                                onClick={() => setRevisingProof(proof)}
+                              >
+                                <span>Request Revision</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
 
               {/* Profitability Result Banner */}
               <div
@@ -1018,7 +1496,7 @@ function OrdersPageContent() {
                     </span>
                   </div>
 
-                  {/* Scrap / Wastage */}
+                  {/* Scrap / Wastage with Log Button */}
                   <div
                     style={{
                       display: 'flex',
@@ -1026,21 +1504,32 @@ function OrdersPageContent() {
                       justifyContent: 'space-between',
                       padding: '8px 12px',
                       fontSize: '0.825rem',
-                      color: 'var(--text-muted)',
+                      background: selectedProfitability.wastageCost > 0 ? 'rgba(239, 68, 68, 0.06)' : 'transparent',
+                      borderRadius: 'var(--radius-sm)',
                     }}
                   >
-                    <span>Material Wastage / Scrap Incurred:</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Material Wastage & Scrap Incurred:</span>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        style={{ fontSize: '0.675rem', padding: '2px 8px', color: '#fb7185', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                        onClick={() => setShowLogWastageModal(true)}
+                      >
+                        <Trash2 size={11} />
+                        <span>+ Log Wastage</span>
+                      </button>
+                    </div>
                     <span
                       style={{
                         color: selectedProfitability.wastageCost > 0 ? '#fb7185' : 'var(--text-dim)',
-                        fontWeight: selectedProfitability.wastageCost > 0 ? 600 : 400,
+                        fontWeight: selectedProfitability.wastageCost > 0 ? 700 : 400,
                       }}
                     >
                       - {formatETB(selectedProfitability.wastageCost)}
                     </span>
                   </div>
 
-                  {/* Transport */}
+                  {/* Direct Order Expenses & Logistics with Log Button */}
                   <div
                     style={{
                       display: 'flex',
@@ -1048,11 +1537,27 @@ function OrdersPageContent() {
                       justifyContent: 'space-between',
                       padding: '8px 12px',
                       fontSize: '0.825rem',
-                      color: 'var(--text-muted)',
+                      background: selectedProfitability.orderTransportCost > 0 ? 'rgba(244, 63, 94, 0.06)' : 'transparent',
+                      borderRadius: 'var(--radius-sm)',
                     }}
                   >
-                    <span>Order-Specific Transport & Scaffolding:</span>
-                    <span style={{ color: '#fb7185' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Direct Order Expenses & Logistics (Transport, Crane, Permits):</span>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        style={{ fontSize: '0.675rem', padding: '2px 8px', color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.3)' }}
+                        onClick={() => setShowLogExpenseModal(true)}
+                      >
+                        <Receipt size={11} />
+                        <span>+ Log Expense</span>
+                      </button>
+                    </div>
+                    <span
+                      style={{
+                        color: selectedProfitability.orderTransportCost > 0 ? '#fb7185' : 'var(--text-dim)',
+                        fontWeight: selectedProfitability.orderTransportCost > 0 ? 700 : 400,
+                      }}
+                    >
                       - {formatETB(selectedProfitability.orderTransportCost)}
                     </span>
                   </div>
@@ -1094,6 +1599,161 @@ function OrdersPageContent() {
                 </div>
               </div>
 
+              {/* ========================================================= */}
+              {/* ITEMIZED ORDER EXPENSES & WASTAGE AUDIT LEDGERS           */}
+              {/* ========================================================= */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '22px' }}>
+                {/* 1. Logged Direct Order Expenses Table */}
+                <div
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '14px 16px',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: '10px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Receipt size={16} color="#fb7185" />
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+                        Logged Direct Expenses for {selectedOrder.orderNumber} ({orderExpenses.length})
+                      </span>
+                    </div>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: '0.72rem', padding: '4px 10px', color: '#fb7185', borderColor: 'rgba(251, 113, 133, 0.3)' }}
+                      onClick={() => setShowLogExpenseModal(true)}
+                    >
+                      <PlusCircle size={12} />
+                      <span>+ Log Order Expense</span>
+                    </button>
+                  </div>
+
+                  {orderExpenses.length > 0 ? (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table className="table" style={{ fontSize: '0.75rem', width: '100%' }}>
+                        <thead>
+                          <tr>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Payee / Contractor</th>
+                            <th>Payment</th>
+                            <th>Voucher / Ref</th>
+                            <th style={{ textAlign: 'right' }}>Net ETB</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {orderExpenses.map((exp) => (
+                            <tr key={exp.id}>
+                              <td>{exp.date}</td>
+                              <td>
+                                <span className="badge badge-secondary" style={{ fontSize: '0.675rem' }}>
+                                  {exp.categoryLabel || exp.category.replace('_', ' ')}
+                                </span>
+                              </td>
+                              <td style={{ color: '#ffffff', fontWeight: 600 }}>{exp.supplierOrPayee}</td>
+                              <td>{exp.paymentMethod.replace('_', ' ')}</td>
+                              <td style={{ fontFamily: 'monospace', color: 'var(--text-dim)' }}>
+                                {exp.receiptRef || exp.expenseNumber}
+                              </td>
+                              <td style={{ textAlign: 'right', fontWeight: 700, color: '#fb7185' }}>
+                                - {formatETB(exp.amountNet)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textAlign: 'center', padding: '12px' }}>
+                      No direct expenses logged for this order yet (e.g. crane rental, delivery fuel, site installation per-diem).
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Logged Order Wastage / Scrap Table */}
+                <div
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '14px 16px',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: '10px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Trash2 size={16} color="#ef4444" />
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+                        Logged Scrap & Material Wastage for {selectedOrder.orderNumber} ({orderWastages.length})
+                      </span>
+                    </div>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: '0.72rem', padding: '4px 10px', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                      onClick={() => setShowLogWastageModal(true)}
+                    >
+                      <PlusCircle size={12} />
+                      <span>+ Log Order Wastage</span>
+                    </button>
+                  </div>
+
+                  {orderWastages.length > 0 ? (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table className="table" style={{ fontSize: '0.75rem', width: '100%' }}>
+                        <thead>
+                          <tr>
+                            <th>Date</th>
+                            <th>Scrapped Material</th>
+                            <th>Quantity</th>
+                            <th>Defect Reason</th>
+                            <th>Unit Cost</th>
+                            <th style={{ textAlign: 'right' }}>Scrap Loss ETB</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {orderWastages.map((wst) => (
+                            <tr key={wst.id}>
+                              <td>{wst.date}</td>
+                              <td style={{ color: '#ffffff', fontWeight: 600 }}>{wst.itemName}</td>
+                              <td>
+                                {wst.quantity} {wst.unit}
+                              </td>
+                              <td>
+                                <span className="badge badge-warning" style={{ fontSize: '0.675rem' }}>
+                                  {wst.reason.replace('_', ' ')}
+                                </span>
+                              </td>
+                              <td style={{ color: 'var(--text-muted)' }}>{formatETB(wst.unitCost)}</td>
+                              <td style={{ textAlign: 'right', fontWeight: 700, color: '#ef4444' }}>
+                                - {formatETB(wst.totalCost)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textAlign: 'center', padding: '12px' }}>
+                      Zero material wastage or defect scrap recorded for this order. Clean production run!
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Action Controls */}
               <div
                 style={{
@@ -1105,6 +1765,36 @@ function OrdersPageContent() {
                   paddingTop: '16px',
                 }}
               >
+                <button
+                  className="btn btn-secondary btn-sm"
+                  style={{ color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.3)' }}
+                  onClick={() => setShowLogExpenseModal(true)}
+                >
+                  <Receipt size={13} />
+                  <span>+ Log Expense</span>
+                </button>
+
+                <button
+                  className="btn btn-secondary btn-sm"
+                  style={{ color: '#fda4af', borderColor: 'rgba(244, 63, 94, 0.3)' }}
+                  onClick={() => setShowLogWastageModal(true)}
+                >
+                  <Trash2 size={13} />
+                  <span>+ Log Wastage</span>
+                </button>
+
+                <button
+                  className="btn btn-secondary btn-sm"
+                  style={{ color: '#c084fc', borderColor: 'rgba(192, 132, 252, 0.3)' }}
+                  onClick={() => {
+                    setNewDesignTargetOrderId(selectedOrder.id);
+                    setShowNewDesignModal(true);
+                  }}
+                >
+                  <Palette size={13} />
+                  <span>+ Attach Design</span>
+                </button>
+
                 {selectedWOs.length > 0 && (
                   <>
                     <button
@@ -1126,14 +1816,6 @@ function OrdersPageContent() {
                     >
                       <Boxes size={13} />
                       <span>Issue Material to BOM</span>
-                    </button>
-                    <button
-                      className="btn btn-secondary btn-sm"
-                      style={{ color: '#fda4af', borderColor: 'rgba(244, 63, 94, 0.3)' }}
-                      onClick={() => setScrapTargetWo(selectedWOs[0])}
-                    >
-                      <Trash2 size={13} />
-                      <span>Log Scrap</span>
                     </button>
                   </>
                 )}
@@ -1864,7 +2546,11 @@ function OrdersPageContent() {
       {showNewDesignModal && (
         <NewDesignProofModal
           orders={orders}
-          onClose={() => setShowNewDesignModal(false)}
+          initialOrderId={newDesignTargetOrderId || selectedOrderId}
+          onClose={() => {
+            setShowNewDesignModal(false);
+            setNewDesignTargetOrderId(undefined);
+          }}
           onCreateProof={(proofData) => {
             const created = createDesignProof(proofData);
             showToast(`Created artwork proof ${created.designNumber} for ${created.customerName}!`);
@@ -1880,6 +2566,28 @@ function OrdersPageContent() {
         items={items}
         onClose={() => setScrapTargetWo(null)}
         onConfirmScrap={handleConfirmScrap}
+      />
+
+      {/* ========================================================= */}
+      {/* MODAL 10: LOG ORDER DIRECT EXPENSE                        */}
+      {/* ========================================================= */}
+      <LogOrderExpenseModal
+        isOpen={showLogExpenseModal}
+        order={selectedOrder || null}
+        onClose={() => setShowLogExpenseModal(false)}
+        onConfirmExpense={handleConfirmOrderExpense}
+      />
+
+      {/* ========================================================= */}
+      {/* MODAL 11: LOG ORDER DIRECT WASTAGE / SCRAP                */}
+      {/* ========================================================= */}
+      <LogOrderWastageModal
+        isOpen={showLogWastageModal}
+        order={selectedOrder || null}
+        workOrders={selectedWOs}
+        items={items}
+        onClose={() => setShowLogWastageModal(false)}
+        onConfirmWastage={handleConfirmOrderWastage}
       />
     </div>
   );

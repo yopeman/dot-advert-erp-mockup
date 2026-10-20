@@ -1191,11 +1191,10 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         directLaborCost += wo.machineHours * 120 * numOps;
       });
 
-      // 3. Order-specific transport & site installation expenses
+      // 3. Order-specific direct expenses (transport, crane rental, permits, site installation, etc.)
       const linkedExpenses = expenses.filter((e) => e.orderId === orderId);
-      const orderTransportCost = linkedExpenses
-        .filter((e) => e.category === 'delivery_transport')
-        .reduce((sum, e) => sum + e.amountNet, 0);
+      const orderDirectExpensesCost = linkedExpenses.reduce((sum, e) => sum + e.amountNet, 0);
+      const orderTransportCost = orderDirectExpensesCost; // Kept for backwards compatibility
 
       // 4. Wastage cost attributed to this order
       const linkedWastage = wastages.filter((w) => w.orderId === orderId);
@@ -1212,12 +1211,12 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         directLaborCost +
         machineCost +
         packagingCost +
-        orderTransportCost +
+        orderDirectExpensesCost +
         allocatedOverheadCost +
         wastageCost;
 
       // Profit calculations
-      const variableCosts = directMaterialCost + directLaborCost + machineCost + wastageCost;
+      const variableCosts = directMaterialCost + directLaborCost + machineCost + wastageCost + orderDirectExpensesCost;
       const grossProfit = orderRevenue - variableCosts;
       const orderProfit = orderRevenue - totalOrderCost;
       const profitMarginPct = orderRevenue > 0 ? (orderProfit / orderRevenue) * 100 : 0;
@@ -1233,6 +1232,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         machineCost,
         packagingCost,
         orderTransportCost,
+        orderDirectExpensesCost,
         allocatedOverheadCost,
         wastageCost,
         totalOrderCost,

@@ -451,7 +451,10 @@ export type ExpenseCategory =
   | 'admin_salaries'
   | 'security'
   | 'office_supplies'
-  | 'order_direct_supplies';
+  | 'order_direct_supplies'
+  | 'crane_scaffolding_rental'
+  | 'installation_per_diem'
+  | 'permits_licensing';
 
 export interface Expense {
   id: string;
@@ -484,6 +487,7 @@ export interface OrderProfitability {
   machineCost: number;
   packagingCost: number;
   orderTransportCost: number;
+  orderDirectExpensesCost?: number;
   allocatedOverheadCost: number;
   wastageCost: number;
   totalOrderCost: number;

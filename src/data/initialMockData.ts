@@ -946,6 +946,37 @@ export const INITIAL_DESIGN_PROOFS: DesignProof[] = [
     ],
     createdDate: '2026-10-14',
   },
+  {
+    id: 'des-6',
+    designNumber: 'DSG-2026-086',
+    customerOrderId: 'ord-101',
+    orderNumber: 'ORD-2026-081',
+    customerName: 'Awash Bank S.C.',
+    title: 'Awash Bank Bole Mega-Branch ATM Kiosk Surround & Frosted Manifestation',
+    designerName: 'Natnael Haile (Senior Graphic Artist)',
+    status: 'client_proofing',
+    widthMeters: 4.8,
+    heightMeters: 2.4,
+    depthCm: 8,
+    resolutionDpi: 300,
+    colorProfile: 'CMYK',
+    materialSpec: 'Dusted Crystal Frosted Vinyl + Plotter Cut Orange Vinyl + Backlit LED Header',
+    mockupUrl: 'https://images.unsplash.com/photo-1541888946425-d0fbb186156f?w=600&auto=format&fit=crop&q=80',
+    clientContactPerson: 'Abebe Kebede (Head of Facility Management)',
+    clientFeedback: 'Sample material swatches delivered to bank HQ. Awaiting final sign-off committee review.',
+    revisionCount: 1,
+    revisions: [
+      {
+        id: 'rev-6-1',
+        versionNumber: 1,
+        date: '2026-10-06',
+        notes: 'Submitted architectural elevation layout with ATM cutout measurements and night illumination proof.',
+        authorName: 'Natnael Haile',
+        status: 'client_proofing',
+      },
+    ],
+    createdDate: '2026-10-05',
+  },
 ];
 
 export const INITIAL_ORDERS: CustomerOrder[] = [
