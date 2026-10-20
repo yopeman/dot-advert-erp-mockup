@@ -237,10 +237,10 @@ export default function ModulesDirectoryPage() {
         badge: { text: `ETB ${(companyFinancials.totalRevenueNet / 1000).toFixed(0)}k Net Rev`, type: 'emerald' },
         tags: ['Cash Realization', 'Operating Expenses', 'Income Statement (P&L)', '15% Output VAT', 'Input VAT Deductions'],
         quickActions: [
-          { label: 'Revenue Trends', href: '/dashboard/finance' },
-          { label: 'Expense Ledger', href: '/dashboard/expenses' },
-          { label: 'P&L Statement', href: '/dashboard/finance' },
-          { label: 'VAT Summary (ERCA)', href: '/dashboard/finance' },
+          { label: 'Executive P&L', href: '/finance?tab=income_statement' },
+          { label: 'Job Costing Margins', href: '/finance?tab=profitability' },
+          { label: 'Cash Flow & Treasury', href: '/finance?tab=cashflow' },
+          { label: 'MoR Tax & VAT', href: '/finance?tab=tax' },
         ],
       },
 
@@ -283,8 +283,8 @@ export default function ModulesDirectoryPage() {
         tags: ['Executive Overview', 'Live Alerts', 'Multi-Module KPI', 'Real-time Metrics', 'Quick Launch'],
         quickActions: [
           { label: 'Executive Cockpit', href: '/dashboard' },
-          { label: 'Financial Health', href: '/dashboard/finance' },
-          { label: 'Production Status', href: '/dashboard/orders' },
+          { label: 'Financial Health', href: '/finance' },
+          { label: 'Production Status', href: '/orders' },
         ],
       },
     ],

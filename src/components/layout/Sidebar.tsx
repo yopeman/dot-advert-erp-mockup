@@ -80,7 +80,7 @@ export default function Sidebar() {
     },
     {
       label: 'Finance & Profitability',
-      href: '/dashboard/finance',
+      href: '/finance',
       icon: TrendingUp,
     },
   ];

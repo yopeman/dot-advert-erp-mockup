@@ -75,6 +75,38 @@ export default function FinancePage() {
 
   return (
     <div>
+      {/* Banner linking to dedicated /finance module */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.1) 100%)',
+          border: '1px solid rgba(16, 185, 129, 0.4)',
+          borderRadius: 'var(--radius-md)',
+          padding: '12px 18px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <TrendingUp size={20} color="#10b981" />
+          <div style={{ fontSize: '0.85rem', color: '#a7f3d0' }}>
+            <strong>Dedicated Finance & P&L Desk Launched:</strong> The Finance module now operates with its own dedicated sidebar and topbar at <strong>/finance</strong>.
+          </div>
+        </div>
+        <Link
+          href="/finance"
+          className="btn btn-primary btn-sm"
+          style={{
+            background: 'linear-gradient(135deg, #10b981, #059669)',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <span>Open /finance Desk →</span>
+        </Link>
+      </div>
+
       {/* Top Header */}
       <div
         style={{

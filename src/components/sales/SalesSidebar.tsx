@@ -95,7 +95,7 @@ function SalesSidebarContent() {
     },
     {
       label: 'Finance & P&L',
-      href: '/dashboard/finance',
+      href: '/finance',
       icon: TrendingUp,
     },
     {
