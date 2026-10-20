@@ -34,7 +34,7 @@ export default function Sidebar() {
       label: 'Modules & Forms Hub',
       href: '/',
       icon: LayoutGrid,
-      badge: '24 Hub',
+      badge: '8 Modules',
       badgeType: 'emerald',
     },
     {

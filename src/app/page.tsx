@@ -97,44 +97,26 @@ export default function ModulesDirectoryPage() {
   const openWOsCount = workOrders.filter((w) => w.status !== 'completed').length;
   const pendingPOsCount = purchaseOrders.filter((p) => p.status === 'approved' || p.status === 'draft').length;
 
-  // Master List of All Cards Across the 8 Core Modules
+  // Master List of The 8 Core Modules (No Duplication)
   const cards: CardItem[] = useMemo(
     () => [
       // 1. CRM
       {
-        id: 'crm-leads',
+        id: 'module-crm',
         category: 'crm',
-        categoryName: 'CRM',
+        categoryName: 'Module 1 • CRM',
         categoryColor: '#6366f1',
-        title: 'Leads & Inquiry Pipeline',
-        subtitle: 'Lead qualification, site surveys & dimensions',
+        title: 'Customer Relationship Management',
+        subtitle: 'Leads pipeline, site surveys, TIN profiles & credit control',
         description:
-          'Capture incoming signage/printing inquiries, schedule site measurements, record client dimensions, and qualify opportunities before issuing quotations.',
+          'End-to-end customer pipeline: capture walk-in inquiries, record site survey dimensions, manage verified client TIN registries, enforce credit limits, and monitor receivables.',
         icon: Users,
         primaryHref: '/crm',
-        primaryLabel: 'Open CRM Leads',
-        badge: { text: `${leads.length} Deals`, type: 'indigo' },
-        tags: ['Walk-ins', 'Site Measurements', 'Lead Qualification', 'Tenders'],
+        primaryLabel: 'Open CRM Module',
+        badge: { text: `${leads.length} Leads • ${customers.length} Accounts`, type: 'indigo' },
+        tags: ['Leads Pipeline', 'Site Measurements', 'TIN Registry', 'Credit Limits', 'Client Ledger'],
         quickActions: [
-          { label: 'Pipeline Funnel', href: '/crm' },
-          { label: 'Site Surveys', href: '/crm' },
-        ],
-      },
-      {
-        id: 'crm-customers',
-        category: 'crm',
-        categoryName: 'CRM',
-        categoryColor: '#6366f1',
-        title: 'Customer Directory & Credit',
-        subtitle: 'Profiles, TIN, VAT status & credit lines',
-        description:
-          'Maintain verified client profiles with Ethiopian TIN registrations, custom payment terms, credit limits, and automated balance protection.',
-        icon: UserCheck,
-        primaryHref: '/crm',
-        primaryLabel: 'Manage Customers',
-        badge: { text: `${customers.length} Accounts`, type: 'indigo' },
-        tags: ['TIN Verified', 'Credit Limit Check', 'Payment Terms', 'Ledger'],
-        quickActions: [
+          { label: 'Leads Pipeline', href: '/crm' },
           { label: 'Customer Directory', href: '/crm' },
           { label: 'Credit Balances', href: '/dashboard/collections' },
         ],
@@ -142,491 +124,179 @@ export default function ModulesDirectoryPage() {
 
       // 2. ORDER
       {
-        id: 'order-jobs',
+        id: 'module-order',
         category: 'order',
-        categoryName: 'Order',
+        categoryName: 'Module 2 • Order',
         categoryColor: '#06b6d4',
-        title: 'Customer Orders',
-        subtitle: 'Job agreements, deadlines & contracted value',
+        title: 'Orders & Production Floor',
+        subtitle: 'Job agreements, CMYK proofing, factory BOM & job costing',
         description:
-          'Central registry of contracted client orders, agreed ETB milestone values, required completion deadlines, and deposit validations.',
+          'Advertising fabrication engine: manage contracted orders, review and sign off CMYK design proofs, generate Bill of Materials (BOM) for the factory floor, and track real-time job margin waterfalls.',
         icon: Cog,
         primaryHref: '/dashboard/orders',
-        primaryLabel: 'Open Orders Desk',
-        badge: { text: `${activeOrdersCount} Active`, type: 'cyan' },
-        tags: ['Order Contracts', 'Deposit Check', 'Milestone Dates', 'PM Assignment'],
+        primaryLabel: 'Open Orders & Production',
+        badge: { text: `${activeOrdersCount} Active • ${openWOsCount} In Floor`, type: 'cyan' },
+        tags: ['Order Contracts', 'CMYK Proofing', 'BOM & Work Orders', 'Machine Scheduling', 'Margin Waterfall'],
         quickActions: [
-          { label: 'All Orders', href: '/dashboard/orders' },
-          { label: 'Track Deadlines', href: '/dashboard/orders' },
-        ],
-      },
-      {
-        id: 'order-design',
-        category: 'order',
-        categoryName: 'Order',
-        categoryColor: '#06b6d4',
-        title: 'Graphic Design & Proofing',
-        subtitle: 'Artwork files, CMYK specs & client sign-offs',
-        description:
-          'Advertising-specific proofing stage. Review print dimensions, CMYK color profiles, mockup proofs, and secure client sign-off before fabrication.',
-        icon: Palette,
-        primaryHref: '/dashboard/orders',
-        primaryLabel: 'Design & Proofing',
-        badge: { text: 'Artwork Proofs', type: 'cyan' },
-        tags: ['Dimension Verification', 'Mockup Proofs', 'Client Approval', 'CMYK Specs'],
-        quickActions: [
-          { label: 'Review Proofs', href: '/dashboard/orders' },
-          { label: 'Print Specifications', href: '/dashboard/orders' },
-        ],
-      },
-      {
-        id: 'order-production',
-        category: 'order',
-        categoryName: 'Order',
-        categoryColor: '#06b6d4',
-        title: 'Production & Work Orders',
-        subtitle: 'BOM materials, cutting, machine hours & scrap',
-        description:
-          'Factory floor execution. Issue Bill of Materials (BOM), schedule CNC/laser and large format printers, record machine hours, and log production scrap.',
-        icon: Layers,
-        primaryHref: '/dashboard/orders',
-        primaryLabel: 'Work Order Center',
-        badge: { text: `${openWOsCount} In Floor`, type: 'cyan' },
-        tags: ['BOM Issue', 'CNC / Laser', 'Large Format Printing', 'Assembly QA'],
-        quickActions: [
+          { label: 'Customer Orders', href: '/dashboard/orders' },
+          { label: 'Design Proofs', href: '/dashboard/orders' },
           { label: 'Factory Work Orders', href: '/dashboard/orders' },
-          { label: 'Scrap & Wastage', href: '/dashboard/inventory' },
-        ],
-      },
-      {
-        id: 'order-profitability',
-        category: 'order',
-        categoryName: 'Order',
-        categoryColor: '#06b6d4',
-        title: 'Job Costing & Profitability',
-        subtitle: 'Real-time job margin & cost waterfall',
-        description:
-          'Dynamic margin analysis rolling up Direct Materials, Operator Labor, Machine Hours, Wastage, and Overhead vs Net Invoiced Price.',
-        icon: TrendingUp,
-        primaryHref: '/dashboard/orders',
-        primaryLabel: 'Order Profitability',
-        badge: { text: 'Live Margin %', type: 'emerald' },
-        tags: ['Material Cost', 'Labor Rollup', 'Machine Rate', 'Net Margin %'],
-        quickActions: [
-          { label: 'View Cost Waterfall', href: '/dashboard/orders' },
-          { label: 'Profit Variance', href: '/dashboard/finance' },
+          { label: 'Job Costing', href: '/dashboard/orders' },
         ],
       },
 
       // 3. SALES
       {
-        id: 'sales-proforma',
+        id: 'module-sales',
         category: 'sales',
-        categoryName: 'Sales',
+        categoryName: 'Module 3 • Sales',
         categoryColor: '#10b981',
-        title: 'Proforma Invoices',
-        subtitle: 'Official quotations & commercial proposals',
+        title: 'Sales, Billing & Invoicing',
+        subtitle: 'Proforma quotations, 15% VAT invoices & digital receipts',
         description:
-          'Mandatory for Ethiopian corporate & government sales. Issue official proforma invoices with validity periods and 15% VAT or Non-VAT toggles.',
-        icon: FileCheck,
-        primaryHref: '/dashboard/sales',
-        primaryLabel: 'Proforma Manager',
-        badge: { text: 'Quotations', type: 'emerald' },
-        tags: ['Commercial Quotation', 'Validity Terms', '15% VAT / Exempt', 'Convert to PO'],
-        quickActions: [
-          { label: 'Active Proformas', href: '/dashboard/sales' },
-          { label: 'Create New Proforma', href: '/dashboard/sales' },
-        ],
-      },
-      {
-        id: 'sales-invoices',
-        category: 'sales',
-        categoryName: 'Sales',
-        categoryColor: '#10b981',
-        title: 'Tax & Commercial Invoicing',
-        subtitle: '15% VAT invoices, exempt bills & PDF preview',
-        description:
-          'Generate statutory Ethiopian tax invoices with TIN, itemized descriptions, 15% VAT math, QR verification, and statutory exemption declarations.',
+          'Commercial tax compliance: issue official Ethiopian proformas with validity terms, print statutory 15% VAT or Non-VAT invoices with QR verification, and reconcile digital receipts via Telebirr, CBE & cash.',
         icon: Receipt,
         primaryHref: '/dashboard/sales',
-        primaryLabel: 'Invoices & Billing',
-        badge: { text: `${unpaidInvoicesCount} Due`, type: unpaidInvoicesCount > 0 ? 'rose' : 'emerald' },
-        tags: ['15% VAT Compliant', 'Non-VAT Exempt', 'TIN Matching', 'Printable PDF'],
+        primaryLabel: 'Open Sales & Billing',
+        badge: {
+          text: unpaidInvoicesCount > 0 ? `${unpaidInvoicesCount} Due • ${invoices.length} Total` : `${invoices.length} Invoices`,
+          type: unpaidInvoicesCount > 0 ? 'rose' : 'emerald',
+        },
+        tags: ['Official Proformas', '15% VAT Compliant', 'Non-VAT Exempt', 'Telebirr & CBE', 'Receipts Ledger'],
         quickActions: [
-          { label: 'Invoice Register', href: '/dashboard/sales' },
-          { label: 'Issue Tax Invoice', href: '/dashboard/sales' },
-        ],
-      },
-      {
-        id: 'sales-collections',
-        category: 'sales',
-        categoryName: 'Sales',
-        categoryColor: '#10b981',
-        title: 'Collections & Digital Receipts',
-        subtitle: 'Telebirr, CBE, Chapa, Awash & Cash receipts',
-        description:
-          'Record client settlements with transaction reference validation. Automatically updates invoice payment status and releases customer credit limits.',
-        icon: Wallet,
-        primaryHref: '/dashboard/collections',
-        primaryLabel: 'Collections Desk',
-        badge: { text: `${collections.length} Payments`, type: 'emerald' },
-        tags: ['Telebirr Payment', 'CBE Bank Transfer', 'Chapa Gateway', 'Cash Desk'],
-        quickActions: [
-          { label: 'Payment Ledger', href: '/dashboard/collections' },
-          { label: 'Record New Receipt', href: '/dashboard/collections' },
+          { label: 'Proforma Register', href: '/dashboard/sales' },
+          { label: 'Tax Invoices', href: '/dashboard/sales' },
+          { label: 'Collections Desk', href: '/dashboard/collections' },
         ],
       },
 
       // 4. HR
       {
-        id: 'hr-employees',
+        id: 'module-hr',
         category: 'hr',
-        categoryName: 'HR',
+        categoryName: 'Module 4 • HR',
         categoryColor: '#a855f7',
-        title: 'Employee Directory & Wages',
-        subtitle: 'Staff profiles, positions & hourly rates',
+        title: 'Human Resources & Payroll',
+        subtitle: 'Staff roster, shift tracking, overtime costing & pension',
         description:
-          'Manage workforce records across Design, Production, Assembly, Installation, Sales, and Admin with hourly/monthly wage parameters.',
-        icon: Users,
-        primaryHref: '/dashboard/payroll',
-        primaryLabel: 'Employee Roster',
-        badge: { text: `${employees.length} Staff`, type: 'purple' },
-        tags: ['Designers', 'Machine Operators', 'Welders & Installers', 'Wage Rates'],
-        quickActions: [
-          { label: 'Employee List', href: '/dashboard/payroll' },
-          { label: 'Add Employee', href: '/dashboard/payroll' },
-        ],
-      },
-      {
-        id: 'hr-attendance',
-        category: 'hr',
-        categoryName: 'HR',
-        categoryColor: '#a855f7',
-        title: 'Attendance & Time Tracker',
-        subtitle: 'Daily clock-in/out & operator shift logs',
-        description:
-          'Track daily presence, shift punctuality, and hours logged by workshop technicians and machine operators.',
+          'Workforce administration: manage production technicians and office staff, monitor daily clock-in/out attendance, allocate rush overtime (1.25x/1.5x) to client jobs, and process Ethiopian statutory payroll (11% + 7% pension).',
         icon: CalendarCheck,
         primaryHref: '/dashboard/payroll',
-        primaryLabel: 'Attendance Logs',
-        badge: { text: 'Daily Roster', type: 'purple' },
-        tags: ['Shift Tracking', 'Clock-in / Out', 'Absence Control', 'Work Shifts'],
+        primaryLabel: 'Open HR & Payroll',
+        badge: { text: `${employees.length} Staff Members`, type: 'purple' },
+        tags: ['Staff Roster', 'Shift Attendance', 'Overtime Direct Cost', '11% Employer Pension', '7% Employee Pension'],
         quickActions: [
-          { label: 'Daily Timesheet', href: '/dashboard/payroll' },
-          { label: 'Log Attendance', href: '/dashboard/payroll' },
-        ],
-      },
-      {
-        id: 'hr-overtime',
-        category: 'hr',
-        categoryName: 'HR',
-        categoryColor: '#a855f7',
-        title: 'Overtime & Labor Allocation',
-        subtitle: 'Overtime multipliers (1.25x/1.5x/2x) & job tags',
-        description:
-          'Crucial for rush advertising deadlines. Log approved overtime hours and directly allocate operator labor expenses to specific customer jobs.',
-        icon: Clock,
-        primaryHref: '/dashboard/payroll',
-        primaryLabel: 'Overtime & Job Labor',
-        badge: { text: 'Direct Costing', type: 'purple' },
-        tags: ['1.25x Overtime', '1.5x Night/Weekend', 'Direct Labor Cost', 'Order Tagging'],
-        quickActions: [
-          { label: 'Overtime Logs', href: '/dashboard/payroll' },
-          { label: 'Allocate to Order', href: '/dashboard/payroll' },
-        ],
-      },
-      {
-        id: 'hr-payroll',
-        category: 'hr',
-        categoryName: 'HR',
-        categoryColor: '#a855f7',
-        title: 'Payroll Runs & Tax Slips',
-        subtitle: 'Pension (11% + 7%), tax brackets & payslips',
-        description:
-          'Automated monthly payroll processing with statutory Ethiopian deductions: 11% employer pension, 7% employee pension, and income tax tiers.',
-        icon: DollarSign,
-        primaryHref: '/dashboard/payroll',
-        primaryLabel: 'Payroll Processing',
-        badge: { text: 'Monthly Run', type: 'purple' },
-        tags: ['11% Employer Pension', '7% Employee Pension', 'Income Tax Tiers', 'Net Pay'],
-        quickActions: [
-          { label: 'Run Monthly Payroll', href: '/dashboard/payroll' },
-          { label: 'Download Slips', href: '/dashboard/payroll' },
+          { label: 'Employee Roster', href: '/dashboard/payroll' },
+          { label: 'Shift Attendance', href: '/dashboard/payroll' },
+          { label: 'Overtime Allocation', href: '/dashboard/payroll' },
+          { label: 'Monthly Payroll', href: '/dashboard/payroll' },
         ],
       },
 
       // 5. INVENTORY
       {
-        id: 'inventory-stores',
+        id: 'module-inventory',
         category: 'inventory',
-        categoryName: 'Inventory',
+        categoryName: 'Module 5 • Inventory',
         categoryColor: '#f59e0b',
-        title: 'Stores & Stock Catalog',
-        subtitle: 'Raw vinyl, acrylic, sheet metals, LEDs & inks',
+        title: 'Inventory, Stores & Procurement',
+        subtitle: 'Substrate catalog, supplier POs, GRN inspection & scrap',
         description:
-          'Monitor item balances, unit costs, reorder levels, and Amharic naming across Main Store, Raw Materials Warehouse, and Floor Stores.',
+          'Raw materials logistics: track vinyl, acrylic sheets & inks across warehouses, issue supplier purchase orders, perform inbound Goods Receipt (GRN) quality inspection, and log production off-cut wastage.',
         icon: Boxes,
         primaryHref: '/dashboard/inventory',
-        primaryLabel: 'Stock Catalog',
+        primaryLabel: 'Open Inventory & Stores',
         badge: {
-          text: lowStockItems.length > 0 ? `${lowStockItems.length} Low Stock` : `${items.length} Items`,
+          text: lowStockItems.length > 0 ? `${lowStockItems.length} Low Stock Alert` : `${items.length} Catalog Items`,
           type: lowStockItems.length > 0 ? 'amber' : 'emerald',
         },
-        tags: ['Stock Balances', 'Amharic Names', 'Reorder Triggers', 'Multi-Store'],
+        tags: ['Stores Catalog', 'Supplier POs', 'Inbound GRN QA', 'Store Transfers', 'Wastage & Scrap'],
         quickActions: [
-          { label: 'View Stock Matrix', href: '/dashboard/inventory' },
-          { label: 'Low Stock Alerts', href: '/dashboard/inventory' },
-        ],
-      },
-      {
-        id: 'inventory-purchase',
-        category: 'inventory',
-        categoryName: 'Inventory',
-        categoryColor: '#f59e0b',
-        title: 'Purchasing & Supplier POs',
-        subtitle: 'Purchase requisitions, supplier POs & approvals',
-        description:
-          'Manage vendor quotes, issue approved Purchase Orders, record supplier payment terms, and track delivery ETAs for raw substrates and inks.',
-        icon: ShoppingCart,
-        primaryHref: '/dashboard/procurement',
-        primaryLabel: 'Purchase Orders',
-        badge: { text: `${pendingPOsCount} Active POs`, type: 'amber' },
-        tags: ['Supplier POs', 'Payment Terms', 'Input VAT 15%', 'Approval Flow'],
-        quickActions: [
-          { label: 'PO Register', href: '/dashboard/procurement' },
-          { label: 'Create Purchase Order', href: '/dashboard/procurement' },
-        ],
-      },
-      {
-        id: 'inventory-grn',
-        category: 'inventory',
-        categoryName: 'Inventory',
-        categoryColor: '#f59e0b',
-        title: 'Goods Receipt Note (GRN)',
-        subtitle: 'Inbound inspection, batch lots & accepted qty',
-        description:
-          'Inspect incoming goods from suppliers. Record accepted vs rejected counts, lot/batch numbers, and automatically increment target warehouse balances.',
-        icon: Truck,
-        primaryHref: '/dashboard/procurement',
-        primaryLabel: 'Goods Receipts',
-        badge: { text: 'Quality QA', type: 'amber' },
-        tags: ['Inbound QA', 'Store Destination', 'Batch / Lot #', 'Receipt Verification'],
-        quickActions: [
-          { label: 'Receive Goods', href: '/dashboard/procurement' },
-          { label: 'Receipt History', href: '/dashboard/procurement' },
-        ],
-      },
-      {
-        id: 'inventory-transfers',
-        category: 'inventory',
-        categoryName: 'Inventory',
-        categoryColor: '#f59e0b',
-        title: 'Store Transfers & Issues',
-        subtitle: 'Inter-warehouse transfers & job stock issues',
-        description:
-          'Execute immutable stock movements: transfer acrylic rolls from Raw Store to Production Floor, or issue materials directly to a customer work order.',
-        icon: ArrowRightLeft,
-        primaryHref: '/dashboard/inventory',
-        primaryLabel: 'Stock Movements',
-        badge: { text: 'Movement Log', type: 'amber' },
-        tags: ['Inter-Store Transfer', 'Production Issue', 'Count Adjustment', 'Audit Log'],
-        quickActions: [
-          { label: 'Transfer Stock', href: '/dashboard/inventory' },
-          { label: 'Movement Ledger', href: '/dashboard/inventory' },
-        ],
-      },
-      {
-        id: 'inventory-wastage',
-        category: 'inventory',
-        categoryName: 'Inventory',
-        categoryColor: '#f59e0b',
-        title: 'Wastage & Scrap Tracker',
-        subtitle: 'Reason tagging (damaged, off-cut, scrap, expired)',
-        description:
-          'Minimize workshop losses. Record scrap quantities with reason codes, responsible staff, and automatically attribute cost to the linked work order.',
-        icon: Trash2,
-        primaryHref: '/dashboard/inventory',
-        primaryLabel: 'Wastage Center',
-        badge: { text: `${wastages.length} Logs`, type: 'rose' },
-        tags: ['Off-cut Loss', 'Print Scrap', 'Operator Error', 'Cost Impact'],
-        quickActions: [
-          { label: 'Log Wastage Form', href: '/dashboard/inventory' },
-          { label: 'Wastage Analytics', href: '/dashboard/inventory' },
+          { label: 'Stock Matrix', href: '/dashboard/inventory' },
+          { label: 'Purchase Orders', href: '/dashboard/procurement' },
+          { label: 'Goods Receipts (GRN)', href: '/dashboard/procurement' },
+          { label: 'Store Transfers', href: '/dashboard/inventory' },
+          { label: 'Wastage Center', href: '/dashboard/inventory' },
         ],
       },
 
       // 6. FINANCE
       {
-        id: 'finance-revenue',
+        id: 'module-finance',
         category: 'finance',
-        categoryName: 'Finance',
-        categoryColor: '#10b981',
-        title: 'Revenue & Cash Inflow',
-        subtitle: 'Invoiced revenue, cash collected & AR aging',
+        categoryName: 'Module 6 • Finance',
+        categoryColor: '#3b82f6',
+        title: 'Finance, Expenses & P&L',
+        subtitle: 'Cash flow, operating overhead, income statement & VAT ledger',
         description:
-          'Monitor top-line business velocity. Compare net invoiced billings against realized digital collections, and review 30/60/90-day aging balances.',
-        icon: Landmark,
+          'Financial controller suite: compare invoiced billings against realized collections, record factory overhead and job-specific expenses, monitor operating P&L margins, and reconcile net 15% ERCA VAT payable.',
+        icon: TrendingUp,
         primaryHref: '/dashboard/finance',
-        primaryLabel: 'Revenue Analysis',
-        badge: { text: `ETB ${(companyFinancials.totalRevenueNet / 1000).toFixed(0)}k`, type: 'emerald' },
-        tags: ['Net Revenue', 'Cash Realization', 'AR Aging', 'Credit Utilization'],
+        primaryLabel: 'Open Finance & P&L',
+        badge: { text: `ETB ${(companyFinancials.totalRevenueNet / 1000).toFixed(0)}k Net Rev`, type: 'emerald' },
+        tags: ['Cash Realization', 'Operating Expenses', 'Income Statement (P&L)', '15% Output VAT', 'Input VAT Deductions'],
         quickActions: [
           { label: 'Revenue Trends', href: '/dashboard/finance' },
-          { label: 'Receivables Aging', href: '/dashboard/finance' },
-        ],
-      },
-      {
-        id: 'finance-expenses',
-        category: 'finance',
-        categoryName: 'Finance',
-        categoryColor: '#10b981',
-        title: 'Operating & Job Expenses',
-        subtitle: 'Fixed overhead vs job-linked variable expenses',
-        description:
-          'Track factory rent, electricity, delivery truck fuel, and order-specific contractor expenses. Seamlessly link expenses to customer jobs.',
-        icon: PieChart,
-        primaryHref: '/dashboard/expenses',
-        primaryLabel: 'Expense Ledger',
-        badge: { text: `ETB ${(companyFinancials.totalExpenses / 1000).toFixed(0)}k`, type: 'emerald' },
-        tags: ['Fixed Costs', 'Order-Linked Fuel', 'Equipment Maintenance', 'Overhead'],
-        quickActions: [
-          { label: 'Record Expense Form', href: '/dashboard/expenses' },
-          { label: 'Expense Breakdown', href: '/dashboard/expenses' },
-        ],
-      },
-      {
-        id: 'finance-pnl',
-        category: 'finance',
-        categoryName: 'Finance',
-        categoryColor: '#10b981',
-        title: 'Income Statement (P&L)',
-        subtitle: 'Gross profit, operating margins & net income',
-        description:
-          'Executive P&L ledger: Net Revenue − Direct COGS = Gross Profit − Operating Expenses = Net Operating Income and overall business margin %.',
-        icon: Scale,
-        primaryHref: '/dashboard/finance',
-        primaryLabel: 'P&L Statement',
-        badge: {
-          text: `${companyFinancials.totalRevenueNet > 0 ? ((companyFinancials.operatingProfit / companyFinancials.totalRevenueNet) * 100).toFixed(1) : 0}% Net`,
-          type: 'emerald',
-        },
-        tags: ['COGS Rollup', 'Gross Profit', 'Operating Income', 'Net Margin'],
-        quickActions: [
-          { label: 'View Income Statement', href: '/dashboard/finance' },
-          { label: 'Export P&L', href: '/dashboard/finance' },
-        ],
-      },
-      {
-        id: 'finance-vat',
-        category: 'finance',
-        categoryName: 'Finance',
-        categoryColor: '#10b981',
-        title: 'VAT Statement & ERCA Ledger',
-        subtitle: 'Output VAT vs Input VAT = Net VAT payable',
-        description:
-          'Stay compliant with Ethiopian tax authorities. Automatically reconciles 15% Output VAT collected on sales against Input VAT paid on purchases.',
-        icon: Receipt,
-        primaryHref: '/dashboard/finance',
-        primaryLabel: 'VAT Statement',
-        badge: { text: `ETB ${(companyFinancials.netVatPayable / 1000).toFixed(0)}k Tax`, type: 'emerald' },
-        tags: ['15% Output VAT', 'Input VAT Deductions', 'Net Payable', 'ERCA Return'],
-        quickActions: [
-          { label: 'VAT Summary', href: '/dashboard/finance' },
-          { label: 'Tax Audit Schedule', href: '/dashboard/finance' },
+          { label: 'Expense Ledger', href: '/dashboard/expenses' },
+          { label: 'P&L Statement', href: '/dashboard/finance' },
+          { label: 'VAT Summary (ERCA)', href: '/dashboard/finance' },
         ],
       },
 
       // 7. REPORT
       {
-        id: 'report-comparisons',
+        id: 'module-report',
         category: 'report',
-        categoryName: 'Report',
+        categoryName: 'Module 7 • Report',
         categoryColor: '#ec4899',
-        title: 'Performance Comparisons',
-        subtitle: 'Month-over-month growth & budget variance',
+        title: 'Reports, Analytics & Audit',
+        subtitle: 'MoM comparisons, formatted exports & immutable audit log',
         description:
-          'Analyze operational trends: compare monthly sales targets against actuals, estimated quote cost vs final factory cost, and machine uptime.',
+          'Operational business intelligence: compare sales targets against actuals, analyze production scrap trends, export structured CSV/Excel and print-ready PDF reports, and inspect the chronological user audit trail.',
         icon: BarChart3,
         primaryHref: '/dashboard/finance',
-        primaryLabel: 'Comparative Analytics',
-        badge: { text: 'Monthly MoM', type: 'purple' },
-        tags: ['Estimated vs Actual', 'Sales Targets', 'Scrap Trends', 'Department Benchmarks'],
+        primaryLabel: 'Open Reports & Audit',
+        badge: { text: 'Export & Audit', type: 'purple' },
+        tags: ['MoM Performance', 'Budget Variance', 'CSV / Excel Export', 'Printable PDF', 'User Audit Trail'],
         quickActions: [
-          { label: 'Cost Variance Report', href: '/dashboard/finance' },
-          { label: 'Monthly Growth', href: '/dashboard/finance' },
-        ],
-      },
-      {
-        id: 'report-exports',
-        category: 'report',
-        categoryName: 'Report',
-        categoryColor: '#ec4899',
-        title: 'Export Center & Downloads',
-        subtitle: 'Exportable CSV, Excel & printable PDF reports',
-        description:
-          'One-click extraction of formatted datasets for management, tax accountants, and board review. Generate print-ready executive summaries.',
-        icon: FileSpreadsheet,
-        primaryHref: '/dashboard/finance',
-        primaryLabel: 'Export Center',
-        badge: { text: 'CSV & PDF', type: 'purple' },
-        tags: ['Excel Sheets', 'CSV Raw Export', 'Printable PDF', 'Accounting Schedule'],
-        quickActions: [
-          { label: 'Export Financials', href: '/dashboard/finance' },
-          { label: 'Export Inventory', href: '/dashboard/inventory' },
-        ],
-      },
-      {
-        id: 'report-audit',
-        category: 'report',
-        categoryName: 'Report',
-        categoryColor: '#ec4899',
-        title: 'Audit Trail ("Who, What & When")',
-        subtitle: 'Chronological immutable log of all user actions',
-        description:
-          'Enterprise accountability ledger. Detailed record of who created purchase orders, who approved proofs, who issued stock, and who accepted cash.',
-        icon: History,
-        primaryHref: '/dashboard/finance',
-        primaryLabel: 'Audit Trail Log',
-        badge: { text: 'Activity Log', type: 'purple' },
-        tags: ['User Accountability', 'Timestamped Log', 'Stock Approvals', 'Cash Verification'],
-        quickActions: [
-          { label: 'View Activity Stream', href: '/dashboard/finance' },
-          { label: 'Security Log', href: '/dashboard/finance' },
+          { label: 'Comparative Analytics', href: '/dashboard/finance' },
+          { label: 'Export Center', href: '/dashboard/finance' },
+          { label: 'Audit Trail ("Who & When")', href: '/dashboard/finance' },
         ],
       },
 
       // 8. DASHBOARD
       {
-        id: 'dashboard-cockpit',
+        id: 'module-dashboard',
         category: 'dashboard',
-        categoryName: 'Dashboard',
-        categoryColor: '#4f46e5',
-        title: 'Executive Cockpit',
+        categoryName: 'Module 8 • Dashboard',
+        categoryColor: '#8b5cf6',
+        title: 'Executive Dashboard & Cockpit',
         subtitle: 'Unified operational summary across all 8 modules',
         description:
-          'Single-pane-of-glass executive view: High-level financial KPIs, critical low-stock warnings, live work orders, and instant action shortcuts.',
+          'Single-pane-of-glass executive overview: consolidate high-level financial KPIs, critical low-stock warnings, live workshop orders, pending receivables, and instant shortcuts to every department.',
         icon: LayoutDashboard,
         primaryHref: '/dashboard',
-        primaryLabel: 'Launch Dashboard',
+        primaryLabel: 'Launch Executive Cockpit',
         badge: { text: 'Master Cockpit', type: 'indigo' },
-        tags: ['Executive Overview', 'Live Alerts', 'Multi-Module KPI', 'Quick Launch'],
+        tags: ['Executive Overview', 'Live Alerts', 'Multi-Module KPI', 'Real-time Metrics', 'Quick Launch'],
         quickActions: [
-          { label: 'Open Main Dashboard', href: '/dashboard' },
-          { label: 'System Overview', href: '/dashboard' },
+          { label: 'Executive Cockpit', href: '/dashboard' },
+          { label: 'Financial Health', href: '/dashboard/finance' },
+          { label: 'Production Status', href: '/dashboard/orders' },
         ],
       },
     ],
     [
+      leads.length,
       customers.length,
       activeOrdersCount,
       openWOsCount,
       unpaidInvoicesCount,
-      collections.length,
+      invoices.length,
       employees.length,
       lowStockItems.length,
       items.length,
-      pendingPOsCount,
-      wastages.length,
       companyFinancials,
     ]
   );
@@ -651,7 +321,7 @@ export default function ModulesDirectoryPage() {
   }, [cards, activeCategory, searchQuery]);
 
   const categories: { key: ModuleCategory; label: string; count: number }[] = [
-    { key: 'all', label: 'All Modules & Forms', count: cards.length },
+    { key: 'all', label: 'All 8 Modules', count: cards.length },
     { key: 'crm', label: '1. CRM', count: cards.filter((c) => c.category === 'crm').length },
     { key: 'order', label: '2. Order', count: cards.filter((c) => c.category === 'order').length },
     { key: 'sales', label: '3. Sales', count: cards.filter((c) => c.category === 'sales').length },
@@ -760,7 +430,7 @@ export default function ModulesDirectoryPage() {
             <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)', marginTop: '4px' }}>
               8 Core Modules
             </div>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>24 Workflows & Forms</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Unified Operations Hub</div>
           </div>
 
           <div
@@ -872,7 +542,7 @@ export default function ModulesDirectoryPage() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '13px' }}>
             <Filter size={15} />
-            <span>Showing {filteredCards.length} of {cards.length} cards</span>
+            <span>Showing {filteredCards.length} of {cards.length} modules</span>
           </div>
         </div>
 
@@ -938,10 +608,10 @@ export default function ModulesDirectoryPage() {
         >
           <Search size={36} style={{ color: 'var(--text-dim)', marginBottom: '16px' }} />
           <h3 style={{ fontSize: '18px', color: 'var(--text-main)', marginBottom: '8px' }}>
-            No matching modules or forms found
+            No matching modules found
           </h3>
           <p style={{ fontSize: '14px', color: 'var(--text-muted)', maxWidth: '400px', margin: '0 auto 20px' }}>
-            Try adjusting your search query or reset the category filter to browse all 24 cards.
+            Try adjusting your search query or reset the category filter to browse all 8 modules.
           </p>
           <button
             onClick={() => {
