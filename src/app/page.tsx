@@ -156,7 +156,7 @@ export default function ModulesDirectoryPage() {
         description:
           'Commercial tax compliance: issue official Ethiopian proformas with validity terms, print statutory 15% VAT or Non-VAT invoices with QR verification, and reconcile digital receipts via Telebirr, CBE & cash.',
         icon: Receipt,
-        primaryHref: '/dashboard/sales',
+        primaryHref: '/sales',
         primaryLabel: 'Open Sales & Billing',
         badge: {
           text: unpaidInvoicesCount > 0 ? `${unpaidInvoicesCount} Due • ${invoices.length} Total` : `${invoices.length} Invoices`,
@@ -181,7 +181,7 @@ export default function ModulesDirectoryPage() {
         description:
           'Workforce administration: manage production technicians and office staff, monitor daily clock-in/out attendance, allocate rush overtime (1.25x/1.5x) to client jobs, and process Ethiopian statutory payroll (11% + 7% pension).',
         icon: CalendarCheck,
-        primaryHref: '/dashboard/payroll',
+        primaryHref: '/payroll',
         primaryLabel: 'Open HR & Payroll',
         badge: { text: `${employees.length} Staff Members`, type: 'purple' },
         tags: ['Staff Roster', 'Shift Attendance', 'Overtime Direct Cost', '11% Employer Pension', '7% Employee Pension'],
@@ -204,7 +204,7 @@ export default function ModulesDirectoryPage() {
         description:
           'Raw materials logistics: track vinyl, acrylic sheets & inks across warehouses, issue supplier purchase orders, perform inbound Goods Receipt (GRN) quality inspection, and log production off-cut wastage.',
         icon: Boxes,
-        primaryHref: '/dashboard/inventory',
+        primaryHref: '/inventory',
         primaryLabel: 'Open Inventory & Stores',
         badge: {
           text: lowStockItems.length > 0 ? `${lowStockItems.length} Low Stock Alert` : `${items.length} Catalog Items`,
@@ -231,7 +231,7 @@ export default function ModulesDirectoryPage() {
         description:
           'Financial controller suite: compare invoiced billings against realized collections, record factory overhead and job-specific expenses, monitor operating P&L margins, and reconcile net 15% ERCA VAT payable.',
         icon: TrendingUp,
-        primaryHref: '/dashboard/finance',
+        primaryHref: '/finance',
         primaryLabel: 'Open Finance & P&L',
         badge: { text: `ETB ${(companyFinancials.totalRevenueNet / 1000).toFixed(0)}k Net Rev`, type: 'emerald' },
         tags: ['Cash Realization', 'Operating Expenses', 'Income Statement (P&L)', '15% Output VAT', 'Input VAT Deductions'],
@@ -254,7 +254,7 @@ export default function ModulesDirectoryPage() {
         description:
           'Operational business intelligence: compare sales targets against actuals, analyze production scrap trends, export structured CSV/Excel and print-ready PDF reports, and inspect the chronological user audit trail.',
         icon: BarChart3,
-        primaryHref: '/dashboard/finance',
+        primaryHref: '/report',
         primaryLabel: 'Open Reports & Audit',
         badge: { text: 'Export & Audit', type: 'purple' },
         tags: ['MoM Performance', 'Budget Variance', 'CSV / Excel Export', 'Printable PDF', 'User Audit Trail'],
