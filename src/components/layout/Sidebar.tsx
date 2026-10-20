@@ -13,16 +13,18 @@ import {
   Receipt,
   Wallet,
   Users,
+  UserCheck,
   PieChart,
   TrendingUp,
 } from 'lucide-react';
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { lowStockItems, invoices, orders } = useErp();
+  const { lowStockItems, invoices, orders, leads } = useErp();
 
   const unpaidInvoices = invoices.filter((i) => i.paymentStatus !== 'paid');
   const activeOrders = orders.filter((o) => o.status === 'in_production' || o.status === 'pending');
+  const activeLeads = leads.filter((l) => l.stage !== 'lost' && l.stage !== 'won');
 
   const navItems = [
     {
@@ -36,6 +38,13 @@ export default function Sidebar() {
       icon: LayoutGrid,
       badge: '24 Hub',
       badgeType: 'emerald',
+    },
+    {
+      label: 'CRM & Leads',
+      href: '/crm',
+      icon: UserCheck,
+      badge: activeLeads.length > 0 ? `${activeLeads.length} Leads` : undefined,
+      badgeType: 'primary',
     },
     {
       label: 'Inventory & Stores',

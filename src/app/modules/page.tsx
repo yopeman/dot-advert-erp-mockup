@@ -78,6 +78,7 @@ export default function ModulesDirectoryPage() {
     invoices,
     collections,
     employees,
+    leads,
     items,
     lowStockItems,
     purchaseOrders,
@@ -110,13 +111,13 @@ export default function ModulesDirectoryPage() {
         description:
           'Capture incoming signage/printing inquiries, schedule site measurements, record client dimensions, and qualify opportunities before issuing quotations.',
         icon: Users,
-        primaryHref: '/sales',
+        primaryHref: '/crm',
         primaryLabel: 'Open CRM Leads',
-        badge: { text: '3 Inquiries', type: 'indigo' },
+        badge: { text: `${leads.length} Deals`, type: 'indigo' },
         tags: ['Walk-ins', 'Site Measurements', 'Lead Qualification', 'Tenders'],
         quickActions: [
-          { label: 'View Pipeline', href: '/sales' },
-          { label: 'New Inquiry Form', href: '/sales' },
+          { label: 'Pipeline Funnel', href: '/crm' },
+          { label: 'Site Surveys', href: '/crm' },
         ],
       },
       {
@@ -129,12 +130,12 @@ export default function ModulesDirectoryPage() {
         description:
           'Maintain verified client profiles with Ethiopian TIN registrations, custom payment terms, credit limits, and automated balance protection.',
         icon: UserCheck,
-        primaryHref: '/sales',
+        primaryHref: '/crm',
         primaryLabel: 'Manage Customers',
         badge: { text: `${customers.length} Accounts`, type: 'indigo' },
         tags: ['TIN Verified', 'Credit Limit Check', 'Payment Terms', 'Ledger'],
         quickActions: [
-          { label: 'Customer List', href: '/sales' },
+          { label: 'Customer Directory', href: '/crm' },
           { label: 'Credit Balances', href: '/collections' },
         ],
       },

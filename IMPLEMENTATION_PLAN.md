@@ -9,20 +9,20 @@ An enterprise-grade, fully interactive, frontend-only mockup for **Dot Advert ER
 The system is structured around **8 distinct operational modules** tailored specifically for advertising, large format printing, and custom signage manufacturing in Ethiopia (ETB currency, 15% VAT / Non-VAT dual compliance, Telebirr/CBE/Chapa collections, and statutory pension/overtime rules):
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                      DOT ADVERT ERP — 8 CORE MODULES                        │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 1. CRM          : Lead Management, Customer Accounts, Site Measurements     │
-│ 2. Order        : Customer Orders, Graphic Design Proofing, Production BOM  │
-│ 3. Sales        : Proforma Invoices, Tax Invoices (15% VAT/Exempt), Receipts│
-│ 4. HR           : Employee Roster, Daily Attendance, Overtime, Payroll      │
-│ 5. Inventory    : Stores & Warehouses, Purchasing (PO/GRN), Transfers, Scrap│
-│ 6. Finance      : Income & Cash Flow, Operating Expenses, Net Margin, VAT   │
-│ 7. Report       : Comparisons, Visual Analytics, Export, Audit Log (Who/When)│
-│ 8. Dashboard    : Executive Cockpit & Unified Multi-Module Summary          │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ ★ MODULES & FORMS DIRECTORY (/modules): Universal Interactive Card Hub      │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                      DOT ADVERT ERP — 8 CORE MODULES                          │
+├───────────────────────────────────────────────────────────────────────────────┤
+│ 1. CRM          : Lead Management, Customer Accounts, Site Measurements       │
+│ 2. Order        : Customer Orders, Graphic Design Proofing, Production BOM    │
+│ 3. Sales        : Proforma Invoices, Tax Invoices (15% VAT/Exempt), Receipts  │
+│ 4. HR           : Employee Roster, Daily Attendance, Overtime, Payroll        │
+│ 5. Inventory    : Stores & Warehouses, Purchasing (PO/GRN), Transfers, Scrap  │
+│ 6. Finance      : Income & Cash Flow, Operating Expenses, Net Margin, VAT     │
+│ 7. Report       : Comparisons, Visual Analytics, Export, Audit Log (Who/When) │
+│ 8. Dashboard    : Executive Cockpit & Unified Multi-Module Summary            │
+├───────────────────────────────────────────────────────────────────────────────┤
+│ ★ MODULES & FORMS DIRECTORY (/modules): Universal Interactive Card Hub        │
+└───────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---

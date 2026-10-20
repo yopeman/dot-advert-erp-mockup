@@ -169,6 +169,52 @@ export interface GoodsReceipt {
   notes?: string;
 }
 
+export type LeadStage = 'new' | 'site_visit' | 'quoted' | 'negotiation' | 'won' | 'lost';
+export type LeadSource = 'walk_in' | 'phone_inquiry' | 'referral' | 'tender' | 'social_media' | 'field_sales';
+export type SignageType =
+  | 'acrylic_3d'
+  | 'billboard_skin'
+  | 'pylon_sign'
+  | 'neon_led'
+  | 'vehicle_branding'
+  | 'expo_booth'
+  | 'indoor_pos'
+  | 'other';
+
+export interface SiteSurvey {
+  locationAddress: string;
+  widthMeters: number;
+  heightMeters: number;
+  installationHeightMeters: number;
+  powerSourceAvailable: boolean;
+  indoorOutdoor: 'indoor' | 'outdoor';
+  surveyDate?: string;
+  surveyorName?: string;
+  notes?: string;
+}
+
+export interface Lead {
+  id: string;
+  leadNumber: string;
+  date: string;
+  companyName: string;
+  contactPerson: string;
+  phone: string;
+  email?: string;
+  tin?: string;
+  city: string;
+  stage: LeadStage;
+  source: LeadSource;
+  projectType: SignageType;
+  estimatedBudget: number; // in ETB
+  probabilityPercent: number; // 10 - 100%
+  expectedCloseDate: string;
+  assignedTo: string;
+  siteSurvey?: SiteSurvey;
+  notes?: string;
+  convertedCustomerId?: string;
+}
+
 export interface Customer {
   id: string;
   code: string;

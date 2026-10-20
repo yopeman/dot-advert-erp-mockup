@@ -21,12 +21,13 @@ import {
   WastageReason,
   PaymentMethod,
   OrderStatus,
-  InvoiceType,
+  Lead,
 } from '@/types/erp';
 import {
   INITIAL_ITEMS,
   INITIAL_STORES,
   INITIAL_SUPPLIERS,
+  INITIAL_LEADS,
   INITIAL_CUSTOMERS,
   INITIAL_ORDERS,
   INITIAL_WORK_ORDERS,
@@ -46,6 +47,7 @@ interface ErpContextType {
   items: Item[];
   stores: Store[];
   suppliers: Supplier[];
+  leads: Lead[];
   customers: Customer[];
   orders: CustomerOrder[];
   workOrders: WorkOrder[];
@@ -82,6 +84,13 @@ interface ErpContextType {
     orderId?: string;
     notes?: string;
   }) => void;
+
+  // CRM & Customer Actions
+  createLead: (lead: Omit<Lead, 'id' | 'leadNumber' | 'date'>) => Lead;
+  updateLead: (leadId: string, updates: Partial<Lead>) => void;
+  createCustomer: (customer: Omit<Customer, 'id' | 'code' | 'outstandingBalance'>) => Customer;
+  updateCustomer: (customerId: string, updates: Partial<Customer>) => void;
+  convertLeadToCustomer: (leadId: string, customerData?: Partial<Customer>) => Customer;
 
   createPurchaseOrder: (po: Omit<PurchaseOrder, 'id' | 'poNumber' | 'date' | 'status'>) => void;
   receivePurchaseOrder: (poId: string, storeId: string) => void;
@@ -132,6 +141,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<Item[]>(INITIAL_ITEMS);
   const [stores, setStores] = useState<Store[]>(INITIAL_STORES);
   const [suppliers, setSuppliers] = useState<Supplier[]>(INITIAL_SUPPLIERS);
+  const [leads, setLeads] = useState<Lead[]>(INITIAL_LEADS);
   const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
   const [orders, setOrders] = useState<CustomerOrder[]>(INITIAL_ORDERS);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>(INITIAL_WORK_ORDERS);
@@ -155,6 +165,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       setItems(getStored('items', INITIAL_ITEMS));
       setStores(getStored('stores', INITIAL_STORES));
       setSuppliers(getStored('suppliers', INITIAL_SUPPLIERS));
+      setLeads(getStored('leads', INITIAL_LEADS));
       setCustomers(getStored('customers', INITIAL_CUSTOMERS));
       setOrders(getStored('orders', INITIAL_ORDERS));
       setWorkOrders(getStored('workOrders', INITIAL_WORK_ORDERS));
@@ -193,6 +204,11 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     if (!isHydrated) return;
     save('stores', stores);
   }, [stores, isHydrated, save]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    save('leads', leads);
+  }, [leads, isHydrated, save]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -250,6 +266,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     setItems(INITIAL_ITEMS);
     setStores(INITIAL_STORES);
     setSuppliers(INITIAL_SUPPLIERS);
+    setLeads(INITIAL_LEADS);
     setCustomers(INITIAL_CUSTOMERS);
     setOrders(INITIAL_ORDERS);
     setWorkOrders(INITIAL_WORK_ORDERS);
@@ -453,6 +470,92 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       );
     },
     [purchaseOrders, addStockMovement]
+  );
+
+  // CRM: Create Lead
+  const createLead = useCallback(
+    (leadData: Omit<Lead, 'id' | 'leadNumber' | 'date'>): Lead => {
+      const newLead: Lead = {
+        ...leadData,
+        id: `lead-${Date.now()}`,
+        leadNumber: `LEAD-${new Date().getFullYear()}-${String(leads.length + 81).padStart(3, '0')}`,
+        date: new Date().toISOString().split('T')[0],
+      };
+      setLeads((prev) => [newLead, ...prev]);
+      return newLead;
+    },
+    [leads.length]
+  );
+
+  // CRM: Update Lead
+  const updateLead = useCallback(
+    (leadId: string, updates: Partial<Lead>) => {
+      setLeads((prev) =>
+        prev.map((lead) => (lead.id === leadId ? { ...lead, ...updates } : lead))
+      );
+    },
+    []
+  );
+
+  // CRM: Create Customer
+  const createCustomer = useCallback(
+    (custData: Omit<Customer, 'id' | 'code' | 'outstandingBalance'>): Customer => {
+      const cleanCode = custData.name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase();
+      const newCust: Customer = {
+        ...custData,
+        id: `cust-${Date.now()}`,
+        code: `CUST-${cleanCode || 'NEW'}`,
+        outstandingBalance: 0,
+      };
+      setCustomers((prev) => [newCust, ...prev]);
+      return newCust;
+    },
+    []
+  );
+
+  // CRM: Update Customer
+  const updateCustomer = useCallback(
+    (customerId: string, updates: Partial<Customer>) => {
+      setCustomers((prev) =>
+        prev.map((cust) => (cust.id === customerId ? { ...cust, ...updates } : cust))
+      );
+    },
+    []
+  );
+
+  // CRM: Convert Lead to Customer
+  const convertLeadToCustomer = useCallback(
+    (leadId: string, customerData?: Partial<Customer>): Customer => {
+      const targetLead = leads.find((l) => l.id === leadId);
+      if (!targetLead) throw new Error('Lead not found');
+
+      const cleanCode = targetLead.companyName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase();
+      const newCustomer: Customer = {
+        id: `cust-${Date.now()}`,
+        code: `CUST-${cleanCode || 'NEW'}`,
+        name: targetLead.companyName,
+        tin: targetLead.tin || '0000000000',
+        address: targetLead.siteSurvey?.locationAddress || `${targetLead.city}, Ethiopia`,
+        phone: targetLead.phone,
+        email: targetLead.email || `info@${cleanCode.toLowerCase() || 'client'}.com`,
+        customerType: 'business',
+        creditLimit: Math.max(targetLead.estimatedBudget * 1.2, 200000),
+        outstandingBalance: 0,
+        paymentTerms: '30 Days Net',
+        isVatRegistered: true,
+        ...customerData,
+      };
+
+      setCustomers((prev) => [newCustomer, ...prev]);
+      setLeads((prev) =>
+        prev.map((l) =>
+          l.id === leadId ? { ...l, stage: 'won', convertedCustomerId: newCustomer.id } : l
+        )
+      );
+
+      return newCustomer;
+    },
+    [leads]
   );
 
   // MUTATOR: Create Customer Order
@@ -769,6 +872,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         items,
         stores,
         suppliers,
+        leads,
         customers,
         orders,
         workOrders,
@@ -781,6 +885,11 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         stockMovements,
         currentRole,
         setCurrentRole,
+        createLead,
+        updateLead,
+        createCustomer,
+        updateCustomer,
+        convertLeadToCustomer,
         addStockMovement,
         recordWastage,
         createPurchaseOrder,
