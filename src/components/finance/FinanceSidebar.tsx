@@ -22,6 +22,7 @@ import {
   Wallet,
   Receipt,
   ShoppingCart,
+  BarChart3,
 } from 'lucide-react';
 
 function FinanceSidebarContent() {
@@ -95,6 +96,11 @@ function FinanceSidebarContent() {
   ];
 
   const crossNavItems = [
+    {
+      label: 'Reports & Analytics',
+      href: '/report',
+      icon: BarChart3,
+    },
     {
       label: 'Sales & Collections',
       href: '/sales',

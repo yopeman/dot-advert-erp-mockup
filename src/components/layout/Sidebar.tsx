@@ -15,6 +15,7 @@ import {
   Users,
   PieChart,
   TrendingUp,
+  BarChart3,
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -82,6 +83,13 @@ export default function Sidebar() {
       label: 'Finance & Profitability',
       href: '/finance',
       icon: TrendingUp,
+    },
+    {
+      label: 'Reports & Analytics',
+      href: '/report',
+      icon: BarChart3,
+      badge: 'BI Hub',
+      badgeType: 'cyan',
     },
   ];
 

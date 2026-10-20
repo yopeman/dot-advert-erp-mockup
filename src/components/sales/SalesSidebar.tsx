@@ -16,6 +16,7 @@ import {
   LayoutGrid,
   ArrowLeft,
   ChevronRight,
+  BarChart3,
 } from 'lucide-react';
 
 function SalesSidebarContent() {
@@ -87,6 +88,11 @@ function SalesSidebarContent() {
       label: 'Production & Orders',
       href: '/orders',
       icon: Boxes,
+    },
+    {
+      label: 'Reports & Analytics',
+      href: '/report',
+      icon: BarChart3,
     },
     {
       label: 'CRM & Lead Pipeline',
