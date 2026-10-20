@@ -1,0 +1,1900 @@
+'use client';
+
+import React, { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useErp } from '@/context/ErpDataContext';
+import {
+  Cog,
+  TrendingUp,
+  Boxes,
+  Users,
+  Clock,
+  Trash2,
+  Truck,
+  PlusCircle,
+  Search,
+  CheckCircle2,
+  AlertCircle,
+  Eye,
+  ChevronRight,
+  Sparkles,
+  Calendar,
+  X,
+  Layers,
+  ArrowRight,
+  ShieldAlert,
+  Palette,
+  FileCheck,
+  AlertTriangle,
+  Ruler,
+  RefreshCw,
+  Filter,
+} from 'lucide-react';
+import {
+  CustomerOrder,
+  WorkOrder,
+  OrderStatus,
+  DesignProof,
+  DesignStatus,
+  WastageReason,
+  WorkOrderBomItem,
+} from '@/types/erp';
+import DesignProofCard, { getStatusBadge } from '@/components/orders/DesignProofCard';
+import DesignSpecsModal from '@/components/orders/DesignSpecsModal';
+import ApproveProofModal from '@/components/orders/ApproveProofModal';
+import RequestRevisionModal from '@/components/orders/RequestRevisionModal';
+import NewDesignProofModal from '@/components/orders/NewDesignProofModal';
+import LogScrapModal from '@/components/orders/LogScrapModal';
+import WorkOrderCard from '@/components/orders/WorkOrderCard';
+
+function OrdersPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') as 'orders' | 'designs' | 'work_orders' | null;
+
+  const {
+    orders,
+    workOrders,
+    customers,
+    items,
+    employees,
+    wastages,
+    expenses,
+    invoices,
+    designProofs,
+    createCustomerOrder,
+    createWorkOrder,
+    updateWorkOrder,
+    advanceWorkOrderStatus,
+    recordWorkOrderScrap,
+    addBomItemToWorkOrder,
+    updateOrderStatus,
+    createDesignProof,
+    updateDesignProof,
+    approveDesignProof,
+    requestDesignRevision,
+    calculateOrderProfitability,
+    allOrderProfitability,
+    addStockMovement,
+  } = useErp();
+
+  // Active Tab synchronized with query string
+  const [activeTab, setActiveTab] = useState<'orders' | 'designs' | 'work_orders'>(
+    tabParam || 'orders'
+  );
+
+  useEffect(() => {
+    if (tabParam && (tabParam === 'orders' || tabParam === 'designs' || tabParam === 'work_orders')) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
+  const handleTabChange = (tab: 'orders' | 'designs' | 'work_orders') => {
+    setActiveTab(tab);
+    router.push(`/orders?tab=${tab}`);
+  };
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedOrderId, setSelectedOrderId] = useState<string>(orders[0]?.id || '');
+
+  // Filter States
+  const [designStatusFilter, setDesignStatusFilter] = useState<'all' | DesignStatus>('all');
+  const [woStationFilter, setWoStationFilter] = useState<string>('all');
+
+  // Modals State
+  const [showNewOrderModal, setShowNewOrderModal] = useState(false);
+  const [showNewWoModal, setShowNewWoModal] = useState(false);
+  const [showAddHoursModal, setShowAddHoursModal] = useState(false);
+  const [targetWoForHours, setTargetWoForHours] = useState<WorkOrder | null>(null);
+  const [showIssueBomModal, setShowIssueBomModal] = useState(false);
+  const [targetWoForBom, setTargetWoForBom] = useState<WorkOrder | null>(null);
+
+  // Design Proof Modals State
+  const [inspectingProof, setInspectingProof] = useState<DesignProof | null>(null);
+  const [approvingProof, setApprovingProof] = useState<DesignProof | null>(null);
+  const [revisingProof, setRevisingProof] = useState<DesignProof | null>(null);
+  const [showNewDesignModal, setShowNewDesignModal] = useState(false);
+
+  // Scrap Modal State
+  const [scrapTargetWo, setScrapTargetWo] = useState<WorkOrder | null>(null);
+
+  // Toast Notification
+  const [notification, setNotification] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setNotification(msg);
+    setTimeout(() => setNotification(null), 4000);
+  };
+
+  // New Order Form State
+  const [newOrderForm, setNewOrderForm] = useState({
+    customerId: customers[0]?.id || '',
+    title: '',
+    description: '',
+    quantity: 1,
+    unitPrice: 50000,
+    expectedDeliveryDate: '2026-10-30',
+    priority: 'normal' as 'low' | 'normal' | 'high' | 'urgent',
+    notes: '',
+  });
+
+  // Enhanced Multi-Item New Work Order Form State
+  const [newWoForm, setNewWoForm] = useState({
+    customerOrderId: orders[0]?.id || '',
+    productDescription: '',
+    plannedQty: 1,
+    workCenterMachine: 'Roland Wide-Format Eco-Solvent Printer',
+    operatorNames: ['Ermias Kebede'],
+    machineHourlyRate: 650,
+    machineHours: 12,
+    selectedItems: [
+      { itemId: items[0]?.id || '', plannedQty: 20 },
+      { itemId: items[6]?.id || items[1]?.id || '', plannedQty: 30 },
+    ],
+  });
+
+  // Add Hours Form State
+  const [hoursToAdd, setHoursToAdd] = useState(4);
+
+  // Issue BOM Form State
+  const [issueBomItemId, setIssueBomItemId] = useState(items[0]?.id || '');
+  const [issueBomQty, setIssueBomQty] = useState(5);
+
+  const formatETB = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'ETB',
+      maximumFractionDigits: 0,
+    })
+      .format(amount)
+      .replace('ETB', 'ETB ');
+  };
+
+  const selectedOrder = orders.find((o) => o.id === selectedOrderId);
+  const selectedProfitability = selectedOrderId
+    ? calculateOrderProfitability(selectedOrderId)
+    : null;
+  const selectedWOs = workOrders.filter((w) => w.customerOrderId === selectedOrderId);
+  const selectedProof = designProofs.find(
+    (d) => d.customerOrderId === selectedOrderId || d.id === selectedOrder?.designProofId
+  );
+
+  // Customer Credit Limit check for New Order
+  const targetCustomer = customers.find((c) => c.id === newOrderForm.customerId);
+  const availableCredit = targetCustomer
+    ? targetCustomer.creditLimit - targetCustomer.outstandingBalance
+    : 0;
+  const isOverCredit = newOrderForm.quantity * newOrderForm.unitPrice > availableCredit;
+
+  // Handle New Order Submit
+  const handleCreateOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!targetCustomer || !newOrderForm.title) return;
+
+    const totalAgreed = newOrderForm.quantity * newOrderForm.unitPrice;
+
+    const created = createCustomerOrder({
+      customerId: targetCustomer.id,
+      customerName: targetCustomer.name,
+      customerTin: targetCustomer.tin,
+      title: newOrderForm.title,
+      items: [
+        {
+          description: newOrderForm.description || newOrderForm.title,
+          quantity: newOrderForm.quantity,
+          unit: 'piece',
+          unitPrice: newOrderForm.unitPrice,
+          total: totalAgreed,
+        },
+      ],
+      totalAgreedPrice: totalAgreed,
+      expectedDeliveryDate: newOrderForm.expectedDeliveryDate,
+      priority: newOrderForm.priority,
+      notes: newOrderForm.notes,
+    });
+
+    setShowNewOrderModal(false);
+    setSelectedOrderId(created.id);
+    showToast(`Order ${created.orderNumber} placed for ${targetCustomer.name}!`);
+  };
+
+  // Handle Create Work Order (Multi-Item BOM)
+  const handleCreateWorkOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parentOrder = orders.find((o) => o.id === newWoForm.customerOrderId);
+    if (!parentOrder) return;
+
+    const linkedProof = designProofs.find(
+      (d) => d.customerOrderId === parentOrder.id || d.id === parentOrder.designProofId
+    );
+
+    // Build BOM Items
+    const bomItems: WorkOrderBomItem[] = newWoForm.selectedItems
+      .map((si) => {
+        const it = items.find((i) => i.id === si.itemId);
+        if (!it) return null;
+        return {
+          itemId: it.id,
+          itemName: it.name,
+          plannedQty: si.plannedQty,
+          actualIssuedQty: si.plannedQty,
+          unit: it.unit,
+          unitCost: it.purchasePrice,
+          totalCost: si.plannedQty * it.purchasePrice,
+        };
+      })
+      .filter((b): b is WorkOrderBomItem => b !== null);
+
+    createWorkOrder({
+      customerOrderId: parentOrder.id,
+      orderNumber: parentOrder.orderNumber,
+      customerName: parentOrder.customerName,
+      productDescription: newWoForm.productDescription || parentOrder.title,
+      plannedQty: newWoForm.plannedQty,
+      startDate: new Date().toISOString().split('T')[0],
+      workCenterMachine: newWoForm.workCenterMachine,
+      operatorNames: newWoForm.operatorNames,
+      machineHours: newWoForm.machineHours,
+      machineHourlyRate: newWoForm.machineHourlyRate,
+      designProofId: linkedProof?.id,
+      designNumber: linkedProof?.designNumber,
+      qualityInspector: 'Dawit Bekele',
+      targetWorkCenters: [newWoForm.workCenterMachine, 'Signage Assembly & LED Wiring Bench', 'Quality Testing Bay'],
+      bomItems,
+    });
+
+    // Deduct stock for all issued BOM items
+    bomItems.forEach((bi) => {
+      addStockMovement({
+        itemId: bi.itemId,
+        fromStoreId: 'store-1',
+        toStoreId: 'store-2',
+        movementType: 'production_issue',
+        quantity: bi.actualIssuedQty,
+        referenceType: 'WORK_ORDER',
+        notes: `Issued for production of ${parentOrder.orderNumber}`,
+      });
+    });
+
+    setShowNewWoModal(false);
+    showToast(
+      `Work Order scheduled with ${bomItems.length} BOM raw materials issued to shopfloor!`
+    );
+  };
+
+  // Handle Add Machine Hours
+  const handleAddHours = (woId: string) => {
+    const wo = workOrders.find((w) => w.id === woId);
+    if (!wo) return;
+
+    const newHours = wo.machineHours + hoursToAdd;
+    updateWorkOrder(woId, { machineHours: newHours });
+    setShowAddHoursModal(false);
+    showToast(`Logged ${hoursToAdd} additional hours on ${wo.workOrderNumber}. Order costing recalculated!`);
+  };
+
+  // Handle Issue Extra Material to WO
+  const handleIssueExtraMaterial = (woId: string) => {
+    const wo = workOrders.find((w) => w.id === woId);
+    const item = items.find((i) => i.id === issueBomItemId);
+    if (!wo || !item || issueBomQty <= 0) return;
+
+    addBomItemToWorkOrder(woId, {
+      itemId: item.id,
+      itemName: item.name,
+      plannedQty: issueBomQty,
+      actualIssuedQty: issueBomQty,
+      unit: item.unit,
+      unitCost: item.purchasePrice,
+    });
+
+    // Deduct stock
+    addStockMovement({
+      itemId: item.id,
+      fromStoreId: 'store-1',
+      toStoreId: 'store-2',
+      movementType: 'production_issue',
+      quantity: issueBomQty,
+      referenceType: 'WORK_ORDER',
+      referenceNumber: wo.workOrderNumber,
+      notes: `Supplemental materials issued to WO: ${wo.workOrderNumber}`,
+    });
+
+    setShowIssueBomModal(false);
+    showToast(`Issued ${issueBomQty} ${item.unit} of ${item.name} to ${wo.workOrderNumber}. BOM updated!`);
+  };
+
+  // Handle Design Proof Confirmations
+  const handleConfirmApproveProof = (proofId: string, approverName: string, notes: string) => {
+    approveDesignProof(proofId, approverName, notes);
+    const targetProof = designProofs.find((d) => d.id === proofId);
+    if (targetProof && targetProof.customerOrderId) {
+      updateOrderStatus(targetProof.customerOrderId, 'in_production');
+    }
+    showToast(`Artwork ${targetProof?.designNumber} approved by ${approverName}! Production unlocked.`);
+  };
+
+  const handleConfirmRevisionProof = (proofId: string, feedbackNotes: string) => {
+    requestDesignRevision(proofId, feedbackNotes);
+    const targetProof = designProofs.find((d) => d.id === proofId);
+    showToast(`Revision request logged for ${targetProof?.designNumber}. Designer notified.`);
+  };
+
+  // Handle Work Order Scrap Confirmation
+  const handleConfirmScrap = (
+    woId: string,
+    scrapData: { itemId: string; quantity: number; reason: WastageReason; notes?: string }
+  ) => {
+    recordWorkOrderScrap(woId, scrapData);
+    const wo = workOrders.find((w) => w.id === woId);
+    showToast(`Recorded ${scrapData.quantity} scrap on ${wo?.workOrderNumber}. Factory cost updated!`);
+  };
+
+  // Filtered Orders
+  const filteredOrders = orders.filter(
+    (o) =>
+      o.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      o.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      o.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Filtered Design Proofs
+  const filteredProofs = designProofs.filter((p) => {
+    const matchesFilter = designStatusFilter === 'all' || p.status === designStatusFilter;
+    const matchesSearch =
+      p.designNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.designerName.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  // Filtered Work Orders
+  const filteredWorkOrders = workOrders.filter((w) => {
+    const matchesStation = woStationFilter === 'all' || w.workCenterMachine === woStationFilter;
+    const matchesSearch =
+      w.workOrderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      w.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      w.productDescription.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStation && matchesSearch;
+  });
+
+  // Metrics
+  const totalPipelineRevenue = orders.reduce((sum, o) => sum + o.totalAgreedPrice, 0);
+  const activeWOCount = workOrders.filter((w) => w.status === 'in_progress').length;
+  const approvedDesignsCount = designProofs.filter((d) => d.status === 'approved').length;
+  const pendingProofCount = designProofs.filter((d) => d.status === 'client_proofing').length;
+  const totalScrapCost = wastages.reduce((sum, w) => sum + w.totalCost, 0);
+
+  return (
+    <div>
+      {/* Top Header Controls */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '20px',
+          flexWrap: 'wrap',
+          gap: '16px',
+        }}
+      >
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span
+              style={{
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                color: '#38bdf8',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+              }}
+            >
+              Order & Production Desk
+            </span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+              • Advertising Design Proofing & Factory BOM Engine
+            </span>
+          </div>
+          <h1 style={{ marginTop: '2px' }}>Customer Jobs, CMYK Proofs & Workshop BOMs</h1>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => setShowNewDesignModal(true)}
+          >
+            <Palette size={14} color="#c084fc" />
+            <span>+ New Artwork Proof</span>
+          </button>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => setShowNewWoModal(true)}
+          >
+            <Cog size={14} color="#38bdf8" />
+            <span>Schedule Work Order</span>
+          </button>
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={() => setShowNewOrderModal(true)}
+          >
+            <PlusCircle size={14} />
+            <span>New Customer Order</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Notification Toast */}
+      {notification && (
+        <div
+          style={{
+            background: 'rgba(16, 185, 129, 0.15)',
+            border: '1px solid #10b981',
+            borderRadius: 'var(--radius-md)',
+            padding: '12px 18px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}
+        >
+          <CheckCircle2 size={18} color="#10b981" />
+          <span style={{ fontSize: '0.85rem', color: '#a7f3d0', fontWeight: 600 }}>
+            {notification}
+          </span>
+        </div>
+      )}
+
+      {/* Top Metric Cards */}
+      <div className="stat-grid" style={{ marginBottom: '20px' }}>
+        <div className="stat-card">
+          <div className="stat-card-title">
+            <span>Orders Pipeline Revenue</span>
+            <TrendingUp size={16} color="#818cf8" />
+          </div>
+          <div className="stat-card-value">{formatETB(totalPipelineRevenue)}</div>
+          <div className="stat-card-subtext">
+            <span>{orders.length} contracted customer orders</span>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-card-title">
+            <span>Artwork Proofs Status</span>
+            <Palette size={16} color="#a855f7" />
+          </div>
+          <div className="stat-card-value" style={{ color: '#c084fc' }}>
+            {approvedDesignsCount} / {designProofs.length} Approved
+          </div>
+          <div className="stat-card-subtext">
+            <span style={{ color: pendingProofCount > 0 ? '#fbbf24' : 'var(--text-dim)' }}>
+              {pendingProofCount} currently awaiting client sign-off
+            </span>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-card-title">
+            <span>Active Production WOs</span>
+            <Cog size={16} color="#38bdf8" />
+          </div>
+          <div className="stat-card-value" style={{ color: '#38bdf8' }}>
+            {activeWOCount} In Production
+          </div>
+          <div className="stat-card-subtext">
+            <span>{workOrders.length} scheduled factory work orders</span>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-card-title">
+            <span>Factory Scrap / Wastage</span>
+            <Trash2 size={16} color="#fb7185" />
+          </div>
+          <div className="stat-card-value" style={{ color: '#fb7185' }}>
+            {formatETB(totalScrapCost)}
+          </div>
+          <div className="stat-card-subtext">
+            <span>Tracked per job order & station</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation Sub-Tabs Bar */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: '1px solid var(--border-subtle)',
+          marginBottom: '20px',
+          flexWrap: 'wrap',
+          gap: '12px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={() => handleTabChange('orders')}
+            style={{
+              padding: '10px 18px',
+              background: 'transparent',
+              border: 'none',
+              borderBottom: activeTab === 'orders' ? '2px solid #38bdf8' : '2px solid transparent',
+              color: activeTab === 'orders' ? '#ffffff' : 'var(--text-muted)',
+              fontWeight: activeTab === 'orders' ? 700 : 500,
+              fontSize: '0.875rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <Boxes size={15} color={activeTab === 'orders' ? '#38bdf8' : 'var(--text-dim)'} />
+            <span>Customer Orders & Profitability ({orders.length})</span>
+          </button>
+
+          <button
+            onClick={() => handleTabChange('designs')}
+            style={{
+              padding: '10px 18px',
+              background: 'transparent',
+              border: 'none',
+              borderBottom: activeTab === 'designs' ? '2px solid #a855f7' : '2px solid transparent',
+              color: activeTab === 'designs' ? '#c084fc' : 'var(--text-muted)',
+              fontWeight: activeTab === 'designs' ? 700 : 500,
+              fontSize: '0.875rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <Palette size={15} color={activeTab === 'designs' ? '#c084fc' : 'var(--text-dim)'} />
+            <span>Graphic Design Proofing Hub ({designProofs.length})</span>
+            {pendingProofCount > 0 && (
+              <span
+                style={{
+                  background: '#f59e0b',
+                  color: '#000000',
+                  fontSize: '0.65rem',
+                  fontWeight: 800,
+                  padding: '1px 6px',
+                  borderRadius: '10px',
+                }}
+              >
+                {pendingProofCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => handleTabChange('work_orders')}
+            style={{
+              padding: '10px 18px',
+              background: 'transparent',
+              border: 'none',
+              borderBottom: activeTab === 'work_orders' ? '2px solid #38bdf8' : '2px solid transparent',
+              color: activeTab === 'work_orders' ? '#38bdf8' : 'var(--text-muted)',
+              fontWeight: activeTab === 'work_orders' ? 700 : 500,
+              fontSize: '0.875rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <Cog size={15} color={activeTab === 'work_orders' ? '#38bdf8' : 'var(--text-dim)'} />
+            <span>Shopfloor Production & BOM ({workOrders.length})</span>
+          </button>
+        </div>
+
+        {/* Global Search Bar */}
+        <div style={{ position: 'relative', minWidth: '280px' }}>
+          <Search
+            size={14}
+            style={{
+              position: 'absolute',
+              left: '12px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: 'var(--text-dim)',
+            }}
+          />
+          <input
+            type="text"
+            placeholder={
+              activeTab === 'orders'
+                ? 'Search orders by # or client...'
+                : activeTab === 'designs'
+                ? 'Search designs by #, title, or client...'
+                : 'Search work orders...'
+            }
+            className="form-input"
+            style={{ paddingLeft: '34px', fontSize: '0.825rem', height: '36px' }}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* ========================================================= */}
+      {/* TAB 1: CUSTOMER ORDERS & PROFITABILITY WATERFALL          */}
+      {/* ========================================================= */}
+      {activeTab === 'orders' && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1.35fr',
+            gap: '24px',
+            alignItems: 'start',
+          }}
+        >
+          {/* LEFT COLUMN: CUSTOMER ORDERS LIST */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {filteredOrders.map((ord) => {
+              const isSelected = ord.id === selectedOrderId;
+              const p = calculateOrderProfitability(ord.id);
+              const marginColor =
+                (p?.profitMarginPct || 0) >= 40
+                  ? '#34d399'
+                  : (p?.profitMarginPct || 0) >= 20
+                  ? '#fbbf24'
+                  : '#fb7185';
+
+              const linkedProof = designProofs.find(
+                (d) => d.customerOrderId === ord.id || d.id === ord.designProofId
+              );
+
+              return (
+                <div
+                  key={ord.id}
+                  onClick={() => setSelectedOrderId(ord.id)}
+                  style={{
+                    background: isSelected ? 'rgba(56, 189, 248, 0.12)' : 'var(--bg-card)',
+                    border: isSelected
+                      ? '1px solid #38bdf8'
+                      : '1px solid var(--border-subtle)',
+                    borderRadius: 'var(--radius-lg)',
+                    padding: '16px 18px',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.9rem' }}>
+                        {ord.orderNumber}
+                      </span>
+                      <span
+                        className={`badge ${
+                          ord.priority === 'urgent'
+                            ? 'badge-rose'
+                            : ord.priority === 'high'
+                            ? 'badge-amber'
+                            : 'badge-gray'
+                        }`}
+                        style={{ fontSize: '0.65rem' }}
+                      >
+                        {ord.priority}
+                      </span>
+                    </div>
+
+                    <span
+                      className={`badge ${
+                        ord.status === 'paid'
+                          ? 'badge-emerald'
+                          : ord.status === 'invoiced'
+                          ? 'badge-primary'
+                          : ord.status === 'in_production'
+                          ? 'badge-amber'
+                          : 'badge-gray'
+                      }`}
+                    >
+                      {ord.status.replace('_', ' ')}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
+                    {ord.title}
+                  </div>
+
+                  <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)', marginBottom: '10px' }}>
+                    Customer: <strong style={{ color: 'var(--text-main)' }}>{ord.customerName}</strong>
+                  </div>
+
+                  {/* Badges Bar: Design status & Margin */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      borderTop: '1px solid var(--border-subtle)',
+                      paddingTop: '10px',
+                    }}
+                  >
+                    <div>
+                      {linkedProof ? (
+                        <span
+                          style={{
+                            fontSize: '0.72rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            color: linkedProof.status === 'approved' ? '#34d399' : '#fbbf24',
+                          }}
+                        >
+                          <Palette size={12} />
+                          <span>Proof: {linkedProof.status === 'approved' ? 'Approved' : 'Awaiting Proof'}</span>
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+                          No Design Proof Linked
+                        </span>
+                      )}
+                    </div>
+
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+                        {formatETB(ord.totalAgreedPrice)}
+                      </span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: marginColor, marginLeft: '8px' }}>
+                        {p?.profitMarginPct.toFixed(1)}% margin
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* RIGHT COLUMN: COST WATERFALL & LIVE PROFITABILITY */}
+          {selectedOrder && selectedProfitability ? (
+            <div className="card" style={{ padding: '24px' }}>
+              {/* Order Header */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  marginBottom: '16px',
+                  borderBottom: '1px solid var(--border-subtle)',
+                  paddingBottom: '16px',
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.8rem', fontFamily: 'monospace', color: '#38bdf8', fontWeight: 700 }}>
+                      {selectedOrder.orderNumber}
+                    </span>
+                    <span className="badge badge-primary">{selectedOrder.status.replace('_', ' ')}</span>
+                  </div>
+                  <h2 style={{ fontSize: '1.25rem', marginTop: '6px', color: '#ffffff' }}>
+                    {selectedOrder.title}
+                  </h2>
+                  <div style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    Client: <strong>{selectedOrder.customerName}</strong> (TIN: {selectedOrder.customerTin})
+                  </div>
+                </div>
+
+                <select
+                  className="form-select"
+                  style={{ width: 'auto', fontSize: '0.8rem', padding: '6px 12px' }}
+                  value={selectedOrder.status}
+                  onChange={(e) => updateOrderStatus(selectedOrder.id, e.target.value as OrderStatus)}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="in_production">In Production</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="invoiced">Invoiced</option>
+                  <option value="paid">Paid</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              {/* Linked Artwork Proof Banner */}
+              {selectedProof && (
+                <div
+                  style={{
+                    background: 'rgba(56, 189, 248, 0.08)',
+                    border: '1px solid rgba(56, 189, 248, 0.25)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '12px 16px',
+                    marginBottom: '18px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '10px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Palette size={18} color="#38bdf8" />
+                    <div>
+                      <div style={{ fontSize: '0.825rem', fontWeight: 600, color: '#ffffff' }}>
+                        Linked Design: {selectedProof.designNumber} — {selectedProof.title}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        {selectedProof.widthMeters}m × {selectedProof.heightMeters}m • {selectedProof.materialSpec}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className={getStatusBadge(selectedProof.status).className} style={{ fontSize: '0.7rem' }}>
+                      {getStatusBadge(selectedProof.status).label}
+                    </span>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: '0.72rem', padding: '4px 8px' }}
+                      onClick={() => setInspectingProof(selectedProof)}
+                    >
+                      <Eye size={12} />
+                      <span>Inspect Artwork</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Profitability Result Banner */}
+              <div
+                style={{
+                  background:
+                    selectedProfitability.profitMarginPct >= 35
+                      ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(20, 30, 51, 0.9) 100%)'
+                      : 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(20, 30, 51, 0.9) 100%)',
+                  border:
+                    selectedProfitability.profitMarginPct >= 35
+                      ? '1px solid rgba(16, 185, 129, 0.35)'
+                      : '1px solid rgba(245, 158, 11, 0.35)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: '18px 20px',
+                  marginBottom: '20px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: selectedProfitability.profitMarginPct >= 35 ? '#34d399' : '#fbbf24',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                      }}
+                    >
+                      True Net Order Profit
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '2rem',
+                        fontWeight: 800,
+                        color: selectedProfitability.profitMarginPct >= 35 ? '#34d399' : '#fbbf24',
+                        marginTop: '2px',
+                      }}
+                    >
+                      {formatETB(selectedProfitability.orderProfit)}
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: 'right' }}>
+                    <div
+                      style={{
+                        fontSize: '2rem',
+                        fontWeight: 800,
+                        color: selectedProfitability.profitMarginPct >= 35 ? '#34d399' : '#fbbf24',
+                      }}
+                    >
+                      {selectedProfitability.profitMarginPct.toFixed(1)}%
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                      Net Profit Margin
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="progress-bar-bg" style={{ height: '7px', marginTop: '12px' }}>
+                  <div
+                    className="progress-bar-fill"
+                    style={{
+                      width: `${Math.min(100, Math.max(0, selectedProfitability.profitMarginPct))}%`,
+                      background: selectedProfitability.profitMarginPct >= 35 ? '#10b981' : '#f59e0b',
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Financial Waterfall Ledger */}
+              <div style={{ marginBottom: '22px' }}>
+                <div
+                  style={{
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    color: 'var(--text-dim)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    marginBottom: '10px',
+                  }}
+                >
+                  Cost Waterfall Breakdown
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {/* Revenue */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '9px 12px',
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      borderRadius: 'var(--radius-sm)',
+                    }}
+                  >
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                      Invoiced Revenue (Excl. 15% VAT):
+                    </span>
+                    <strong style={{ color: '#ffffff' }}>
+                      + {formatETB(selectedProfitability.orderRevenue)}
+                    </strong>
+                  </div>
+
+                  {/* Direct Materials BOM */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      fontSize: '0.825rem',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
+                    <span>Direct Raw Materials Consumed (BOM):</span>
+                    <span style={{ color: '#fb7185' }}>
+                      - {formatETB(selectedProfitability.directMaterialCost)}
+                    </span>
+                  </div>
+
+                  {/* Direct Labor */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      fontSize: '0.825rem',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
+                    <span>Direct Workshop Labor (Operator Hours):</span>
+                    <span style={{ color: '#fb7185' }}>
+                      - {formatETB(selectedProfitability.directLaborCost)}
+                    </span>
+                  </div>
+
+                  {/* Machine Runtime */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      fontSize: '0.825rem',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
+                    <span>Machine Station Hourly Runtime Cost:</span>
+                    <span style={{ color: '#fb7185' }}>
+                      - {formatETB(selectedProfitability.machineCost)}
+                    </span>
+                  </div>
+
+                  {/* Scrap / Wastage */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      fontSize: '0.825rem',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
+                    <span>Material Wastage / Scrap Incurred:</span>
+                    <span
+                      style={{
+                        color: selectedProfitability.wastageCost > 0 ? '#fb7185' : 'var(--text-dim)',
+                        fontWeight: selectedProfitability.wastageCost > 0 ? 600 : 400,
+                      }}
+                    >
+                      - {formatETB(selectedProfitability.wastageCost)}
+                    </span>
+                  </div>
+
+                  {/* Transport */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      fontSize: '0.825rem',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
+                    <span>Order-Specific Transport & Scaffolding:</span>
+                    <span style={{ color: '#fb7185' }}>
+                      - {formatETB(selectedProfitability.orderTransportCost)}
+                    </span>
+                  </div>
+
+                  {/* Factory Overhead */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      fontSize: '0.825rem',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
+                    <span>Allocated Factory Fixed Overhead (5%):</span>
+                    <span style={{ color: '#fb7185' }}>
+                      - {formatETB(selectedProfitability.allocatedOverheadCost)}
+                    </span>
+                  </div>
+
+                  {/* Total Cost Line */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '10px 12px',
+                      borderTop: '1px solid var(--border-subtle)',
+                      borderBottom: '1px solid var(--border-subtle)',
+                      fontWeight: 700,
+                    }}
+                  >
+                    <span>Total Order Cost (Fixed + Variable):</span>
+                    <span style={{ color: '#fb7185' }}>
+                      {formatETB(selectedProfitability.totalOrderCost)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Controls */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  flexWrap: 'wrap',
+                  borderTop: '1px solid var(--border-subtle)',
+                  paddingTop: '16px',
+                }}
+              >
+                {selectedWOs.length > 0 && (
+                  <>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => {
+                        setTargetWoForHours(selectedWOs[0]);
+                        setShowAddHoursModal(true);
+                      }}
+                    >
+                      <Clock size={13} />
+                      <span>Log Hours</span>
+                    </button>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => {
+                        setTargetWoForBom(selectedWOs[0]);
+                        setShowIssueBomModal(true);
+                      }}
+                    >
+                      <Boxes size={13} />
+                      <span>Issue Material to BOM</span>
+                    </button>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      style={{ color: '#fda4af', borderColor: 'rgba(244, 63, 94, 0.3)' }}
+                      onClick={() => setScrapTargetWo(selectedWOs[0])}
+                    >
+                      <Trash2 size={13} />
+                      <span>Log Scrap</span>
+                    </button>
+                  </>
+                )}
+
+                <Link
+                  href="/dashboard/sales"
+                  className="btn btn-primary btn-sm"
+                  style={{ marginLeft: 'auto' }}
+                >
+                  <span>Proceed to Invoicing</span>
+                  <ArrowRight size={13} />
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
+              <Cog size={36} color="var(--text-dim)" style={{ margin: '0 auto 12px' }} />
+              <h3>Select an Order to Inspect Profitability</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Click any customer order from the left column to view its live financial cost rollup, BOM issues, and margin waterfall.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* TAB 2: GRAPHIC DESIGN PROOFING & ARTWORK SIGN-OFF HUB     */}
+      {/* ========================================================= */}
+      {activeTab === 'designs' && (
+        <div>
+          {/* Status Filters Bar */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '18px',
+              flexWrap: 'wrap',
+              gap: '12px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)', fontWeight: 600 }}>Filter Status:</span>
+              {(['all', 'client_proofing', 'revision_requested', 'approved', 'drafting'] as const).map((st) => (
+                <button
+                  key={st}
+                  className={`btn btn-sm ${designStatusFilter === st ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ fontSize: '0.75rem', padding: '5px 12px' }}
+                  onClick={() => setDesignStatusFilter(st)}
+                >
+                  {st === 'all'
+                    ? `All Proofs (${designProofs.length})`
+                    : st === 'client_proofing'
+                    ? `Awaiting Sign-off (${designProofs.filter((d) => d.status === 'client_proofing').length})`
+                    : st === 'revision_requested'
+                    ? `Revisions (${designProofs.filter((d) => d.status === 'revision_requested').length})`
+                    : st === 'approved'
+                    ? `Approved (${designProofs.filter((d) => d.status === 'approved').length})`
+                    : `Drafting (${designProofs.filter((d) => d.status === 'drafting').length})`}
+                </button>
+              ))}
+            </div>
+
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => setShowNewDesignModal(true)}
+            >
+              <PlusCircle size={14} />
+              <span>+ Upload New Artwork Proof</span>
+            </button>
+          </div>
+
+          {/* Grid of Design Proof Cards */}
+          {filteredProofs.length > 0 ? (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
+                gap: '20px',
+              }}
+            >
+              {filteredProofs.map((proof) => (
+                <DesignProofCard
+                  key={proof.id}
+                  proof={proof}
+                  onViewSpecs={(p) => setInspectingProof(p)}
+                  onApprove={(p) => setApprovingProof(p)}
+                  onRequestRevision={(p) => setRevisingProof(p)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
+              <Palette size={40} color="var(--text-dim)" style={{ margin: '0 auto 12px' }} />
+              <h3>No Design Proofs Found</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                No artwork proofs match your active search or filter. Create a new proof or clear filters.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* TAB 3: SHOPFLOOR WORK ORDERS & MULTI-ITEM BOM            */}
+      {/* ========================================================= */}
+      {activeTab === 'work_orders' && (
+        <div>
+          {/* Station Filters Bar */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '18px',
+              flexWrap: 'wrap',
+              gap: '12px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)', fontWeight: 600 }}>Station Filter:</span>
+              <select
+                className="form-select"
+                style={{ width: 'auto', fontSize: '0.8rem', padding: '6px 12px' }}
+                value={woStationFilter}
+                onChange={(e) => setWoStationFilter(e.target.value)}
+              >
+                <option value="all">All Workshop Machine Stations ({workOrders.length})</option>
+                <option value="Roland Wide-Format Eco-Solvent Printer">
+                  Roland Wide-Format Eco-Solvent Printer
+                </option>
+                <option value="Laser Cutter & Channel Bending Station #1">
+                  Laser Cutter & Channel Bending Station #1
+                </option>
+                <option value="Roland Wide-Format Eco-Solvent Printer & MIG Welding Bay">
+                  Roland Eco-Solvent & MIG Welding Bay
+                </option>
+                <option value="Graphtec Vinyl Cutting Plotter & Mutoh Eco-Solvent">
+                  Graphtec Vinyl Cutting Plotter & Laminator
+                </option>
+              </select>
+            </div>
+
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={() => setShowNewWoModal(true)}
+            >
+              <Cog size={14} color="#38bdf8" />
+              <span>+ Schedule Production Work Order</span>
+            </button>
+          </div>
+
+          {/* Grid of Work Order Cards */}
+          {filteredWorkOrders.length > 0 ? (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(460px, 1fr))',
+                gap: '20px',
+              }}
+            >
+              {filteredWorkOrders.map((wo) => {
+                const linkedProof = designProofs.find(
+                  (d) => d.id === wo.designProofId || d.customerOrderId === wo.customerOrderId
+                );
+
+                return (
+                  <WorkOrderCard
+                    key={wo.id}
+                    workOrder={wo}
+                    designProof={linkedProof}
+                    formatETB={formatETB}
+                    onAdvanceStatus={(woId, status) => {
+                      advanceWorkOrderStatus(woId, status);
+                      showToast(`Work Order ${wo.workOrderNumber} status advanced to ${status.replace('_', ' ')}!`);
+                    }}
+                    onAddHours={(target) => {
+                      setTargetWoForHours(target);
+                      setShowAddHoursModal(true);
+                    }}
+                    onIssueBom={(target) => {
+                      setTargetWoForBom(target);
+                      setShowIssueBomModal(true);
+                    }}
+                    onLogScrap={(target) => setScrapTargetWo(target)}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
+              <Cog size={40} color="var(--text-dim)" style={{ margin: '0 auto 12px' }} />
+              <h3>No Work Orders Found</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                No active work orders match your search criteria.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL 1: NEW CUSTOMER ORDER                               */}
+      {/* ========================================================= */}
+      {showNewOrderModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <PlusCircle size={20} color="#818cf8" />
+                <h3>Create New Customer Job Order</h3>
+              </div>
+              <button
+                onClick={() => setShowNewOrderModal(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleCreateOrder}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label className="form-label">Customer / Client *</label>
+                  <select
+                    className="form-select"
+                    value={newOrderForm.customerId}
+                    onChange={(e) => setNewOrderForm({ ...newOrderForm, customerId: e.target.value })}
+                    required
+                  >
+                    {customers.map((c) => {
+                      const avail = c.creditLimit - c.outstandingBalance;
+                      return (
+                        <option key={c.id} value={c.id}>
+                          {c.name} — Avail. Credit: {formatETB(avail)} (Limit: {formatETB(c.creditLimit)})
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                {isOverCredit && (
+                  <div
+                    style={{
+                      background: 'rgba(244, 63, 94, 0.15)',
+                      border: '1px solid #f43f5e',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '10px 14px',
+                      marginBottom: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '0.8rem',
+                      color: '#fca5a5',
+                    }}
+                  >
+                    <ShieldAlert size={16} />
+                    <span>
+                      Order amount ({formatETB(newOrderForm.quantity * newOrderForm.unitPrice)}) exceeds available credit limit ({formatETB(availableCredit)})! Executive override required.
+                    </span>
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label className="form-label">Job Title *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Awash Bank ATM Signage Branding..."
+                    className="form-input"
+                    value={newOrderForm.title}
+                    onChange={(e) => setNewOrderForm({ ...newOrderForm, title: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Quantity *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      className="form-input"
+                      value={newOrderForm.quantity}
+                      onChange={(e) =>
+                        setNewOrderForm({ ...newOrderForm, quantity: parseInt(e.target.value) || 1 })
+                      }
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Agreed Unit Selling Price (ETB) *</label>
+                    <input
+                      type="number"
+                      min="0"
+                      className="form-input"
+                      value={newOrderForm.unitPrice}
+                      onChange={(e) =>
+                        setNewOrderForm({ ...newOrderForm, unitPrice: parseFloat(e.target.value) || 0 })
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Expected Delivery Date</label>
+                    <input
+                      type="date"
+                      className="form-input"
+                      value={newOrderForm.expectedDeliveryDate}
+                      onChange={(e) =>
+                        setNewOrderForm({ ...newOrderForm, expectedDeliveryDate: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Priority</label>
+                    <select
+                      className="form-select"
+                      value={newOrderForm.priority}
+                      onChange={(e) =>
+                        setNewOrderForm({
+                          ...newOrderForm,
+                          priority: e.target.value as 'low' | 'normal' | 'high' | 'urgent',
+                        })
+                      }
+                    >
+                      <option value="normal">Normal</option>
+                      <option value="high">High Priority</option>
+                      <option value="urgent">Urgent Rush</option>
+                      <option value="low">Low Priority</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Order Notes / Specifications</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Technical specifications, mounting hardware..."
+                    className="form-textarea"
+                    value={newOrderForm.notes}
+                    onChange={(e) => setNewOrderForm({ ...newOrderForm, notes: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setShowNewOrderModal(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary btn-sm">
+                  Create Customer Order
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL 2: SCHEDULE WORK ORDER (MULTI-ITEM BOM)             */}
+      {/* ========================================================= */}
+      {showNewWoModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '640px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Cog size={20} color="#38bdf8" />
+                <h3>Schedule Work Order & Bill of Materials</h3>
+              </div>
+              <button
+                onClick={() => setShowNewWoModal(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleCreateWorkOrder}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div className="form-group">
+                  <label className="form-label">Customer Order *</label>
+                  <select
+                    className="form-select"
+                    value={newWoForm.customerOrderId}
+                    onChange={(e) => {
+                      setNewWoForm({ ...newWoForm, customerOrderId: e.target.value });
+                      const ord = orders.find((o) => o.id === e.target.value);
+                      if (ord) setNewWoForm((prev) => ({ ...prev, productDescription: ord.title }));
+                    }}
+                    required
+                  >
+                    {orders.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.orderNumber} — {o.customerName} ({o.title})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Work Center / Machine Station *</label>
+                  <select
+                    className="form-select"
+                    value={newWoForm.workCenterMachine}
+                    onChange={(e) => setNewWoForm({ ...newWoForm, workCenterMachine: e.target.value })}
+                  >
+                    <option value="Roland Wide-Format Eco-Solvent Printer">
+                      Roland Wide-Format Eco-Solvent Printer
+                    </option>
+                    <option value="Laser Cutter & Channel Bending Station #1">
+                      Laser Cutter & Channel Bending Station #1
+                    </option>
+                    <option value="Graphtec Vinyl Cutting Plotter & Laminator">
+                      Graphtec Vinyl Cutting Plotter & Laminator
+                    </option>
+                    <option value="MIG Welding & Structural Steel Assembly Bay">
+                      MIG Welding & Structural Steel Assembly Bay
+                    </option>
+                    <option value="Signage Assembly & LED Wiring Bench">
+                      Signage Assembly & LED Wiring Bench
+                    </option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Planned Machine Hours</label>
+                    <input
+                      type="number"
+                      min="1"
+                      className="form-input"
+                      value={newWoForm.machineHours}
+                      onChange={(e) =>
+                        setNewWoForm({ ...newWoForm, machineHours: parseInt(e.target.value) || 1 })
+                      }
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Machine Hourly Rate (ETB/hr)</label>
+                    <input
+                      type="number"
+                      min="100"
+                      className="form-input"
+                      value={newWoForm.machineHourlyRate}
+                      onChange={(e) =>
+                        setNewWoForm({ ...newWoForm, machineHourlyRate: parseFloat(e.target.value) || 500 })
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Multi-Item Bill of Materials Builder */}
+                <div
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '14px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#38bdf8' }}>
+                      Allocated Raw Materials (BOM)
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: '0.72rem', padding: '3px 8px' }}
+                      onClick={() =>
+                        setNewWoForm({
+                          ...newWoForm,
+                          selectedItems: [
+                            ...newWoForm.selectedItems,
+                            { itemId: items[2]?.id || items[0]?.id || '', plannedQty: 10 },
+                          ],
+                        })
+                      }
+                    >
+                      + Add Material Line
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {newWoForm.selectedItems.map((si, idx) => {
+                      return (
+                        <div
+                          key={idx}
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '2fr 1fr auto',
+                            gap: '10px',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <select
+                            className="form-select"
+                            value={si.itemId}
+                            onChange={(e) => {
+                              const updated = [...newWoForm.selectedItems];
+                              updated[idx].itemId = e.target.value;
+                              setNewWoForm({ ...newWoForm, selectedItems: updated });
+                            }}
+                          >
+                            {items.map((it) => (
+                              <option key={it.id} value={it.id}>
+                                {it.name} ({it.unit}) — Stock: {it.currentStock}
+                              </option>
+                            ))}
+                          </select>
+
+                          <input
+                            type="number"
+                            min="0.5"
+                            step="any"
+                            placeholder="Qty"
+                            className="form-input"
+                            value={si.plannedQty}
+                            onChange={(e) => {
+                              const updated = [...newWoForm.selectedItems];
+                              updated[idx].plannedQty = parseFloat(e.target.value) || 1;
+                              setNewWoForm({ ...newWoForm, selectedItems: updated });
+                            }}
+                          />
+
+                          {newWoForm.selectedItems.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = newWoForm.selectedItems.filter((_, i) => i !== idx);
+                                setNewWoForm({ ...newWoForm, selectedItems: updated });
+                              }}
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#fb7185',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <X size={16} />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setShowNewWoModal(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary btn-sm">
+                  Schedule WO & Issue Stock
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL 3: LOG EXTRA MACHINE HOURS                          */}
+      {/* ========================================================= */}
+      {showAddHoursModal && targetWoForHours && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '420px' }}>
+            <div className="modal-header">
+              <h3>Log Machine Operating Hours</h3>
+              <button
+                onClick={() => setShowAddHoursModal(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: '14px' }}>
+                Adding operating hours increases the machine runtime cost ({formatETB(targetWoForHours.machineHourlyRate)}/hr) and direct labor hours for {targetWoForHours.workOrderNumber}.
+              </p>
+
+              <div className="form-group">
+                <label className="form-label">Additional Hours Logged</label>
+                <input
+                  type="number"
+                  min="0.5"
+                  step="any"
+                  className="form-input"
+                  value={hoursToAdd}
+                  onChange={(e) => setHoursToAdd(parseFloat(e.target.value) || 0)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setShowAddHoursModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => handleAddHours(targetWoForHours.id)}
+              >
+                Log Hours & Recalculate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL 4: ISSUE SUPPLEMENTAL BOM MATERIAL                  */}
+      {/* ========================================================= */}
+      {showIssueBomModal && targetWoForBom && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '480px' }}>
+            <div className="modal-header">
+              <h3>Issue Supplemental BOM Material</h3>
+              <button
+                onClick={() => setShowIssueBomModal(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: '14px' }}>
+                Transfer raw materials from store inventory to {targetWoForBom.workOrderNumber} and update the job&apos;s direct material cost.
+              </p>
+
+              <div className="form-group">
+                <label className="form-label">Material / Item *</label>
+                <select
+                  className="form-select"
+                  value={issueBomItemId}
+                  onChange={(e) => setIssueBomItemId(e.target.value)}
+                >
+                  {items.map((it) => (
+                    <option key={it.id} value={it.id}>
+                      {it.name} — Current: {it.currentStock} {it.unit} (@ {formatETB(it.purchasePrice)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Quantity to Issue *</label>
+                <input
+                  type="number"
+                  min="0.1"
+                  step="any"
+                  className="form-input"
+                  value={issueBomQty}
+                  onChange={(e) => setIssueBomQty(parseFloat(e.target.value) || 0)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setShowIssueBomModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => handleIssueExtraMaterial(targetWoForBom.id)}
+              >
+                Issue to Job & Update Stock
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL 5: INSPECT DESIGN SPECS                             */}
+      {/* ========================================================= */}
+      <DesignSpecsModal
+        proof={inspectingProof}
+        onClose={() => setInspectingProof(null)}
+        onApprove={(p) => setApprovingProof(p)}
+        onRequestRevision={(p) => setRevisingProof(p)}
+      />
+
+      {/* ========================================================= */}
+      {/* MODAL 6: APPROVE PROOF & UNLOCK PRODUCTION                */}
+      {/* ========================================================= */}
+      <ApproveProofModal
+        proof={approvingProof}
+        onClose={() => setApprovingProof(null)}
+        onConfirmApprove={handleConfirmApproveProof}
+      />
+
+      {/* ========================================================= */}
+      {/* MODAL 7: REQUEST REVISION MODAL                           */}
+      {/* ========================================================= */}
+      <RequestRevisionModal
+        proof={revisingProof}
+        onClose={() => setRevisingProof(null)}
+        onConfirmRevision={handleConfirmRevisionProof}
+      />
+
+      {/* ========================================================= */}
+      {/* MODAL 8: NEW DESIGN PROOF MODAL                           */}
+      {/* ========================================================= */}
+      {showNewDesignModal && (
+        <NewDesignProofModal
+          orders={orders}
+          onClose={() => setShowNewDesignModal(false)}
+          onCreateProof={(proofData) => {
+            const created = createDesignProof(proofData);
+            showToast(`Created artwork proof ${created.designNumber} for ${created.customerName}!`);
+          }}
+        />
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL 9: LOG WORK ORDER SCRAP                             */}
+      {/* ========================================================= */}
+      <LogScrapModal
+        workOrder={scrapTargetWo}
+        items={items}
+        onClose={() => setScrapTargetWo(null)}
+        onConfirmScrap={handleConfirmScrap}
+      />
+    </div>
+  );
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--text-muted)' }}>
+          Loading Order & Production Desk...
+        </div>
+      }
+    >
+      <OrdersPageContent />
+    </Suspense>
+  );
+}

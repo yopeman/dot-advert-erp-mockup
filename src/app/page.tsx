@@ -133,15 +133,15 @@ export default function ModulesDirectoryPage() {
         description:
           'Advertising fabrication engine: manage contracted orders, review and sign off CMYK design proofs, generate Bill of Materials (BOM) for the factory floor, and track real-time job margin waterfalls.',
         icon: Cog,
-        primaryHref: '/dashboard/orders',
+        primaryHref: '/orders',
         primaryLabel: 'Open Orders & Production',
         badge: { text: `${activeOrdersCount} Active • ${openWOsCount} In Floor`, type: 'cyan' },
         tags: ['Order Contracts', 'CMYK Proofing', 'BOM & Work Orders', 'Machine Scheduling', 'Margin Waterfall'],
         quickActions: [
-          { label: 'Customer Orders', href: '/dashboard/orders' },
-          { label: 'Design Proofs', href: '/dashboard/orders' },
-          { label: 'Factory Work Orders', href: '/dashboard/orders' },
-          { label: 'Job Costing', href: '/dashboard/orders' },
+          { label: 'Customer Orders', href: '/orders?tab=orders' },
+          { label: 'Design Proofs', href: '/orders?tab=designs' },
+          { label: 'Factory Work Orders', href: '/orders?tab=work_orders' },
+          { label: 'Job Costing', href: '/orders?tab=orders' },
         ],
       },
 

@@ -77,7 +77,7 @@ function CrmSidebarContent() {
     },
     {
       label: 'Factory Work Orders',
-      href: '/dashboard/orders',
+      href: '/orders',
       icon: Cog,
     },
     {
