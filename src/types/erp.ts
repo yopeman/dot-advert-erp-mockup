@@ -341,6 +341,36 @@ export interface Collection {
   notes?: string;
 }
 
+export interface EmployeeGuarantor {
+  fullName: string;
+  relationship: string;
+  organization: string;
+  jobTitle?: string;
+  phone: string;
+  kebeleId?: string;
+  guaranteeAmount?: number;
+  letterStatus: 'verified' | 'submitted' | 'pending';
+  notes?: string;
+}
+
+export interface EmployeeEmergencyContact {
+  fullName: string;
+  relationship: string;
+  phone: string;
+  alternativePhone?: string;
+  citySubCity?: string;
+}
+
+export interface EmployeeDocument {
+  id: string;
+  name: string;
+  category: 'identity' | 'contract' | 'warranty' | 'education' | 'medical' | 'police_clearance';
+  fileUrl?: string;
+  uploadDate: string;
+  verified: boolean;
+  notes?: string;
+}
+
 export interface Employee {
   id: string;
   employeeId: string;
@@ -356,6 +386,32 @@ export interface Employee {
   pensionNumber: string;
   employmentStatus: 'active' | 'on_leave' | 'terminated';
   startDate: string;
+
+  // Detailed Onboarding & Profile Attributes
+  dateOfBirth?: string;
+  gender?: 'male' | 'female';
+  maritalStatus?: 'single' | 'married' | 'divorced';
+  nationalIdNumber?: string;
+  kebeleCity?: string;
+  phone?: string;
+  email?: string;
+
+  // Contract Details
+  contractType?: 'permanent' | 'fixed_term' | 'probation_45_days' | 'apprentice';
+  contractEndDate?: string;
+  probationEndDate?: string;
+  noticePeriodDays?: number;
+  workShift?: 'standard_day' | 'evening_shift' | 'night_shift' | 'flexible';
+  dutyStation?: string;
+
+  // Warranty / Legal Guarantor (Wase / ዋስ)
+  guarantor?: EmployeeGuarantor;
+
+  // Emergency Contact
+  emergencyContact?: EmployeeEmergencyContact;
+
+  // Verified Onboarding Documents
+  documents?: EmployeeDocument[];
 }
 
 export interface PayrollEntry {
@@ -377,6 +433,106 @@ export interface PayrollEntry {
   netPay: number;
   allocatedOrderId?: string;
   allocatedOrderNumber?: string;
+}
+
+export type LeaveType = 'annual' | 'sick' | 'maternity' | 'paternity' | 'compassionate' | 'unpaid';
+export type LeaveStatus = 'pending' | 'approved' | 'rejected';
+
+export interface LeaveRequest {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  department: string;
+  leaveType: LeaveType;
+  startDate: string;
+  endDate: string;
+  daysCount: number;
+  reason: string;
+  status: LeaveStatus;
+  appliedDate: string;
+  approvedBy?: string;
+}
+
+export type AttendanceStatus = 'present' | 'late' | 'absent' | 'on_leave' | 'half_day';
+
+export interface AttendanceRecord {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  department: string;
+  date: string;
+  checkIn: string; // e.g. "08:02"
+  checkOut?: string; // e.g. "17:15"
+  status: AttendanceStatus;
+  overtimeHours: number;
+  notes?: string;
+  checkInPhoto?: string;
+  checkOutPhoto?: string;
+  photoVerified?: boolean;
+  terminalLocation?: string;
+}
+
+export type RecruitmentStage = 'sourcing' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected';
+
+export interface JobOpening {
+  id: string;
+  title: string;
+  department: string;
+  type: 'full_time' | 'contract' | 'shift_work';
+  openPositions: number;
+  location: string;
+  experienceLevel: string;
+  salaryRange: string;
+  status: 'active' | 'closed' | 'draft';
+  postedDate: string;
+  deadline: string;
+  applicantsCount: number;
+  description: string;
+  urgency?: 'urgent' | 'normal' | 'high';
+  requirements?: string[];
+  responsibilities?: string[];
+  skillsKeywords?: string[];
+  benefits?: string[];
+}
+
+export interface InterviewSchedule {
+  id: string;
+  candidateId: string;
+  candidateName: string;
+  jobTitle: string;
+  date: string; // "2026-10-24"
+  time: string; // "10:30"
+  durationMinutes: number; // 45
+  interviewType: 'practical_shopfloor_test' | 'technical_face_to_face' | 'hr_screening' | 'remote_call';
+  interviewers: string[];
+  locationOrLink: string;
+  status: 'scheduled' | 'completed' | 'cancelled' | 'rescheduled';
+  scoreRating?: number; // 1 to 5
+  evaluationNotes?: string;
+  preparationChecklist?: string[];
+}
+
+export interface Candidate {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  fullName: string;
+  phone: string;
+  email: string;
+  experienceYears: number;
+  currentEmployer?: string;
+  expectedSalary: number;
+  stage: RecruitmentStage;
+  appliedDate: string;
+  rating: number; // 1 to 5
+  notes?: string;
+  resumeSummary?: string;
+  portfolioUrl?: string;
+  skills?: string[];
+  educationLevel?: string;
+  interviewDate?: string;
+  interviewStatus?: string;
+  interviews?: InterviewSchedule[];
 }
 
 export type ExpenseCostType = 'fixed' | 'variable' | 'semi_variable';
@@ -433,6 +589,10 @@ export interface OrderProfitability {
 
 export type ErpRole =
   | 'general_manager'
+  | 'super_admin'
+  | 'admin'
+  | 'hr_manager'
+  | 'employee'
   | 'storekeeper'
   | 'procurement_officer'
   | 'production_supervisor'
@@ -440,3 +600,4 @@ export type ErpRole =
   | 'sales_rep'
   | 'accountant_cashier'
   | 'hr_officer';
+
