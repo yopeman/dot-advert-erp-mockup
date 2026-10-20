@@ -269,6 +269,48 @@ export interface CustomerOrder {
   status: OrderStatus;
   priority: 'low' | 'normal' | 'high' | 'urgent';
   notes?: string;
+  designProofId?: string;
+}
+
+export type DesignStatus =
+  | 'drafting'
+  | 'client_proofing'
+  | 'revision_requested'
+  | 'approved'
+  | 'rejected';
+
+export interface DesignRevision {
+  id: string;
+  versionNumber: number; // e.g. 1, 2, 3
+  date: string;
+  notes: string;
+  authorName: string;
+  status: DesignStatus;
+}
+
+export interface DesignProof {
+  id: string;
+  designNumber: string; // e.g. "DSG-2026-081"
+  customerOrderId: string;
+  orderNumber: string;
+  customerName: string;
+  title: string;
+  designerName: string;
+  status: DesignStatus;
+  widthMeters: number;
+  heightMeters: number;
+  depthCm?: number;
+  resolutionDpi: number; // e.g. 300 DPI
+  colorProfile: 'CMYK' | 'Pantone' | 'RGB';
+  materialSpec: string; // e.g. "3mm Cast Acrylic + 3M High-Tack Vinyl"
+  mockupUrl?: string; // Preview artwork thumbnail/graphic url or badge
+  clientContactPerson?: string;
+  clientFeedback?: string;
+  approvedDate?: string;
+  approvedBy?: string;
+  revisionCount: number;
+  revisions: DesignRevision[];
+  createdDate: string;
 }
 
 export interface WorkOrderBomItem {
@@ -293,12 +335,17 @@ export interface WorkOrder {
   scrapQty: number;
   startDate: string;
   endDate?: string;
-  status: 'scheduled' | 'in_progress' | 'completed' | 'on_hold';
+  status: 'scheduled' | 'in_progress' | 'quality_inspection' | 'completed' | 'on_hold';
   workCenterMachine: string;
   operatorNames: string[];
   machineHours: number;
   machineHourlyRate: number; // e.g., 650 ETB/hr
   bomItems: WorkOrderBomItem[];
+  designProofId?: string;
+  designNumber?: string;
+  qualityInspectionNotes?: string;
+  qualityInspector?: string;
+  targetWorkCenters?: string[];
 }
 
 export type InvoiceType = 'vat_15' | 'non_vat_exempt';

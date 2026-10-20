@@ -24,6 +24,10 @@ import {
   Lead,
   LeadStage,
   SiteSurvey,
+  DesignProof,
+  DesignRevision,
+  DesignStatus,
+  WorkOrderBomItem,
 } from '@/types/erp';
 import {
   INITIAL_ITEMS,
@@ -33,6 +37,7 @@ import {
   INITIAL_CUSTOMERS,
   INITIAL_ORDERS,
   INITIAL_WORK_ORDERS,
+  INITIAL_DESIGN_PROOFS,
   INITIAL_INVOICES,
   INITIAL_COLLECTIONS,
   INITIAL_EMPLOYEES,
@@ -53,6 +58,7 @@ interface ErpContextType {
   customers: Customer[];
   orders: CustomerOrder[];
   workOrders: WorkOrder[];
+  designProofs: DesignProof[];
   invoices: Invoice[];
   collections: Collection[];
   employees: Employee[];
@@ -108,8 +114,21 @@ interface ErpContextType {
   receivePurchaseOrder: (poId: string, storeId: string) => void;
   createCustomerOrder: (order: Omit<CustomerOrder, 'id' | 'orderNumber' | 'date' | 'status'>) => CustomerOrder;
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
+
+  // Graphic Design & Artwork Proof Actions
+  createDesignProof: (proof: Omit<DesignProof, 'id' | 'designNumber' | 'createdDate' | 'revisions' | 'revisionCount'>) => DesignProof;
+  updateDesignProof: (designId: string, updates: Partial<DesignProof>) => void;
+  addDesignRevision: (designId: string, revision: { notes: string; authorName: string; status: DesignStatus }) => void;
+  approveDesignProof: (designId: string, approverName: string, notes?: string) => void;
+  requestDesignRevision: (designId: string, feedbackNotes: string) => void;
+
+  // Work Orders & Production BOM Actions
   createWorkOrder: (wo: Omit<WorkOrder, 'id' | 'workOrderNumber' | 'status' | 'actualGoodQty' | 'scrapQty'>) => void;
   updateWorkOrder: (woId: string, updates: Partial<WorkOrder>) => void;
+  advanceWorkOrderStatus: (woId: string, status: WorkOrder['status']) => void;
+  recordWorkOrderScrap: (woId: string, scrapData: { itemId: string; quantity: number; reason: WastageReason; notes?: string }) => void;
+  addBomItemToWorkOrder: (woId: string, item: Omit<WorkOrderBomItem, 'totalCost'>) => void;
+
   createInvoice: (inv: Omit<Invoice, 'id' | 'invoiceNumber' | 'date' | 'paidAmount' | 'balanceDue' | 'paymentStatus'>) => Invoice;
   recordCollection: (params: {
     invoiceId: string;
@@ -157,6 +176,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
   const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
   const [orders, setOrders] = useState<CustomerOrder[]>(INITIAL_ORDERS);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>(INITIAL_WORK_ORDERS);
+  const [designProofs, setDesignProofs] = useState<DesignProof[]>(INITIAL_DESIGN_PROOFS);
   const [invoices, setInvoices] = useState<Invoice[]>(INITIAL_INVOICES);
   const [collections, setCollections] = useState<Collection[]>(INITIAL_COLLECTIONS);
   const [employees, setEmployees] = useState<Employee[]>(INITIAL_EMPLOYEES);
@@ -208,6 +228,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       setCustomers(normalizedCustomers);
       setOrders(getStored('orders', INITIAL_ORDERS));
       setWorkOrders(getStored('workOrders', INITIAL_WORK_ORDERS));
+      setDesignProofs(getStored('designProofs', INITIAL_DESIGN_PROOFS));
       setInvoices(getStored('invoices', INITIAL_INVOICES));
       setCollections(getStored('collections', INITIAL_COLLECTIONS));
       setEmployees(getStored('employees', INITIAL_EMPLOYEES));
@@ -266,6 +287,11 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isHydrated) return;
+    save('designProofs', designProofs);
+  }, [designProofs, isHydrated, save]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
     save('invoices', invoices);
   }, [invoices, isHydrated, save]);
 
@@ -309,6 +335,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     setCustomers(INITIAL_CUSTOMERS);
     setOrders(INITIAL_ORDERS);
     setWorkOrders(INITIAL_WORK_ORDERS);
+    setDesignProofs(INITIAL_DESIGN_PROOFS);
     setInvoices(INITIAL_INVOICES);
     setCollections(INITIAL_COLLECTIONS);
     setEmployees(INITIAL_EMPLOYEES);
@@ -800,6 +827,130 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status } : o)));
   }, []);
 
+  // MUTATOR: Graphic Design & Proofing Engine
+  const createDesignProof = useCallback(
+    (
+      proofData: Omit<DesignProof, 'id' | 'designNumber' | 'createdDate' | 'revisions' | 'revisionCount'>
+    ): DesignProof => {
+      const newProof: DesignProof = {
+        ...proofData,
+        id: `des-${Date.now()}`,
+        designNumber: `DSG-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+        createdDate: new Date().toISOString().split('T')[0],
+        revisionCount: 1,
+        revisions: [
+          {
+            id: `rev-${Date.now()}-1`,
+            versionNumber: 1,
+            date: new Date().toISOString().split('T')[0],
+            notes: 'Initial artwork & vector proof generated for client review.',
+            authorName: proofData.designerName,
+            status: proofData.status,
+          },
+        ],
+      };
+      setDesignProofs((prev) => [newProof, ...prev]);
+      if (proofData.customerOrderId) {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === proofData.customerOrderId ? { ...o, designProofId: newProof.id } : o))
+        );
+      }
+      return newProof;
+    },
+    []
+  );
+
+  const updateDesignProof = useCallback((designId: string, updates: Partial<DesignProof>) => {
+    setDesignProofs((prev) =>
+      prev.map((d) => (d.id === designId ? { ...d, ...updates } : d))
+    );
+  }, []);
+
+  const addDesignRevision = useCallback(
+    (
+      designId: string,
+      revision: { notes: string; authorName: string; status: DesignStatus }
+    ) => {
+      setDesignProofs((prev) =>
+        prev.map((d) => {
+          if (d.id !== designId) return d;
+          const nextVer = d.revisionCount + 1;
+          const newRev: DesignRevision = {
+            id: `rev-${Date.now()}-${nextVer}`,
+            versionNumber: nextVer,
+            date: new Date().toISOString().split('T')[0],
+            notes: revision.notes,
+            authorName: revision.authorName,
+            status: revision.status,
+          };
+          return {
+            ...d,
+            status: revision.status,
+            revisionCount: nextVer,
+            revisions: [newRev, ...d.revisions],
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const approveDesignProof = useCallback(
+    (designId: string, approverName: string, notes?: string) => {
+      setDesignProofs((prev) =>
+        prev.map((d) => {
+          if (d.id !== designId) return d;
+          const nextVer = d.revisionCount + 1;
+          const approvalRev: DesignRevision = {
+            id: `rev-${Date.now()}-${nextVer}`,
+            versionNumber: nextVer,
+            date: new Date().toISOString().split('T')[0],
+            notes: notes || 'Artwork & dimensions officially approved by client. Ready for print & fabrication.',
+            authorName: approverName,
+            status: 'approved',
+          };
+          return {
+            ...d,
+            status: 'approved',
+            approvedDate: new Date().toISOString().split('T')[0],
+            approvedBy: approverName,
+            clientFeedback: notes || d.clientFeedback,
+            revisionCount: nextVer,
+            revisions: [approvalRev, ...d.revisions],
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const requestDesignRevision = useCallback(
+    (designId: string, feedbackNotes: string) => {
+      setDesignProofs((prev) =>
+        prev.map((d) => {
+          if (d.id !== designId) return d;
+          const nextVer = d.revisionCount + 1;
+          const revRecord: DesignRevision = {
+            id: `rev-${Date.now()}-${nextVer}`,
+            versionNumber: nextVer,
+            date: new Date().toISOString().split('T')[0],
+            notes: feedbackNotes,
+            authorName: 'Client Revision Request',
+            status: 'revision_requested',
+          };
+          return {
+            ...d,
+            status: 'revision_requested',
+            clientFeedback: feedbackNotes,
+            revisionCount: nextVer,
+            revisions: [revRecord, ...d.revisions],
+          };
+        })
+      );
+    },
+    []
+  );
+
   // MUTATOR: Work Orders
   const createWorkOrder = useCallback(
     (woData: Omit<WorkOrder, 'id' | 'workOrderNumber' | 'status' | 'actualGoodQty' | 'scrapQty'>) => {
@@ -820,6 +971,77 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
   const updateWorkOrder = useCallback((woId: string, updates: Partial<WorkOrder>) => {
     setWorkOrders((prev) => prev.map((w) => (w.id === woId ? { ...w, ...updates } : w)));
   }, []);
+
+  const advanceWorkOrderStatus = useCallback(
+    (woId: string, nextStatus: WorkOrder['status']) => {
+      setWorkOrders((prev) =>
+        prev.map((wo) => {
+          if (wo.id !== woId) return wo;
+          const isDone = nextStatus === 'completed';
+          return {
+            ...wo,
+            status: nextStatus,
+            endDate: isDone ? new Date().toISOString().split('T')[0] : wo.endDate,
+            actualGoodQty: isDone && wo.actualGoodQty === 0 ? wo.plannedQty : wo.actualGoodQty,
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const recordWorkOrderScrap = useCallback(
+    (
+      woId: string,
+      scrapData: {
+        itemId: string;
+        quantity: number;
+        reason: WastageReason;
+        notes?: string;
+      }
+    ) => {
+      const wo = workOrders.find((w) => w.id === woId);
+      if (!wo) return;
+
+      // 1. Update WO scrap count
+      setWorkOrders((prev) =>
+        prev.map((w) =>
+          w.id === woId ? { ...w, scrapQty: w.scrapQty + scrapData.quantity } : w
+        )
+      );
+
+      // 2. Record wastage to ERP wastage log
+      recordWastage({
+        itemId: scrapData.itemId,
+        quantity: scrapData.quantity,
+        storeId: 'store-2', // Production floor
+        reason: scrapData.reason,
+        orderId: wo.customerOrderId,
+        notes: `Work Order ${wo.workOrderNumber}: ${scrapData.notes || 'Production scrap/wastage'}`,
+      });
+    },
+    [workOrders, recordWastage]
+  );
+
+  const addBomItemToWorkOrder = useCallback(
+    (woId: string, itemData: Omit<WorkOrderBomItem, 'totalCost'>) => {
+      setWorkOrders((prev) =>
+        prev.map((wo) => {
+          if (wo.id !== woId) return wo;
+          const totalCost = (itemData.actualIssuedQty || itemData.plannedQty) * itemData.unitCost;
+          const newItem: WorkOrderBomItem = {
+            ...itemData,
+            totalCost,
+          };
+          return {
+            ...wo,
+            bomItems: [...wo.bomItems, newItem],
+          };
+        })
+      );
+    },
+    []
+  );
 
   // MUTATOR: Create Invoice (with VAT or Non-VAT)
   const createInvoice = useCallback(
@@ -1097,6 +1319,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         customers,
         orders,
         workOrders,
+        designProofs,
         invoices,
         collections,
         employees,
@@ -1125,8 +1348,16 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         receivePurchaseOrder,
         createCustomerOrder,
         updateOrderStatus,
+        createDesignProof,
+        updateDesignProof,
+        addDesignRevision,
+        approveDesignProof,
+        requestDesignRevision,
         createWorkOrder,
         updateWorkOrder,
+        advanceWorkOrderStatus,
+        recordWorkOrderScrap,
+        addBomItemToWorkOrder,
         createInvoice,
         recordCollection,
         recordExpense,
