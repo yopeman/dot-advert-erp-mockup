@@ -163,12 +163,12 @@ export default function SalesHeader() {
       {/* Right: Quick Action Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <Link
-          href="/dashboard/collections"
+          href="/sales?tab=collections"
           className="btn btn-secondary btn-sm"
-          style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+          style={{ fontSize: '0.78rem', padding: '6px 12px', borderColor: 'rgba(16, 185, 129, 0.4)', color: '#6ee7b7' }}
         >
           <CreditCard size={14} />
-          <span>Collections</span>
+          <span>Collections & Receipts</span>
         </Link>
 
         {resetSuccess && (

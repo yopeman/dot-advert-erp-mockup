@@ -29,23 +29,30 @@ import {
   Landmark,
   BadgePercent,
   Download,
+  Smartphone,
+  Banknote,
+  FileCheck2,
+  Wallet,
 } from 'lucide-react';
-import { InvoiceType, Invoice, Customer, ProformaInvoice, ProformaStatus } from '@/types/erp';
+import { InvoiceType, Invoice, Customer, ProformaInvoice, ProformaStatus, PaymentMethod, Collection } from '@/types/erp';
 
 function SalesPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const activeTab = (searchParams.get('tab') as 'invoices' | 'proformas' | 'customers' | 'vat_reports') || 'invoices';
+  const activeTab =
+    (searchParams.get('tab') as 'invoices' | 'proformas' | 'collections' | 'customers' | 'vat_reports') || 'invoices';
 
   const {
     invoices,
     proformas,
     customers,
     orders,
+    collections,
     createInvoice,
     createProforma,
     updateProformaStatus,
     convertProformaToInvoice,
+    recordCollection,
     companyFinancials,
   } = useErp();
 
@@ -54,12 +61,15 @@ function SalesPageContent() {
   const [typeFilter, setTypeFilter] = useState<'all' | 'vat_15' | 'non_vat_exempt'>('all');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'unpaid' | 'partially_paid' | 'paid'>('all');
   const [proformaStatusFilter, setProformaStatusFilter] = useState<'all' | ProformaStatus>('all');
+  const [channelFilter, setChannelFilter] = useState<'all' | PaymentMethod>('all');
 
   // Modals
   const [showNewInvoiceModal, setShowNewInvoiceModal] = useState(false);
   const [showNewProformaModal, setShowNewProformaModal] = useState(false);
+  const [showCollectModal, setShowCollectModal] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
   const [previewProforma, setPreviewProforma] = useState<ProformaInvoice | null>(null);
+  const [previewReceipt, setPreviewReceipt] = useState<Collection | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
 
   // New Invoice Form State
@@ -77,6 +87,15 @@ function SalesPageContent() {
   const [proformaItemUnit, setProformaItemUnit] = useState('pcs');
   const [proformaItemPrice, setProformaItemPrice] = useState(25000);
   const [proformaNotes, setProformaNotes] = useState('Prices valid for 15 days. 50% advance on PO confirmation.');
+
+  // Collection Form State
+  const [selectedInvoiceIdForCollect, setSelectedInvoiceIdForCollect] = useState<string>(
+    invoices.find((i) => i.balanceDue > 0)?.id || invoices[0]?.id || ''
+  );
+  const [amountToCollect, setAmountToCollect] = useState<number>(0);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('telebirr');
+  const [bankRef, setBankRef] = useState('TB-8921092837');
+  const [collectorNotes, setCollectorNotes] = useState('Payment verified via digital confirmation.');
 
   const formatETB = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -97,6 +116,23 @@ function SalesPageContent() {
   const totalOutstandingBalance = invoices.reduce((sum, inv) => sum + inv.balanceDue, 0);
   const totalCollectedAmount = invoices.reduce((sum, inv) => sum + inv.paidAmount, 0);
   const totalProformaValue = proformas.reduce((sum, p) => sum + p.grandTotal, 0);
+
+  // Group Collections by Channel
+  const telebirrTotal = collections
+    .filter((c) => c.paymentMethod === 'telebirr')
+    .reduce((sum, c) => sum + c.amountReceived, 0);
+
+  const bankTotal = collections
+    .filter((c) => c.paymentMethod === 'bank_transfer')
+    .reduce((sum, c) => sum + c.amountReceived, 0);
+
+  const cashTotal = collections
+    .filter((c) => c.paymentMethod === 'cash')
+    .reduce((sum, c) => sum + c.amountReceived, 0);
+
+  const chapaTotal = collections
+    .filter((c) => c.paymentMethod === 'chapa')
+    .reduce((sum, c) => sum + c.amountReceived, 0);
 
   // Filtered Invoices
   const filteredInvoices = useMemo(() => {
@@ -127,6 +163,70 @@ function SalesPageContent() {
       return matchesSearch && matchesStatus;
     });
   }, [proformas, searchQuery, proformaStatusFilter]);
+
+  // Filtered Collections
+  const filteredCollections = useMemo(() => {
+    return collections.filter((col) => {
+      const q = searchQuery.toLowerCase();
+      const matchesSearch =
+        col.receiptNumber.toLowerCase().includes(q) ||
+        col.customerName.toLowerCase().includes(q) ||
+        col.invoiceNumber.toLowerCase().includes(q) ||
+        col.bankReference.toLowerCase().includes(q);
+
+      const matchesChannel = channelFilter === 'all' || col.paymentMethod === channelFilter;
+      return matchesSearch && matchesChannel;
+    });
+  }, [collections, searchQuery, channelFilter]);
+
+  // Open Collect Modal for a specific Invoice
+  const handleOpenCollectForInvoice = (invoice: Invoice) => {
+    setSelectedInvoiceIdForCollect(invoice.id);
+    setAmountToCollect(invoice.balanceDue);
+    setPaymentMethod('telebirr');
+    setBankRef(`TB-${Math.floor(100000000 + Math.random() * 900000000)}`);
+    setCollectorNotes(`Payment for ${invoice.invoiceNumber}`);
+    setShowCollectModal(true);
+  };
+
+  // Open Collect Modal for a specific Customer
+  const handleOpenCollectForCustomer = (cust: Customer) => {
+    const custInvoice = invoices.find((i) => i.customerId === cust.id && i.balanceDue > 0);
+    if (custInvoice) {
+      handleOpenCollectForInvoice(custInvoice);
+    } else {
+      const anyInvoice = invoices.find((i) => i.customerId === cust.id) || invoices[0];
+      if (anyInvoice) {
+        setSelectedInvoiceIdForCollect(anyInvoice.id);
+        setAmountToCollect(cust.outstandingBalance);
+        setPaymentMethod('telebirr');
+        setBankRef(`TB-${Math.floor(100000000 + Math.random() * 900000000)}`);
+        setCollectorNotes(`Customer balance settlement for ${cust.name}`);
+        setShowCollectModal(true);
+      }
+    }
+  };
+
+  // Handle Collection Submission
+  const handleSubmitCollection = (e: React.FormEvent) => {
+    e.preventDefault();
+    const inv = invoices.find((i) => i.id === selectedInvoiceIdForCollect);
+    if (!inv || amountToCollect <= 0) return;
+
+    recordCollection({
+      invoiceId: inv.id,
+      amountReceived: Number(amountToCollect),
+      paymentMethod,
+      bankReference: bankRef,
+      notes: collectorNotes,
+    });
+
+    setShowCollectModal(false);
+    setNotification(
+      `Payment of ${formatETB(amountToCollect)} collected via ${paymentMethod.toUpperCase()}! Customer credit & invoice reconciled.`
+    );
+    setTimeout(() => setNotification(null), 4000);
+  };
 
   // Handle New Invoice Submit
   const handleCreateInvoice = (e: React.FormEvent) => {
@@ -225,6 +325,8 @@ function SalesPageContent() {
     }
   };
 
+  const selectedInvoiceForForm = invoices.find((i) => i.id === selectedInvoiceIdForCollect);
+
   return (
     <div>
       {/* Top Header & Quick Actions */}
@@ -249,16 +351,30 @@ function SalesPageContent() {
                 letterSpacing: '0.08em',
               }}
             >
-              Sales, Billing & Tax Invoicing
+              Sales, Billing, Credit & Collections Desk
             </span>
             <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
-              • Dual 15% VAT & Non-VAT Directives
+              • Dual 15% VAT, Telebirr & CBE Reconciled
             </span>
           </div>
-          <h1 style={{ marginTop: '2px', fontSize: '1.65rem' }}>Customer Invoicing, Proformas & MoR Compliance</h1>
+          <h1 style={{ marginTop: '2px', fontSize: '1.65rem' }}>Customer Invoicing, Credit Limits & Digital Collections</h1>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => {
+              const firstDue = invoices.find((i) => i.balanceDue > 0) || invoices[0];
+              if (firstDue) handleOpenCollectForInvoice(firstDue);
+            }}
+            style={{
+              borderColor: 'rgba(16, 185, 129, 0.4)',
+              color: '#6ee7b7',
+            }}
+          >
+            <CreditCard size={14} />
+            <span>+ Record Collection</span>
+          </button>
           <button
             className="btn btn-secondary btn-sm"
             onClick={() => setShowNewProformaModal(true)}
@@ -331,16 +447,16 @@ function SalesPageContent() {
           </div>
         </div>
 
-        <div className="stat-card" style={{ borderTop: '2px solid #38bdf8' }}>
+        <div className="stat-card" style={{ borderTop: '2px solid #10b981' }}>
           <div className="stat-card-title">
-            <span>Active Proformas Pipeline</span>
-            <FileSpreadsheet size={16} color="#38bdf8" />
+            <span>Reconciled Collections</span>
+            <Wallet size={16} color="#10b981" />
           </div>
-          <div className="stat-card-value" style={{ color: '#38bdf8' }}>
-            {formatETB(totalProformaValue)}
+          <div className="stat-card-value" style={{ color: '#10b981' }}>
+            {formatETB(companyFinancials.totalCollected)}
           </div>
           <div className="stat-card-subtext">
-            <span>{proformas.length} quotes awaiting PO / advance</span>
+            <span>{collections.length} digital receipts via Telebirr & CBE</span>
           </div>
         </div>
 
@@ -353,7 +469,7 @@ function SalesPageContent() {
             {formatETB(totalOutstandingBalance)}
           </div>
           <div className="stat-card-subtext">
-            <span>{formatETB(totalCollectedAmount)} collected to date</span>
+            <span>Pending receivables across {customers.length} client accounts</span>
           </div>
         </div>
       </div>
@@ -411,13 +527,34 @@ function SalesPageContent() {
         </button>
 
         <button
+          onClick={() => setTab('collections')}
+          style={{
+            padding: '10px 18px',
+            background: 'transparent',
+            border: 'none',
+            borderBottom: activeTab === 'collections' ? '2px solid #10b981' : '2px solid transparent',
+            color: activeTab === 'collections' ? '#10b981' : 'var(--text-muted)',
+            fontWeight: activeTab === 'collections' ? 600 : 500,
+            fontSize: '0.875rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          <CreditCard size={16} color={activeTab === 'collections' ? '#10b981' : undefined} />
+          <span>Collections & Receipts</span>
+          <span className="badge badge-emerald">{collections.length}</span>
+        </button>
+
+        <button
           onClick={() => setTab('customers')}
           style={{
             padding: '10px 18px',
             background: 'transparent',
             border: 'none',
-            borderBottom: activeTab === 'customers' ? '2px solid #a855f7' : '2px solid transparent',
-            color: activeTab === 'customers' ? '#ffffff' : 'var(--text-muted)',
+            borderBottom: activeTab === 'customers' ? '2px solid #38bdf8' : '2px solid transparent',
+            color: activeTab === 'customers' ? '#38bdf8' : 'var(--text-muted)',
             fontWeight: activeTab === 'customers' ? 600 : 500,
             fontSize: '0.875rem',
             cursor: 'pointer',
@@ -426,7 +563,7 @@ function SalesPageContent() {
             gap: '8px',
           }}
         >
-          <Users size={16} color={activeTab === 'customers' ? '#c084fc' : undefined} />
+          <Users size={16} color={activeTab === 'customers' ? '#38bdf8' : undefined} />
           <span>Customer Accounts & Credit</span>
           <span className="badge badge-gray">{customers.length}</span>
         </button>
@@ -448,8 +585,8 @@ function SalesPageContent() {
           }}
         >
           <ShieldCheck size={16} color={activeTab === 'vat_reports' ? '#c084fc' : undefined} />
-          <span>MoR VAT Compliance & Tax Register</span>
-          <span className="badge badge-emerald">MoR 15%</span>
+          <span>MoR VAT Compliance</span>
+          <span className="badge badge-purple">MoR 15%</span>
         </button>
       </div>
 
@@ -680,15 +817,15 @@ function SalesPageContent() {
                             <span>Print</span>
                           </button>
                           {inv.balanceDue > 0 && (
-                            <Link
-                              href="/dashboard/collections"
+                            <button
+                              onClick={() => handleOpenCollectForInvoice(inv)}
                               className="btn btn-primary btn-sm"
                               title="Record Collection for this Invoice"
-                              style={{ padding: '4px 8px', fontSize: '0.72rem', background: '#0284c7' }}
+                              style={{ padding: '4px 8px', fontSize: '0.72rem', background: '#059669', borderColor: '#059669' }}
                             >
                               <CreditCard size={12} />
-                              <span>Pay</span>
-                            </Link>
+                              <span>Collect</span>
+                            </button>
                           )}
                         </div>
                       </td>
@@ -991,7 +1128,258 @@ function SalesPageContent() {
       )}
 
       {/* ======================================================== */}
-      {/* TAB 3: CUSTOMER ACCOUNTS & CREDIT LIMITS                 */}
+      {/* TAB 3: COLLECTIONS & DIGITAL RECEIPTS                    */}
+      {/* ======================================================== */}
+      {activeTab === 'collections' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Payment Channel Highlights */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+            <div className="card" style={{ borderLeft: '4px solid #10b981' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#10b981', textTransform: 'uppercase' }}>
+                  Telebirr Merchant
+                </span>
+                <Smartphone size={16} color="#10b981" />
+              </div>
+              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#ffffff', fontFamily: 'monospace' }}>
+                {formatETB(telebirrTotal)}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                Instant API reconciled via Ethio Telecom
+              </div>
+            </div>
+
+            <div className="card" style={{ borderLeft: '4px solid #3b82f6' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase' }}>
+                  Commercial Banks (CBE / Awash)
+                </span>
+                <Building2 size={16} color="#3b82f6" />
+              </div>
+              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#ffffff', fontFamily: 'monospace' }}>
+                {formatETB(bankTotal)}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                Wire transfers & RTGS corporate settlements
+              </div>
+            </div>
+
+            <div className="card" style={{ borderLeft: '4px solid #f59e0b' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase' }}>
+                  Cashier Cash
+                </span>
+                <Banknote size={16} color="#f59e0b" />
+              </div>
+              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#ffffff', fontFamily: 'monospace' }}>
+                {formatETB(cashTotal)}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                Counter cash receipts with physical deposit
+              </div>
+            </div>
+
+            <div className="card" style={{ borderLeft: '4px solid #a855f7' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#a855f7', textTransform: 'uppercase' }}>
+                  Total Collected To Date
+                </span>
+                <Wallet size={16} color="#a855f7" />
+              </div>
+              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#a855f7', fontFamily: 'monospace' }}>
+                {formatETB(companyFinancials.totalCollected)}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                {collections.length} reconciled digital receipt vouchers
+              </div>
+            </div>
+          </div>
+
+          {/* Receipts Table Card */}
+          <div className="card">
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '18px',
+                flexWrap: 'wrap',
+                gap: '12px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: '280px' }}>
+                <div style={{ position: 'relative', width: '100%', maxWidth: '340px' }}>
+                  <Search
+                    size={16}
+                    style={{
+                      position: 'absolute',
+                      left: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: 'var(--text-dim)',
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search receipt #, client, invoice, or bank ref..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px 8px 36px',
+                      fontSize: '0.82rem',
+                      background: 'var(--bg-input)',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-bright)',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                {/* Channel Filter */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Channel:</span>
+                  <select
+                    value={channelFilter}
+                    onChange={(e) => setChannelFilter(e.target.value as any)}
+                    style={{
+                      padding: '7px 10px',
+                      fontSize: '0.78rem',
+                      background: 'var(--bg-input)',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-bright)',
+                      outline: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <option value="all">All Payment Channels</option>
+                    <option value="telebirr">Telebirr Merchant</option>
+                    <option value="bank_transfer">CBE / Bank Transfer</option>
+                    <option value="cash">Counter Cash</option>
+                    <option value="chapa">Chapa Gateway</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => {
+                  const firstDue = invoices.find((i) => i.balanceDue > 0) || invoices[0];
+                  if (firstDue) handleOpenCollectForInvoice(firstDue);
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                }}
+              >
+                <PlusCircle size={14} />
+                <span>+ Record Collection Voucher</span>
+              </button>
+            </div>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Receipt #</th>
+                    <th>Date</th>
+                    <th>Customer Name</th>
+                    <th>Invoice Settled</th>
+                    <th style={{ textAlign: 'right' }}>Amount Received</th>
+                    <th style={{ textAlign: 'center' }}>Payment Channel</th>
+                    <th>Transaction / Bank Ref</th>
+                    <th style={{ textAlign: 'right' }}>Remaining Balance</th>
+                    <th>Cashier / Collector</th>
+                    <th style={{ textAlign: 'center' }}>Voucher</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredCollections.length === 0 ? (
+                    <tr>
+                      <td colSpan={10} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-dim)' }}>
+                        No collection records found matching current criteria.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredCollections.map((col) => (
+                      <tr key={col.id}>
+                        <td>
+                          <button
+                            onClick={() => setPreviewReceipt(col)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#10b981',
+                              fontWeight: 700,
+                              fontFamily: 'monospace',
+                              cursor: 'pointer',
+                              padding: 0,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                            }}
+                          >
+                            <FileCheck2 size={13} />
+                            <span>{col.receiptNumber}</span>
+                          </button>
+                        </td>
+                        <td style={{ fontSize: '0.8rem', color: '#ffffff' }}>{col.date}</td>
+                        <td style={{ fontWeight: 600, color: '#ffffff' }}>{col.customerName}</td>
+                        <td>
+                          <span style={{ fontFamily: 'monospace', color: '#c084fc', fontSize: '0.8rem' }}>
+                            {col.invoiceNumber}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: '#10b981' }}>
+                          {formatETB(col.amountReceived)}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <span
+                            className={`badge ${
+                              col.paymentMethod === 'telebirr'
+                                ? 'badge-emerald'
+                                : col.paymentMethod === 'bank_transfer'
+                                ? 'badge-blue'
+                                : 'badge-amber'
+                            }`}
+                            style={{ textTransform: 'capitalize' }}
+                          >
+                            {col.paymentMethod.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td>
+                          <code style={{ fontSize: '0.72rem', color: '#93c5fd', background: 'rgba(59, 130, 246, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                            {col.bankReference}
+                          </code>
+                        </td>
+                        <td style={{ textAlign: 'right', fontFamily: 'monospace', color: col.remainingCustomerBalance > 0 ? '#fbbf24' : '#10b981' }}>
+                          {formatETB(col.remainingCustomerBalance)}
+                        </td>
+                        <td style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>{col.receivedBy}</td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button
+                            onClick={() => setPreviewReceipt(col)}
+                            className="btn btn-secondary btn-sm"
+                            style={{ padding: '4px 8px', fontSize: '0.72rem' }}
+                            title="Print Cash Receipt Voucher"
+                          >
+                            <Printer size={12} />
+                            <span>Voucher</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 4: CUSTOMER ACCOUNTS & CREDIT LIMITS                 */}
       {/* ======================================================== */}
       {activeTab === 'customers' && (
         <div className="card">
@@ -1015,6 +1403,14 @@ function SalesPageContent() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setTab('collections')}
+                style={{ borderColor: 'rgba(16, 185, 129, 0.4)', color: '#6ee7b7' }}
+              >
+                <CreditCard size={14} />
+                <span>View Collections Ledger</span>
+              </button>
               <Link href="/crm" className="btn btn-secondary btn-sm">
                 <Users size={14} />
                 <span>Go to CRM Pipeline</span>
@@ -1106,17 +1502,31 @@ function SalesPageContent() {
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>{c.phone}</div>
                       </td>
                       <td style={{ textAlign: 'center' }}>
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => {
-                            setProformaCustomerId(c.id);
-                            setShowNewProformaModal(true);
-                          }}
-                          style={{ padding: '4px 8px', fontSize: '0.72rem' }}
-                        >
-                          <PlusCircle size={12} />
-                          <span>Quote</span>
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => {
+                              setProformaCustomerId(c.id);
+                              setShowNewProformaModal(true);
+                            }}
+                            style={{ padding: '4px 8px', fontSize: '0.72rem' }}
+                            title="Issue Proforma"
+                          >
+                            <PlusCircle size={12} />
+                            <span>Quote</span>
+                          </button>
+                          {c.outstandingBalance > 0 && (
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => handleOpenCollectForCustomer(c)}
+                              style={{ padding: '4px 8px', fontSize: '0.72rem', background: '#059669', borderColor: '#059669' }}
+                              title="Collect Outstanding Balance"
+                            >
+                              <CreditCard size={12} />
+                              <span>Collect</span>
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -1128,7 +1538,7 @@ function SalesPageContent() {
       )}
 
       {/* ======================================================== */}
-      {/* TAB 4: MoR VAT COMPLIANCE & TAX REGISTER                 */}
+      {/* TAB 5: MoR VAT COMPLIANCE & TAX REGISTER                 */}
       {/* ======================================================== */}
       {activeTab === 'vat_reports' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -1928,7 +2338,308 @@ function SalesPageContent() {
       )}
 
       {/* ======================================================== */}
-      {/* MODAL 3: PRINTABLE MOR TAX INVOICE PREVIEW               */}
+      {/* MODAL 3: RECORD PAYMENT COLLECTION                       */}
+      {/* ======================================================== */}
+      {showCollectModal && selectedInvoiceForForm && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px',
+          }}
+        >
+          <div
+            style={{
+              background: '#0e111d',
+              border: '1px solid rgba(16, 185, 129, 0.35)',
+              borderRadius: 'var(--radius-lg)',
+              maxWidth: '560px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.6)',
+            }}
+          >
+            <div
+              style={{
+                padding: '20px 24px',
+                borderBottom: '1px solid rgba(16, 185, 129, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#ffffff',
+                  }}
+                >
+                  <CreditCard size={17} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff' }}>
+                    Record Collection Voucher
+                  </h3>
+                  <p style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+                    Reconcile invoice payment & adjust customer credit balance
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCollectModal(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitCollection} style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Select Invoice */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '6px' }}>
+                    Target Customer Invoice:
+                  </label>
+                  <select
+                    value={selectedInvoiceIdForCollect}
+                    onChange={(e) => {
+                      setSelectedInvoiceIdForCollect(e.target.value);
+                      const inv = invoices.find((i) => i.id === e.target.value);
+                      if (inv) setAmountToCollect(inv.balanceDue);
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      background: 'var(--bg-input)',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-bright)',
+                      fontSize: '0.85rem',
+                      outline: 'none',
+                    }}
+                  >
+                    {invoices.map((i) => (
+                      <option key={i.id} value={i.id}>
+                        {i.invoiceNumber} - {i.customerName} (Due: {formatETB(i.balanceDue)} of {formatETB(i.grandTotal)})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Invoice Status Snapshot */}
+                <div
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid var(--border-subtle)',
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr 1fr',
+                    gap: '10px',
+                    fontSize: '0.78rem',
+                  }}
+                >
+                  <div>
+                    <div style={{ color: 'var(--text-dim)' }}>Grand Total</div>
+                    <div style={{ fontWeight: 700, color: '#ffffff', fontFamily: 'monospace' }}>
+                      {formatETB(selectedInvoiceForForm.grandTotal)}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ color: 'var(--text-dim)' }}>Already Paid</div>
+                    <div style={{ fontWeight: 700, color: '#10b981', fontFamily: 'monospace' }}>
+                      {formatETB(selectedInvoiceForForm.paidAmount)}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ color: 'var(--text-dim)' }}>Current Balance Due</div>
+                    <div style={{ fontWeight: 700, color: '#fbbf24', fontFamily: 'monospace' }}>
+                      {formatETB(selectedInvoiceForForm.balanceDue)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Amount to Collect */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>Amount to Collect (ETB):</label>
+                    <button
+                      type="button"
+                      onClick={() => setAmountToCollect(selectedInvoiceForForm.balanceDue)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#10b981',
+                        fontSize: '0.72rem',
+                        cursor: 'pointer',
+                        padding: 0,
+                        textDecoration: 'underline',
+                      }}
+                    >
+                      Pay Full Balance ({formatETB(selectedInvoiceForForm.balanceDue)})
+                    </button>
+                  </div>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    max={selectedInvoiceForForm.balanceDue || selectedInvoiceForForm.grandTotal}
+                    value={amountToCollect}
+                    onChange={(e) => setAmountToCollect(Number(e.target.value))}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      background: 'var(--bg-input)',
+                      border: '1px solid #10b981',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-bright)',
+                      fontSize: '0.95rem',
+                      fontFamily: 'monospace',
+                      fontWeight: 700,
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                {/* Payment Channel */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '8px' }}>
+                    Payment Channel:
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                    {[
+                      { id: 'telebirr', label: 'Telebirr', icon: Smartphone, color: '#10b981' },
+                      { id: 'bank_transfer', label: 'CBE / Wire', icon: Building2, color: '#3b82f6' },
+                      { id: 'cash', label: 'Counter Cash', icon: Banknote, color: '#f59e0b' },
+                    ].map((ch) => {
+                      const Icon = ch.icon;
+                      const isSelected = paymentMethod === ch.id;
+                      return (
+                        <button
+                          key={ch.id}
+                          type="button"
+                          onClick={() => {
+                            setPaymentMethod(ch.id as any);
+                            if (ch.id === 'telebirr') {
+                              setBankRef(`TB-${Math.floor(100000000 + Math.random() * 900000000)}`);
+                            } else if (ch.id === 'bank_transfer') {
+                              setBankRef(`CBE-TXN-${Math.floor(10000000 + Math.random() * 90000000)}`);
+                            } else {
+                              setBankRef(`CSH-REC-${Math.floor(1000 + Math.random() * 9000)}`);
+                            }
+                          }}
+                          style={{
+                            padding: '8px 10px',
+                            borderRadius: 'var(--radius-md)',
+                            border: isSelected ? `2px solid ${ch.color}` : '1px solid var(--border-subtle)',
+                            background: isSelected ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+                            color: isSelected ? '#ffffff' : 'var(--text-muted)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            fontSize: '0.78rem',
+                            fontWeight: isSelected ? 700 : 500,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Icon size={14} color={ch.color} />
+                          <span>{ch.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Bank / Transaction Reference */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '6px' }}>
+                    Transaction Reference / Telebirr Txn ID:
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={bankRef}
+                    onChange={(e) => setBankRef(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '9px 12px',
+                      background: 'var(--bg-input)',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-bright)',
+                      fontSize: '0.85rem',
+                      fontFamily: 'monospace',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '6px' }}>
+                    Internal Reconciliation Notes:
+                  </label>
+                  <input
+                    type="text"
+                    value={collectorNotes}
+                    onChange={(e) => setCollectorNotes(e.target.value)}
+                    placeholder="e.g. Paid in full via Telebirr merchant code 948210"
+                    style={{
+                      width: '100%',
+                      padding: '9px 12px',
+                      background: 'var(--bg-input)',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-bright)',
+                      fontSize: '0.82rem',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '24px' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setShowCollectModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-sm"
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    padding: '8px 20px',
+                  }}
+                >
+                  <CheckCircle2 size={15} />
+                  <span>Confirm Payment & Print Voucher</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL 4: PRINTABLE MOR TAX INVOICE PREVIEW               */}
       {/* ======================================================== */}
       {previewInvoice && (
         <div
@@ -2255,7 +2966,7 @@ function SalesPageContent() {
       )}
 
       {/* ======================================================== */}
-      {/* MODAL 4: PRINTABLE PROFORMA QUOTATION PREVIEW            */}
+      {/* MODAL 5: PRINTABLE PROFORMA QUOTATION PREVIEW            */}
       {/* ======================================================== */}
       {previewProforma && (
         <div
@@ -2497,6 +3208,218 @@ function SalesPageContent() {
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '20px', borderTop: '1px solid #e2e8f0', fontSize: '0.75rem', color: '#64748b' }}>
                 <div>Sales Representative: Dot Advert Commercial Team</div>
                 <div>Approved by: Commercial Director</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL 6: PRINTABLE CASH RECEIPT VOUCHER PREVIEW          */}
+      {/* ======================================================== */}
+      {previewReceipt && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.82)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1100,
+            padding: '20px',
+          }}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              color: '#0f172a',
+              borderRadius: 'var(--radius-lg)',
+              maxWidth: '680px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.7)',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            {/* Action Bar */}
+            <div
+              style={{
+                padding: '12px 24px',
+                background: '#f8fafc',
+                borderBottom: '1px solid #e2e8f0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', fontWeight: 600, color: '#059669' }}>
+                <FileCheck2 size={16} />
+                <span>Official Cash Receipt Voucher (CRV)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  onClick={() => window.print()}
+                  className="btn btn-primary btn-sm"
+                  style={{ background: '#059669', borderColor: '#059669', color: '#ffffff' }}
+                >
+                  <Printer size={14} />
+                  <span>Print Receipt</span>
+                </button>
+                <button
+                  onClick={() => setPreviewReceipt(null)}
+                  style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px' }}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+
+            {/* Voucher Document */}
+            <div style={{ padding: '32px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+              {/* Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #059669', paddingBottom: '14px', marginBottom: '18px' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div
+                      style={{
+                        width: '26px',
+                        height: '26px',
+                        borderRadius: '6px',
+                        background: '#059669',
+                        color: '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 900,
+                        fontSize: '0.85rem',
+                      }}
+                    >
+                      D
+                    </div>
+                    <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>
+                      DOT ADVERT & COMMUNICATION PLC
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>
+                    TIN: 0048291048 • Addis Ababa, Bole Sub-City
+                  </div>
+                </div>
+
+                <div style={{ textAlign: 'right' }}>
+                  <div
+                    style={{
+                      display: 'inline-block',
+                      padding: '3px 10px',
+                      background: '#059669',
+                      color: '#ffffff',
+                      fontSize: '0.75rem',
+                      fontWeight: 800,
+                      borderRadius: '4px',
+                      marginBottom: '4px',
+                    }}
+                  >
+                    OFFICIAL CASH RECEIPT
+                  </div>
+                  <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', fontFamily: 'monospace' }}>
+                    {previewReceipt.receiptNumber}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Date: {previewReceipt.date}</div>
+                </div>
+              </div>
+
+              {/* Receipt Details Body */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '0.85rem', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dotted #cbd5e1', paddingBottom: '8px' }}>
+                  <span style={{ color: '#64748b' }}>Received With Thanks From:</span>
+                  <strong style={{ color: '#0f172a' }}>{previewReceipt.customerName}</strong>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dotted #cbd5e1', paddingBottom: '8px' }}>
+                  <span style={{ color: '#64748b' }}>Against Invoice Reference:</span>
+                  <strong style={{ fontFamily: 'monospace', color: '#7c3aed' }}>{previewReceipt.invoiceNumber}</strong>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dotted #cbd5e1', paddingBottom: '8px' }}>
+                  <span style={{ color: '#64748b' }}>Payment Mode / Channel:</span>
+                  <span style={{ textTransform: 'uppercase', fontWeight: 700, color: '#059669' }}>
+                    {previewReceipt.paymentMethod.replace('_', ' ')}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dotted #cbd5e1', paddingBottom: '8px' }}>
+                  <span style={{ color: '#64748b' }}>Transaction / Bank Reference:</span>
+                  <code style={{ fontFamily: 'monospace', color: '#1e40af', fontWeight: 700 }}>
+                    {previewReceipt.bankReference}
+                  </code>
+                </div>
+
+                <div
+                  style={{
+                    background: '#ecfdf5',
+                    border: '1px solid #a7f3d0',
+                    borderRadius: '6px',
+                    padding: '14px 18px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginTop: '8px',
+                  }}
+                >
+                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#065f46' }}>Total Amount Received:</span>
+                  <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#059669', fontFamily: 'monospace' }}>
+                    {formatETB(previewReceipt.amountReceived)}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#64748b', marginTop: '4px' }}>
+                  <span>Remaining Customer Account Balance:</span>
+                  <strong style={{ fontFamily: 'monospace', color: previewReceipt.remainingCustomerBalance > 0 ? '#b45309' : '#059669' }}>
+                    {formatETB(previewReceipt.remainingCustomerBalance)}
+                  </strong>
+                </div>
+              </div>
+
+              {/* Signatures */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', paddingTop: '24px', borderTop: '1px solid #e2e8f0', fontSize: '0.75rem', color: '#64748b' }}>
+                <div>
+                  <div style={{ height: '32px' }} />
+                  <div style={{ borderTop: '1px solid #94a3b8', paddingTop: '4px', fontWeight: 600, color: '#0f172a' }}>
+                    Received By: {previewReceipt.receivedBy}
+                  </div>
+                  <div>Cashier / Accounts Officer</div>
+                </div>
+
+                <div>
+                  <div style={{ height: '32px' }} />
+                  <div style={{ borderTop: '1px solid #94a3b8', paddingTop: '4px', fontWeight: 600, color: '#0f172a' }}>
+                    Finance Verification
+                  </div>
+                  <div>Accountant Signature</div>
+                </div>
+
+                <div style={{ textAlign: 'center' }}>
+                  <div
+                    style={{
+                      width: '70px',
+                      height: '70px',
+                      border: '2px dashed #94a3b8',
+                      borderRadius: '50%',
+                      margin: '0 auto 4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.62rem',
+                      fontWeight: 700,
+                      color: '#94a3b8',
+                    }}
+                  >
+                    PAID STAMP
+                  </div>
+                </div>
               </div>
             </div>
           </div>

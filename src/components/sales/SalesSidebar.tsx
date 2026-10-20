@@ -23,7 +23,7 @@ function SalesSidebarContent() {
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab') || 'invoices';
 
-  const { invoices, proformas, customers, companyFinancials, currentRole, setCurrentRole } = useErp();
+  const { invoices, proformas, customers, collections, companyFinancials, currentRole, setCurrentRole } = useErp();
 
   const unpaidInvoices = invoices.filter((i) => i.paymentStatus !== 'paid');
   const activeProformas = proformas.filter((p) => p.status !== 'converted');
@@ -57,6 +57,14 @@ function SalesSidebarContent() {
       badgeType: activeProformas.length > 0 ? 'amber' : 'gray',
     },
     {
+      tabId: 'collections',
+      label: 'Collections & Digital Receipts',
+      href: '/sales?tab=collections',
+      icon: CreditCard,
+      badge: `${collections.length} Receipts`,
+      badgeType: 'emerald',
+    },
+    {
       tabId: 'customers',
       label: 'Customer Accounts & Credit',
       href: '/sales?tab=customers',
@@ -70,7 +78,7 @@ function SalesSidebarContent() {
       href: '/sales?tab=vat_reports',
       icon: ShieldCheck,
       badge: '15% VAT',
-      badgeType: 'emerald',
+      badgeType: 'purple',
     },
   ];
 
@@ -84,11 +92,6 @@ function SalesSidebarContent() {
       label: 'CRM & Lead Pipeline',
       href: '/crm',
       icon: Users,
-    },
-    {
-      label: 'Payment Collections',
-      href: '/dashboard/collections',
-      icon: CreditCard,
     },
     {
       label: 'Finance & P&L',
