@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { usePathname } from 'next/navigation';
 import { ErpDataProvider } from '@/context/ErpDataContext';
 import Sidebar from '@/components/layout/Sidebar';
@@ -21,44 +21,64 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [isGoldenStoryOpen, setIsGoldenStoryOpen] = useState(false);
   const pathname = usePathname();
 
-  const isCrmPage = pathname.startsWith('/crm');
-  const isOrdersPage = pathname.startsWith('/orders');
-  const isSalesPage = pathname.startsWith('/sales');
-  const isFinancePage = pathname.startsWith('/finance');
-  const isReportPage = pathname.startsWith('/report');
+  const isCrmPage = pathname?.startsWith('/crm');
+  const isOrdersPage = pathname?.startsWith('/orders');
+  const isSalesPage = pathname?.startsWith('/sales');
+  const isFinancePage = pathname?.startsWith('/finance');
+  const isReportPage = pathname?.startsWith('/report');
   const isNoSidebarPage = pathname === '/' || pathname === '/modules' || pathname === '/forms';
+  const isHrPage = pathname?.startsWith('/hr') || pathname?.startsWith('/inventory');
 
   return (
     <ErpDataProvider>
-      <div className="app-container">
-        {isCrmPage ? (
-          <CrmSidebar />
-        ) : isOrdersPage ? (
-          <OrdersSidebar />
-        ) : isSalesPage ? (
-          <SalesSidebar />
-        ) : isFinancePage ? (
-          <FinanceSidebar />
-        ) : isReportPage ? (
-          <ReportSidebar />
-        ) : (
-          !isNoSidebarPage && <Sidebar />
-        )}
-        <div className="main-content" style={{ width: isNoSidebarPage ? '100%' : undefined }}>
+      <div className="app-container" style={{ background: isHrPage ? '#f8fafc' : undefined }}>
+        <Suspense fallback={null}>
           {isCrmPage ? (
-            <CrmHeader />
+            <CrmSidebar />
           ) : isOrdersPage ? (
-            <OrdersHeader />
+            <OrdersSidebar />
           ) : isSalesPage ? (
-            <SalesHeader />
+            <SalesSidebar />
           ) : isFinancePage ? (
-            <FinanceHeader />
+            <FinanceSidebar />
           ) : isReportPage ? (
-            <ReportHeader />
+            <ReportSidebar />
           ) : (
-            <Header onOpenGoldenStory={() => setIsGoldenStoryOpen(true)} />
+            !isNoSidebarPage && <Sidebar />
           )}
-          <main className="page-body">{children}</main>
+        </Suspense>
+        <div
+          className="main-content"
+          style={{
+            width: isNoSidebarPage ? '100%' : undefined,
+            background: isHrPage ? '#f8fafc' : undefined,
+          }}
+        >
+          <Suspense fallback={null}>
+            {isCrmPage ? (
+              <CrmHeader />
+            ) : isOrdersPage ? (
+              <OrdersHeader />
+            ) : isSalesPage ? (
+              <SalesHeader />
+            ) : isFinancePage ? (
+              <FinanceHeader />
+            ) : isReportPage ? (
+              <ReportHeader />
+            ) : (
+              <Header onOpenGoldenStory={() => setIsGoldenStoryOpen(true)} />
+            )}
+          </Suspense>
+          <main
+            className="page-body"
+            style={{
+              background: isHrPage ? '#f8fafc' : undefined,
+              color: isHrPage ? '#0f172a' : undefined,
+              maxWidth: isHrPage ? '1680px' : undefined,
+            }}
+          >
+            {children}
+          </main>
         </div>
       </div>
       <GoldenStoryModal
