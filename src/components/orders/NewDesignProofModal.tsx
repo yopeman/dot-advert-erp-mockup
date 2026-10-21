@@ -61,8 +61,8 @@ export default function NewDesignProofModal({
       <div className="modal-content" style={{ maxWidth: '640px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Palette size={20} color="#818cf8" />
-            <h3 style={{ color: '#ffffff' }}>Create Graphic Design & Artwork Proof</h3>
+            <Palette size={20} color="#4338ca" />
+            <h3 style={{ color: 'var(--text-main)' }}>Create Graphic Design & Artwork Proof</h3>
           </div>
           <button
             onClick={onClose}

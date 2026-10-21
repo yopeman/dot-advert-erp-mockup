@@ -577,7 +577,7 @@ function OrdersPageContent() {
         <div
           style={{
             background: '#ecfdf5',
-            border: '1px solid #10b981',
+            border: '1px solid #059669',
             borderRadius: 'var(--radius-md)',
             padding: '12px 18px',
             marginBottom: '20px',
@@ -586,7 +586,7 @@ function OrdersPageContent() {
             gap: '10px',
           }}
         >
-          <CheckCircle2 size={18} color="#10b981" />
+          <CheckCircle2 size={18} color="#059669" />
           <span style={{ fontSize: '0.85rem', color: '#065f46', fontWeight: 600 }}>
             {notification}
           </span>
@@ -637,9 +637,9 @@ function OrdersPageContent() {
         <div className="stat-card">
           <div className="stat-card-title">
             <span>Factory Scrap / Wastage</span>
-            <Trash2 size={16} color="#ef4444" />
+            <Trash2 size={16} color="#dc2626" />
           </div>
-          <div className="stat-card-value" style={{ color: '#ef4444' }}>
+          <div className="stat-card-value" style={{ color: '#dc2626' }}>
             {formatETB(totalScrapCost)}
           </div>
           <div className="stat-card-subtext">
@@ -748,10 +748,10 @@ function OrdersPageContent() {
               const p = calculateOrderProfitability(ord.id);
               const marginColor =
                 (p?.profitMarginPct || 0) >= 40
-                  ? '#34d399'
+                  ? '#047857'
                   : (p?.profitMarginPct || 0) >= 20
-                  ? '#fbbf24'
-                  : '#fb7185';
+                  ? '#b45309'
+                  : '#dc2626';
 
               const linkedProof = designProofs.find(
                 (d) => d.customerOrderId === ord.id || d.id === ord.designProofId
@@ -840,7 +840,7 @@ function OrdersPageContent() {
                             display: 'flex',
                             alignItems: 'center',
                             gap: '4px',
-                            color: linkedProof.status === 'approved' ? '#34d399' : '#fbbf24',
+                            color: linkedProof.status === 'approved' ? '#047857' : '#b45309',
                           }}
                         >
                           <Palette size={12} />
@@ -859,7 +859,7 @@ function OrdersPageContent() {
                             display: 'flex',
                             alignItems: 'center',
                             gap: '4px',
-                            color: '#38bdf8',
+                            color: '#0e7490',
                             marginTop: '3px',
                           }}
                         >
@@ -935,7 +935,7 @@ function OrdersPageContent() {
               {/* ========================================================= */}
               <div
                 style={{
-                  background: 'rgba(255, 255, 255, 0.02)',
+                  background: '#f8fafc',
                   border: '1px solid var(--border-subtle)',
                   borderRadius: 'var(--radius-lg)',
                   padding: '14px 16px',
@@ -955,7 +955,7 @@ function OrdersPageContent() {
                     gap: '6px',
                   }}
                 >
-                  <Sparkles size={13} color="#38bdf8" />
+                  <Sparkles size={13} color="#0e7490" />
                   <span>Order Lifecycle Progress Pipeline</span>
                 </div>
 
@@ -976,8 +976,8 @@ function OrdersPageContent() {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                      <CheckCircle2 size={14} color="#10b981" />
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#34d399' }}>
+                      <CheckCircle2 size={14} color="#059669" />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#047857' }}>
                         1. Client & Surveys
                       </span>
                     </div>
@@ -1033,21 +1033,21 @@ function OrdersPageContent() {
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                       {allOrderDesignsApproved ? (
-                        <ShieldCheck size={14} color="#10b981" />
+                        <ShieldCheck size={14} color="#059669" />
                       ) : orderRevisionDesignsCount > 0 ? (
-                        <AlertTriangle size={14} color="#fb7185" />
+                        <AlertTriangle size={14} color="#dc2626" />
                       ) : (
-                        <Clock size={14} color="#fbbf24" />
+                        <Clock size={14} color="#b45309" />
                       )}
                       <span
                         style={{
                           fontSize: '0.75rem',
                           fontWeight: 700,
                           color: allOrderDesignsApproved
-                            ? '#059669'
+                            ? '#047857'
                             : orderRevisionDesignsCount > 0
                             ? '#e11d48'
-                            : '#d97706',
+                            : '#b45309',
                         }}
                       >
                         3. Design Proofs
@@ -1178,7 +1178,7 @@ function OrdersPageContent() {
                 {selectedOrderSurveys.length === 0 ? (
                   <div
                     style={{
-                      background: 'rgba(255, 255, 255, 0.02)',
+                      background: '#f8fafc',
                       border: '1px dashed var(--border-subtle)',
                       borderRadius: 'var(--radius-md)',
                       padding: '24px',
@@ -1226,7 +1226,7 @@ function OrdersPageContent() {
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
-                              <div style={{ fontSize: '0.675rem', fontWeight: 700, color: '#ca8a04', textTransform: 'uppercase' }}>
+                              <div style={{ fontSize: '0.675rem', fontWeight: 700, color: '#854d0e', textTransform: 'uppercase' }}>
                                 Signboard #{srvIdx + 1} • {survey.indoorOutdoor.toUpperCase()}
                               </div>
                               <h4 style={{ fontSize: '0.9rem', color: 'var(--text-main)', margin: '2px 0 0', fontWeight: 700 }}>
@@ -1244,7 +1244,7 @@ function OrdersPageContent() {
                               display: 'grid',
                               gridTemplateColumns: 'repeat(3, 1fr)',
                               gap: '6px',
-                              background: 'rgba(255, 255, 255, 0.02)',
+                              background: '#f8fafc',
                               border: '1px solid var(--border-subtle)',
                               borderRadius: 'var(--radius-sm)',
                               padding: '8px',
@@ -1253,19 +1253,19 @@ function OrdersPageContent() {
                           >
                             <div>
                               <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)' }}>Width × Height</div>
-                              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#38bdf8' }}>
+                              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0e7490' }}>
                                 {survey.widthMeters}m × {survey.heightMeters}m
                               </div>
                             </div>
                             <div>
                               <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)' }}>Surface Area</div>
-                              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#34d399' }}>
+                              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#047857' }}>
                                 {area} m²
                               </div>
                             </div>
                             <div>
                               <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)' }}>3D Depth</div>
-                              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#f59e0b' }}>
+                              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#b45309' }}>
                                 {survey.depthMeters ? `${survey.depthMeters}m` : 'Flat / 2D'}
                               </div>
                             </div>
@@ -1274,7 +1274,7 @@ function OrdersPageContent() {
                           {/* Technical & Installation Specs */}
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <MapPin size={12} color="#38bdf8" />
+                              <MapPin size={12} color="#0e7490" />
                               <span style={{ color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                 {survey.locationAddress}
                               </span>
@@ -1282,7 +1282,7 @@ function OrdersPageContent() {
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
                               <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <Zap size={12} color={survey.powerSourceAvailable ? '#34d399' : '#f59e0b'} />
+                                <Zap size={12} color={survey.powerSourceAvailable ? '#047857' : '#b45309'} />
                                 <span>{survey.powerSourceAvailable ? '220V Power Ready' : 'No Direct Power'}</span>
                               </span>
                               <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
@@ -1295,7 +1295,7 @@ function OrdersPageContent() {
                                 style={{
                                   fontSize: '0.7rem',
                                   color: 'var(--text-muted)',
-                                  background: 'rgba(255, 255, 255, 0.02)',
+                                  background: '#f8fafc',
                                   padding: '6px 8px',
                                   borderRadius: 'var(--radius-sm)',
                                   marginTop: '4px',
@@ -1319,7 +1319,7 @@ function OrdersPageContent() {
               {/* ========================================================= */}
               <div
                 style={{
-                  background: 'rgba(255, 255, 255, 0.02)',
+                  background: '#f8fafc',
                   border: '1px solid var(--border-subtle)',
                   borderRadius: 'var(--radius-lg)',
                   padding: '18px 20px',
@@ -1363,7 +1363,7 @@ function OrdersPageContent() {
 
                   <button
                     className="btn btn-secondary btn-sm"
-                    style={{ fontSize: '0.75rem', color: '#c084fc', borderColor: 'rgba(168, 85, 247, 0.3)' }}
+                    style={{ fontSize: '0.75rem', color: '#7e22ce', borderColor: 'rgba(168, 85, 247, 0.3)' }}
                     onClick={() => {
                       setNewDesignTargetOrderId(selectedOrder.id);
                       setShowNewDesignModal(true);
@@ -1388,7 +1388,7 @@ function OrdersPageContent() {
                       marginBottom: '14px',
                     }}
                   >
-                    <span style={{ fontSize: '0.8rem', color: '#7dd3fc' }}>
+                    <span style={{ fontSize: '0.8rem', color: '#075985' }}>
                       No design proofs attached to this order yet.
                     </span>
                     <button
@@ -1415,8 +1415,8 @@ function OrdersPageContent() {
                       marginBottom: '14px',
                     }}
                   >
-                    <ShieldCheck size={18} color="#10b981" />
-                    <span style={{ fontSize: '0.825rem', color: '#a7f3d0', fontWeight: 600 }}>
+                    <ShieldCheck size={18} color="#059669" />
+                    <span style={{ fontSize: '0.825rem', color: '#166534', fontWeight: 600 }}>
                       Customer Approval Certified: All {orderDesigns.length} artwork design proofs approved by {selectedOrder.customerName}. Workshop production released!
                     </span>
                   </div>
@@ -1433,8 +1433,8 @@ function OrdersPageContent() {
                       marginBottom: '14px',
                     }}
                   >
-                    <AlertTriangle size={18} color="#fb7185" />
-                    <span style={{ fontSize: '0.825rem', color: '#fecdd3', fontWeight: 600 }}>
+                    <AlertTriangle size={18} color="#dc2626" />
+                    <span style={{ fontSize: '0.825rem', color: '#9f1239', fontWeight: 600 }}>
                       Customer Action Required: {orderRevisionDesignsCount} design(s) have client revision requests pending designer updates.
                     </span>
                   </div>
@@ -1451,8 +1451,8 @@ function OrdersPageContent() {
                       marginBottom: '14px',
                     }}
                   >
-                    <Clock size={18} color="#fbbf24" />
-                    <span style={{ fontSize: '0.825rem', color: '#fde68a', fontWeight: 600 }}>
+                    <Clock size={18} color="#b45309" />
+                    <span style={{ fontSize: '0.825rem', color: '#92400e', fontWeight: 600 }}>
                       Awaiting Customer Approval: {orderPendingDesignsCount} of {orderDesigns.length} artwork proofs pending client digital sign-off.
                     </span>
                   </div>
@@ -1469,7 +1469,7 @@ function OrdersPageContent() {
                         <div
                           key={proof.id}
                           style={{
-                            background: 'rgba(255, 255, 255, 0.03)',
+                            background: '#f8fafc',
                             border: isApproved
                               ? '1px solid rgba(16, 185, 129, 0.25)'
                               : '1px solid var(--border-subtle)',
@@ -1492,7 +1492,7 @@ function OrdersPageContent() {
                                   height: '56px',
                                   borderRadius: '6px',
                                   objectFit: 'cover',
-                                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                                  border: '1px solid var(--border-subtle)',
                                 }}
                               />
                             ) : (
@@ -1505,7 +1505,7 @@ function OrdersPageContent() {
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  color: '#c084fc',
+                                  color: '#7e22ce',
                                 }}
                               >
                                 <Palette size={22} />
@@ -1514,7 +1514,7 @@ function OrdersPageContent() {
 
                             <div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: '#c084fc', fontWeight: 700 }}>
+                                <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: '#7e22ce', fontWeight: 700 }}>
                                   {proof.designNumber}
                                 </span>
                                 <span className={badge.className} style={{ fontSize: '0.675rem' }}>
@@ -1540,13 +1540,13 @@ function OrdersPageContent() {
                                     background: 'rgba(16, 185, 129, 0.08)',
                                     borderRadius: '4px',
                                     fontSize: '0.72rem',
-                                    color: '#a7f3d0',
+                                    color: '#166534',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '6px',
                                   }}
                                 >
-                                  <Check size={12} color="#10b981" />
+                                  <Check size={12} color="#059669" />
                                   <span>
                                     Signed off by <strong>{proof.approvedBy}</strong> ({proof.approvedDate || 'Approved'}). {proof.clientFeedback ? `"${proof.clientFeedback}"` : ''}
                                   </span>
@@ -1561,7 +1561,7 @@ function OrdersPageContent() {
                                     background: 'rgba(244, 63, 94, 0.08)',
                                     borderRadius: '4px',
                                     fontSize: '0.72rem',
-                                    color: '#fca5a5',
+                                    color: '#b91c1c',
                                   }}
                                 >
                                   <strong>Customer Revision:</strong> {proof.clientFeedback}
@@ -1587,8 +1587,8 @@ function OrdersPageContent() {
                                 style={{
                                   fontSize: '0.72rem',
                                   padding: '5px 10px',
-                                  background: '#10b981',
-                                  borderColor: '#059669',
+                                  background: '#047857',
+                                  borderColor: '#047857',
                                 }}
                                 onClick={() => setApprovingProof(proof)}
                               >
@@ -1600,7 +1600,7 @@ function OrdersPageContent() {
                             {proof.status !== 'revision_requested' && (
                               <button
                                 className="btn btn-secondary btn-sm"
-                                style={{ fontSize: '0.72rem', padding: '5px 9px', color: '#fda4af' }}
+                                style={{ fontSize: '0.72rem', padding: '5px 9px', color: '#be123c' }}
                                 onClick={() => setRevisingProof(proof)}
                               >
                                 <span>Request Revision</span>
@@ -1619,8 +1619,8 @@ function OrdersPageContent() {
                 style={{
                   background:
                     selectedProfitability.profitMarginPct >= 35
-                      ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(20, 30, 51, 0.9) 100%)'
-                      : 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(20, 30, 51, 0.9) 100%)',
+                      ? 'linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%)'
+                      : 'linear-gradient(135deg, #fffbeb 0%, #ffffff 100%)',
                   border:
                     selectedProfitability.profitMarginPct >= 35
                       ? '1px solid rgba(16, 185, 129, 0.35)'
@@ -1636,7 +1636,7 @@ function OrdersPageContent() {
                       style={{
                         fontSize: '0.75rem',
                         fontWeight: 700,
-                        color: selectedProfitability.profitMarginPct >= 35 ? '#34d399' : '#fbbf24',
+                        color: selectedProfitability.profitMarginPct >= 35 ? '#047857' : '#b45309',
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
                       }}
@@ -1647,7 +1647,7 @@ function OrdersPageContent() {
                       style={{
                         fontSize: '2rem',
                         fontWeight: 800,
-                        color: selectedProfitability.profitMarginPct >= 35 ? '#34d399' : '#fbbf24',
+                        color: selectedProfitability.profitMarginPct >= 35 ? '#047857' : '#b45309',
                         marginTop: '2px',
                       }}
                     >
@@ -1660,7 +1660,7 @@ function OrdersPageContent() {
                       style={{
                         fontSize: '2rem',
                         fontWeight: 800,
-                        color: selectedProfitability.profitMarginPct >= 35 ? '#34d399' : '#fbbf24',
+                        color: selectedProfitability.profitMarginPct >= 35 ? '#047857' : '#b45309',
                       }}
                     >
                       {selectedProfitability.profitMarginPct.toFixed(1)}%
@@ -1677,7 +1677,7 @@ function OrdersPageContent() {
                     className="progress-bar-fill"
                     style={{
                       width: `${Math.min(100, Math.max(0, selectedProfitability.profitMarginPct))}%`,
-                      background: selectedProfitability.profitMarginPct >= 35 ? '#10b981' : '#f59e0b',
+                      background: selectedProfitability.profitMarginPct >= 35 ? '#059669' : '#f59e0b',
                     }}
                   />
                 </div>
@@ -1706,7 +1706,7 @@ function OrdersPageContent() {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       padding: '9px 12px',
-                      background: 'rgba(255, 255, 255, 0.04)',
+                      background: '#f8fafc',
                       borderRadius: 'var(--radius-sm)',
                     }}
                   >
@@ -1730,7 +1730,7 @@ function OrdersPageContent() {
                     }}
                   >
                     <span>Direct Raw Materials Consumed (BOM):</span>
-                    <span style={{ color: '#fb7185' }}>
+                    <span style={{ color: '#dc2626' }}>
                       - {formatETB(selectedProfitability.directMaterialCost)}
                     </span>
                   </div>
@@ -1747,7 +1747,7 @@ function OrdersPageContent() {
                     }}
                   >
                     <span>Direct Workshop Labor (Operator Hours):</span>
-                    <span style={{ color: '#fb7185' }}>
+                    <span style={{ color: '#dc2626' }}>
                       - {formatETB(selectedProfitability.directLaborCost)}
                     </span>
                   </div>
@@ -1764,7 +1764,7 @@ function OrdersPageContent() {
                     }}
                   >
                     <span>Machine Station Hourly Runtime Cost:</span>
-                    <span style={{ color: '#fb7185' }}>
+                    <span style={{ color: '#dc2626' }}>
                       - {formatETB(selectedProfitability.machineCost)}
                     </span>
                   </div>
@@ -1785,7 +1785,7 @@ function OrdersPageContent() {
                       <span style={{ color: 'var(--text-muted)' }}>Material Wastage & Scrap Incurred:</span>
                       <button
                         className="btn btn-secondary btn-sm"
-                        style={{ fontSize: '0.675rem', padding: '2px 8px', color: '#fb7185', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                        style={{ fontSize: '0.675rem', padding: '2px 8px', color: '#dc2626', borderColor: 'rgba(239, 68, 68, 0.3)' }}
                         onClick={() => setShowLogWastageModal(true)}
                       >
                         <Trash2 size={11} />
@@ -1794,7 +1794,7 @@ function OrdersPageContent() {
                     </div>
                     <span
                       style={{
-                        color: selectedProfitability.wastageCost > 0 ? '#fb7185' : 'var(--text-dim)',
+                        color: selectedProfitability.wastageCost > 0 ? '#dc2626' : 'var(--text-dim)',
                         fontWeight: selectedProfitability.wastageCost > 0 ? 700 : 400,
                       }}
                     >
@@ -1818,7 +1818,7 @@ function OrdersPageContent() {
                       <span style={{ color: 'var(--text-muted)' }}>Direct Order Expenses & Logistics (Transport, Crane, Permits):</span>
                       <button
                         className="btn btn-secondary btn-sm"
-                        style={{ fontSize: '0.675rem', padding: '2px 8px', color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.3)' }}
+                        style={{ fontSize: '0.675rem', padding: '2px 8px', color: '#dc2626', borderColor: 'rgba(220, 38, 38, 0.25)' }}
                         onClick={() => setShowLogExpenseModal(true)}
                       >
                         <Receipt size={11} />
@@ -1827,7 +1827,7 @@ function OrdersPageContent() {
                     </div>
                     <span
                       style={{
-                        color: selectedProfitability.orderTransportCost > 0 ? '#fb7185' : 'var(--text-dim)',
+                        color: selectedProfitability.orderTransportCost > 0 ? '#dc2626' : 'var(--text-dim)',
                         fontWeight: selectedProfitability.orderTransportCost > 0 ? 700 : 400,
                       }}
                     >
@@ -1847,7 +1847,7 @@ function OrdersPageContent() {
                     }}
                   >
                     <span>Allocated Factory Fixed Overhead (5%):</span>
-                    <span style={{ color: '#fb7185' }}>
+                    <span style={{ color: '#dc2626' }}>
                       - {formatETB(selectedProfitability.allocatedOverheadCost)}
                     </span>
                   </div>
@@ -1865,7 +1865,7 @@ function OrdersPageContent() {
                     }}
                   >
                     <span>Total Order Cost (Fixed + Variable):</span>
-                    <span style={{ color: '#fb7185' }}>
+                    <span style={{ color: '#dc2626' }}>
                       {formatETB(selectedProfitability.totalOrderCost)}
                     </span>
                   </div>
@@ -1879,7 +1879,7 @@ function OrdersPageContent() {
                 {/* 1. Logged Direct Order Expenses Table */}
                 <div
                   style={{
-                    background: 'rgba(255, 255, 255, 0.02)',
+                    background: '#f8fafc',
                     border: '1px solid var(--border-subtle)',
                     borderRadius: 'var(--radius-md)',
                     padding: '14px 16px',
@@ -1894,14 +1894,14 @@ function OrdersPageContent() {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Receipt size={16} color="#fb7185" />
+                      <Receipt size={16} color="#dc2626" />
                       <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>
                         Logged Direct Expenses for {selectedOrder.orderNumber} ({orderExpenses.length})
                       </span>
                     </div>
                     <button
                       className="btn btn-secondary btn-sm"
-                      style={{ fontSize: '0.72rem', padding: '4px 10px', color: '#fb7185', borderColor: 'rgba(251, 113, 133, 0.3)' }}
+                      style={{ fontSize: '0.72rem', padding: '4px 10px', color: '#dc2626', borderColor: 'rgba(220, 38, 38, 0.25)' }}
                       onClick={() => setShowLogExpenseModal(true)}
                     >
                       <PlusCircle size={12} />
@@ -1936,7 +1936,7 @@ function OrdersPageContent() {
                               <td style={{ fontFamily: 'monospace', color: 'var(--text-dim)' }}>
                                 {exp.receiptRef || exp.expenseNumber}
                               </td>
-                              <td style={{ textAlign: 'right', fontWeight: 700, color: '#fb7185' }}>
+                              <td style={{ textAlign: 'right', fontWeight: 700, color: '#dc2626' }}>
                                 - {formatETB(exp.amountNet)}
                               </td>
                             </tr>
@@ -1954,7 +1954,7 @@ function OrdersPageContent() {
                 {/* 2. Logged Order Wastage / Scrap Table */}
                 <div
                   style={{
-                    background: 'rgba(255, 255, 255, 0.02)',
+                    background: '#f8fafc',
                     border: '1px solid var(--border-subtle)',
                     borderRadius: 'var(--radius-md)',
                     padding: '14px 16px',
@@ -1969,14 +1969,14 @@ function OrdersPageContent() {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Trash2 size={16} color="#ef4444" />
+                      <Trash2 size={16} color="#dc2626" />
                       <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>
                         Logged Scrap & Material Wastage for {selectedOrder.orderNumber} ({orderWastages.length})
                       </span>
                     </div>
                     <button
                       className="btn btn-secondary btn-sm"
-                      style={{ fontSize: '0.72rem', padding: '4px 10px', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                      style={{ fontSize: '0.72rem', padding: '4px 10px', color: '#dc2626', borderColor: 'rgba(239, 68, 68, 0.3)' }}
                       onClick={() => setShowLogWastageModal(true)}
                     >
                       <PlusCircle size={12} />
@@ -2011,7 +2011,7 @@ function OrdersPageContent() {
                                 </span>
                               </td>
                               <td style={{ color: 'var(--text-muted)' }}>{formatETB(wst.unitCost)}</td>
-                              <td style={{ textAlign: 'right', fontWeight: 700, color: '#ef4444' }}>
+                              <td style={{ textAlign: 'right', fontWeight: 700, color: '#dc2626' }}>
                                 - {formatETB(wst.totalCost)}
                               </td>
                             </tr>
@@ -2040,7 +2040,7 @@ function OrdersPageContent() {
               >
                 <button
                   className="btn btn-secondary btn-sm"
-                  style={{ color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.3)' }}
+                  style={{ color: '#dc2626', borderColor: 'rgba(220, 38, 38, 0.25)' }}
                   onClick={() => setShowLogExpenseModal(true)}
                 >
                   <Receipt size={13} />
@@ -2049,7 +2049,7 @@ function OrdersPageContent() {
 
                 <button
                   className="btn btn-secondary btn-sm"
-                  style={{ color: '#fda4af', borderColor: 'rgba(244, 63, 94, 0.3)' }}
+                  style={{ color: '#be123c', borderColor: 'rgba(244, 63, 94, 0.3)' }}
                   onClick={() => setShowLogWastageModal(true)}
                 >
                   <Trash2 size={13} />
@@ -2058,7 +2058,7 @@ function OrdersPageContent() {
 
                 <button
                   className="btn btn-secondary btn-sm"
-                  style={{ color: '#c084fc', borderColor: 'rgba(192, 132, 252, 0.3)' }}
+                  style={{ color: '#7e22ce', borderColor: 'rgba(192, 132, 252, 0.3)' }}
                   onClick={() => {
                     setNewDesignTargetOrderId(selectedOrder.id);
                     setShowNewDesignModal(true);
@@ -2237,7 +2237,7 @@ function OrdersPageContent() {
               className="btn btn-secondary btn-sm"
               onClick={() => setShowNewWoModal(true)}
             >
-              <Cog size={14} color="#38bdf8" />
+              <Cog size={14} color="#0e7490" />
               <span>+ Schedule Production Work Order</span>
             </button>
           </div>
@@ -2299,7 +2299,7 @@ function OrdersPageContent() {
           <div className="modal-content">
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <PlusCircle size={20} color="#818cf8" />
+                <PlusCircle size={20} color="#4338ca" />
                 <h3>Create New Customer Job Order</h3>
               </div>
               <button
@@ -2334,7 +2334,7 @@ function OrdersPageContent() {
                   <div
                     style={{
                       background: 'rgba(244, 63, 94, 0.15)',
-                      border: '1px solid #f43f5e',
+                      border: '1px solid #dc2626',
                       borderRadius: 'var(--radius-md)',
                       padding: '10px 14px',
                       marginBottom: '14px',
@@ -2342,7 +2342,7 @@ function OrdersPageContent() {
                       alignItems: 'center',
                       gap: '8px',
                       fontSize: '0.8rem',
-                      color: '#fca5a5',
+                      color: '#b91c1c',
                     }}
                   >
                     <ShieldAlert size={16} />
@@ -2458,8 +2458,8 @@ function OrdersPageContent() {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Ruler size={16} color="#38bdf8" />
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#38bdf8' }}>
+                      <Ruler size={16} color="#0e7490" />
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#0e7490' }}>
                         Link Site Surveys & Dimensions ({newOrderForm.siteSurveyIds.length} Selected)
                       </span>
                     </div>
@@ -2480,7 +2480,7 @@ function OrdersPageContent() {
                         style={{
                           background: 'none',
                           border: 'none',
-                          color: '#38bdf8',
+                          color: '#0e7490',
                           fontSize: '11px',
                           cursor: 'pointer',
                           textDecoration: 'underline',
@@ -2524,7 +2524,7 @@ function OrdersPageContent() {
                               gap: '10px',
                               padding: '10px 12px',
                               background: isChecked ? 'rgba(56, 189, 248, 0.12)' : 'var(--bg-app)',
-                              border: isChecked ? '1px solid #38bdf8' : '1px solid var(--border-subtle)',
+                              border: isChecked ? '1px solid #0e7490' : '1px solid var(--border-subtle)',
                               borderRadius: 'var(--radius-sm)',
                               cursor: 'pointer',
                               transition: 'all 0.15s ease',
@@ -2591,7 +2591,7 @@ function OrdersPageContent() {
           <div className="modal-content" style={{ maxWidth: '640px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Cog size={20} color="#38bdf8" />
+                <Cog size={20} color="#0e7490" />
                 <h3>Schedule Work Order & Bill of Materials</h3>
               </div>
               <button
@@ -2681,14 +2681,14 @@ function OrdersPageContent() {
                 {/* Multi-Item Bill of Materials Builder */}
                 <div
                   style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
+                    background: '#f8fafc',
                     border: '1px solid var(--border-subtle)',
                     borderRadius: 'var(--radius-md)',
                     padding: '14px',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#38bdf8' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0e7490' }}>
                       Allocated Raw Materials (BOM)
                     </div>
                     <button
@@ -2761,7 +2761,7 @@ function OrdersPageContent() {
                               style={{
                                 background: 'transparent',
                                 border: 'none',
-                                color: '#fb7185',
+                                color: '#dc2626',
                                 cursor: 'pointer',
                               }}
                             >
@@ -3030,7 +3030,7 @@ function OrdersPageContent() {
                     border: '1px solid var(--border-light)',
                   }}
                 >
-                  <AlertCircle size={28} color="#f59e0b" style={{ margin: '0 auto 8px' }} />
+                  <AlertCircle size={28} color="#b45309" style={{ margin: '0 auto 8px' }} />
                   <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)' }}>
                     No Site Surveys Found for {selectedOrder.customerName}
                   </div>
@@ -3089,7 +3089,7 @@ function OrdersPageContent() {
                             📍 {survey.locationAddress} • {survey.indoorOutdoor.toUpperCase()} • Elev: {survey.installationHeightMeters}m
                             {survey.depthMeters ? ` • Depth: ${survey.depthMeters}m` : ''}
                           </div>
-                          <div style={{ fontSize: '0.7rem', color: survey.powerSourceAvailable ? '#34d399' : '#f59e0b', marginTop: '2px' }}>
+                          <div style={{ fontSize: '0.7rem', color: survey.powerSourceAvailable ? '#047857' : '#b45309', marginTop: '2px' }}>
                             {survey.powerSourceAvailable ? '⚡ 220V Power Ready' : '⚠️ No Direct Power'}
                           </div>
                         </div>

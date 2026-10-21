@@ -75,8 +75,8 @@ export default function WorkOrderCard({
                 fontFamily: 'monospace',
                 fontSize: '0.85rem',
                 fontWeight: 700,
-                color: '#38bdf8',
-                background: 'rgba(56, 189, 248, 0.15)',
+                color: '#0e7490',
+                background: '#ecfeff',
                 padding: '3px 8px',
                 borderRadius: 'var(--radius-sm)',
               }}
@@ -91,7 +91,7 @@ export default function WorkOrderCard({
           <span className={statusBadge.className}>{statusBadge.label}</span>
         </div>
 
-        <h3 style={{ fontSize: '1.1rem', color: '#ffffff', marginBottom: '4px' }}>
+        <h3 style={{ fontSize: '1.1rem', color: 'var(--text-main)', marginBottom: '4px' }}>
           {workOrder.productDescription}
         </h3>
         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
@@ -107,15 +107,15 @@ export default function WorkOrderCard({
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              background: 'rgba(99, 102, 241, 0.12)',
-              border: '1px solid rgba(99, 102, 241, 0.3)',
+              background: '#eef2ff',
+              border: '1px solid rgba(67, 56, 202, 0.2)',
               borderRadius: 'var(--radius-sm)',
               padding: '4px 10px',
               fontSize: '0.75rem',
-              color: '#c7d2fe',
+              color: '#3730a3',
             }}
           >
-            <Sparkles size={12} color="#818cf8" />
+            <Sparkles size={12} color="#4338ca" />
             <span>
               Design: <strong>{designProof.designNumber}</strong> ({designProof.widthMeters}m × {designProof.heightMeters}m)
             </span>
@@ -127,7 +127,7 @@ export default function WorkOrderCard({
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            background: 'rgba(255, 255, 255, 0.04)',
+            background: '#f8fafc',
             border: '1px solid var(--border-subtle)',
             borderRadius: 'var(--radius-sm)',
             padding: '4px 10px',
@@ -135,7 +135,7 @@ export default function WorkOrderCard({
             color: 'var(--text-muted)',
           }}
         >
-          <Cog size={12} color="#38bdf8" />
+          <Cog size={12} color="#0e7490" />
           <span>Station: <strong>{workOrder.workCenterMachine}</strong></span>
         </div>
 
@@ -147,7 +147,7 @@ export default function WorkOrderCard({
                 style={{
                   fontSize: '0.68rem',
                   color: 'var(--text-dim)',
-                  background: 'rgba(255, 255, 255, 0.03)',
+                  background: '#f4f4f5',
                   padding: '2px 6px',
                   borderRadius: '3px',
                 }}
@@ -162,7 +162,7 @@ export default function WorkOrderCard({
       {/* Machine & Operator Hours */}
       <div
         style={{
-          background: 'rgba(255, 255, 255, 0.02)',
+          background: '#f8fafc',
           border: '1px solid var(--border-subtle)',
           borderRadius: 'var(--radius-md)',
           padding: '12px 14px',
@@ -174,7 +174,7 @@ export default function WorkOrderCard({
       >
         <div>
           <div style={{ color: 'var(--text-dim)', fontSize: '0.72rem' }}>Machine Runtime Logged</div>
-          <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#38bdf8', marginTop: '2px' }}>
+          <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0e7490', marginTop: '2px' }}>
             {workOrder.machineHours} Hours
             <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 400 }}>
               {' '}(@ {formatETB(workOrder.machineHourlyRate)}/hr = {formatETB(workOrder.machineHours * workOrder.machineHourlyRate)})
@@ -192,9 +192,9 @@ export default function WorkOrderCard({
         <div>
           <div style={{ color: 'var(--text-dim)', fontSize: '0.72rem' }}>Output & Scrap Count</div>
           <div style={{ color: 'var(--text-main)', marginTop: '2px' }}>
-            <span style={{ color: '#34d399', fontWeight: 700 }}>{workOrder.actualGoodQty} Good</span> / {workOrder.plannedQty} Planned
+            <span style={{ color: '#047857', fontWeight: 700 }}>{workOrder.actualGoodQty} Good</span> / {workOrder.plannedQty} Planned
             {workOrder.scrapQty > 0 && (
-              <span style={{ color: '#fb7185', fontWeight: 700, marginLeft: '8px' }}>
+              <span style={{ color: '#dc2626', fontWeight: 700, marginLeft: '8px' }}>
                 • {workOrder.scrapQty} Scrapped
               </span>
             )}
@@ -208,7 +208,7 @@ export default function WorkOrderCard({
           <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Bill of Materials (BOM) Allocated ({workOrder.bomItems.length} items)
           </div>
-          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>
             Subtotal: {formatETB(totalBomCost)}
           </div>
         </div>
@@ -216,7 +216,7 @@ export default function WorkOrderCard({
         <div style={{ border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
             <thead>
-              <tr style={{ background: 'rgba(255, 255, 255, 0.03)', textAlign: 'left', color: 'var(--text-dim)', borderBottom: '1px solid var(--border-subtle)' }}>
+              <tr style={{ background: '#f4f4f5', textAlign: 'left', color: 'var(--text-dim)', borderBottom: '1px solid var(--border-subtle)' }}>
                 <th style={{ padding: '8px 12px' }}>Raw Material</th>
                 <th style={{ padding: '8px 12px' }}>Planned</th>
                 <th style={{ padding: '8px 12px' }}>Issued</th>
@@ -226,12 +226,12 @@ export default function WorkOrderCard({
             </thead>
             <tbody>
               {workOrder.bomItems.map((item, idx) => (
-                <tr key={idx} style={{ borderBottom: idx < workOrder.bomItems.length - 1 ? '1px solid rgba(255, 255, 255, 0.03)' : 'none' }}>
+                <tr key={idx} style={{ borderBottom: idx < workOrder.bomItems.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
                   <td style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--text-main)' }}>{item.itemName}</td>
                   <td style={{ padding: '8px 12px', color: 'var(--text-muted)' }}>{item.plannedQty} {item.unit}</td>
-                  <td style={{ padding: '8px 12px', color: '#38bdf8', fontWeight: 600 }}>{item.actualIssuedQty || item.plannedQty} {item.unit}</td>
+                  <td style={{ padding: '8px 12px', color: '#0e7490', fontWeight: 600 }}>{item.actualIssuedQty || item.plannedQty} {item.unit}</td>
                   <td style={{ padding: '8px 12px', color: 'var(--text-muted)' }}>{formatETB(item.unitCost)}</td>
-                  <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600, color: '#ffffff' }}>{formatETB(item.totalCost)}</td>
+                  <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600, color: 'var(--text-main)' }}>{formatETB(item.totalCost)}</td>
                 </tr>
               ))}
             </tbody>
@@ -243,8 +243,8 @@ export default function WorkOrderCard({
       {workOrder.qualityInspectionNotes && (
         <div
           style={{
-            background: 'rgba(168, 85, 247, 0.08)',
-            border: '1px solid rgba(168, 85, 247, 0.25)',
+            background: '#faf5ff',
+            border: '1px solid rgba(126, 34, 206, 0.2)',
             borderRadius: 'var(--radius-md)',
             padding: '10px 14px',
             fontSize: '0.78rem',
@@ -253,10 +253,10 @@ export default function WorkOrderCard({
             gap: '8px',
           }}
         >
-          <ShieldCheck size={16} color="#c084fc" style={{ flexShrink: 0, marginTop: '2px' }} />
+          <ShieldCheck size={16} color="#7e22ce" style={{ flexShrink: 0, marginTop: '2px' }} />
           <div>
-            <span style={{ color: '#c084fc', fontWeight: 600 }}>QC Sign-Off & Inspection ({workOrder.qualityInspector || 'Inspector'}): </span>
-            <span style={{ color: '#f1f5f9' }}>{workOrder.qualityInspectionNotes}</span>
+            <span style={{ color: '#7e22ce', fontWeight: 600 }}>QC Sign-Off & Inspection ({workOrder.qualityInspector || 'Inspector'}): </span>
+            <span style={{ color: 'var(--text-main)' }}>{workOrder.qualityInspectionNotes}</span>
           </div>
         </div>
       )}
@@ -292,7 +292,7 @@ export default function WorkOrderCard({
           </button>
           <button
             className="btn btn-secondary btn-sm"
-            style={{ fontSize: '0.75rem', padding: '6px 10px', color: '#fda4af', borderColor: 'rgba(244, 63, 94, 0.3)' }}
+            style={{ fontSize: '0.75rem', padding: '6px 10px', color: '#be123c', borderColor: 'rgba(220, 38, 38, 0.25)' }}
             onClick={() => onLogScrap(workOrder)}
           >
             <Trash2 size={13} />
@@ -316,7 +316,7 @@ export default function WorkOrderCard({
           {workOrder.status === 'in_progress' && (
             <button
               className="btn btn-primary btn-sm"
-              style={{ fontSize: '0.75rem', padding: '6px 12px', background: '#a855f7', borderColor: '#a855f7' }}
+              style={{ fontSize: '0.75rem', padding: '6px 12px', background: '#7e22ce', borderColor: '#7e22ce' }}
               onClick={() => onAdvanceStatus(workOrder.id, 'quality_inspection')}
             >
               <span>Send to Quality Inspection</span>
@@ -327,7 +327,7 @@ export default function WorkOrderCard({
           {workOrder.status === 'quality_inspection' && (
             <button
               className="btn btn-primary btn-sm"
-              style={{ fontSize: '0.75rem', padding: '6px 12px', background: '#10b981', borderColor: '#10b981' }}
+              style={{ fontSize: '0.75rem', padding: '6px 12px', background: '#047857', borderColor: '#047857' }}
               onClick={() => onAdvanceStatus(workOrder.id, 'completed')}
             >
               <CheckCircle2 size={13} />
@@ -336,7 +336,7 @@ export default function WorkOrderCard({
           )}
 
           {workOrder.status === 'completed' && (
-            <span style={{ fontSize: '0.75rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontSize: '0.75rem', color: '#047857', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <CheckCircle2 size={14} />
               <span>Job Completed</span>
             </span>
