@@ -33,11 +33,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isNoSidebarPage = pathname === '/' || pathname === '/modules' || pathname === '/forms';
   const isHrPage = pathname?.startsWith('/hr');
   const isStorePage = pathname?.startsWith('/inventory') || pathname?.startsWith('/dashboard/inventory');
-  const isDedicatedPage = isHrPage || isStorePage;
 
   return (
     <ErpDataProvider>
-      <div className="app-container" style={{ background: isDedicatedPage ? '#f8fafc' : undefined }}>
+      <div className="app-container" style={{ background: 'var(--bg-app)' }}>
         <Suspense fallback={null}>
           {isCrmPage ? (
             <CrmSidebar />
@@ -61,7 +60,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           className="main-content"
           style={{
             width: isNoSidebarPage ? '100%' : undefined,
-            background: isDedicatedPage ? '#f8fafc' : undefined,
+            background: 'var(--bg-app)',
           }}
         >
           <Suspense fallback={null}>
@@ -86,9 +85,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <main
             className="page-body"
             style={{
-              background: isDedicatedPage ? '#f8fafc' : undefined,
-              color: isDedicatedPage ? '#0f172a' : undefined,
-              maxWidth: isDedicatedPage ? '1680px' : undefined,
+              background: 'var(--bg-app)',
+              color: 'var(--text-main)',
+              maxWidth: isNoSidebarPage ? '1440px' : '1680px',
             }}
           >
             {children}

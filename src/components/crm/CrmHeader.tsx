@@ -47,10 +47,10 @@ export default function CrmHeader() {
     <header
       style={{
         height: '68px',
-        background: 'rgba(12, 19, 34, 0.92)',
+        background: '#ffffff',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(99, 102, 241, 0.2)',
+        borderBottom: '1px solid #e4e4e7',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -58,6 +58,7 @@ export default function CrmHeader() {
         position: 'sticky',
         top: 0,
         zIndex: 50,
+        boxShadow: '0 1px 3px rgba(10, 10, 10, 0.04)',
       }}
     >
       {/* Left: CRM Division Branding */}
@@ -68,15 +69,15 @@ export default function CrmHeader() {
               width: '10px',
               height: '10px',
               borderRadius: '50%',
-              background: '#06b6d4',
-              boxShadow: '0 0 10px #06b6d4',
+              background: '#facc15',
+              boxShadow: '0 0 8px rgba(250, 204, 21, 0.8)',
             }}
           />
           <div>
-            <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.01em' }}>
+            <div style={{ fontSize: '0.875rem', fontWeight: 800, color: '#09090b', letterSpacing: '-0.01em' }}>
               Dot Advert CRM Desk
             </div>
-            <div style={{ fontSize: '0.675rem', color: '#94a3b8' }}>
+            <div style={{ fontSize: '0.675rem', color: '#71717a', fontWeight: 500 }}>
               Commercial Pipeline • Site Surveys • Customer Accounts
             </div>
           </div>
@@ -85,10 +86,12 @@ export default function CrmHeader() {
         <span
           style={{
             fontSize: '0.7rem',
-            color: 'var(--text-dim)',
-            background: 'rgba(255,255,255,0.06)',
-            padding: '2px 8px',
-            borderRadius: '4px',
+            color: '#71717a',
+            background: '#f4f4f5',
+            border: '1px solid #e4e4e7',
+            padding: '3px 10px',
+            borderRadius: '9999px',
+            fontWeight: 600,
           }}
         >
           Addis Ababa • ETB
@@ -99,35 +102,41 @@ export default function CrmHeader() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         {/* Live Pipeline Value Pill */}
         <div
-          className="badge badge-indigo"
           style={{
-            padding: '6px 12px',
+            padding: '5px 12px',
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
             fontSize: '12px',
             fontWeight: 700,
+            background: '#fef9c3',
+            color: '#854d0e',
+            border: '1px solid #fde047',
+            borderRadius: '9999px',
           }}
           title="Total open pipeline value"
         >
-          <TrendingUp size={13} />
+          <TrendingUp size={13} color="#ca8a04" />
           <span>Pipeline: {formatETB(totalPipelineValue)}</span>
         </div>
 
         {/* Surveys Count Pill */}
         <div
-          className="badge badge-cyan"
           style={{
-            padding: '6px 12px',
+            padding: '5px 12px',
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
             fontSize: '12px',
             fontWeight: 700,
+            background: '#f4f4f5',
+            color: '#09090b',
+            border: '1px solid #e4e4e7',
+            borderRadius: '9999px',
           }}
           title="Active facade site surveys"
         >
-          <Ruler size={13} />
+          <Ruler size={13} color="#0891b2" />
           <span>{totalSurveysCount} Sign Surveys</span>
         </div>
 
@@ -137,16 +146,16 @@ export default function CrmHeader() {
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            background: 'var(--bg-input)',
-            border: '1px solid var(--border-medium)',
+            background: '#ffffff',
+            border: '1px solid #e4e4e7',
             borderRadius: 'var(--radius-md)',
             padding: '5px 10px',
             fontSize: '0.78rem',
-            color: '#a5b4fc',
+            color: '#09090b',
             fontWeight: 600,
           }}
         >
-          <UserCheck size={14} color="#818cf8" />
+          <UserCheck size={14} color="#ca8a04" />
           <span>Sales & Accounts Lead</span>
         </div>
 

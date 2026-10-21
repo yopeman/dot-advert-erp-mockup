@@ -91,8 +91,8 @@ function CrmSidebarContent() {
     <aside
       style={{
         width: '275px',
-        background: '#0c1322',
-        borderRight: '1px solid rgba(99, 102, 241, 0.2)',
+        background: '#09090b',
+        borderRight: '1px solid #18181b',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -108,10 +108,11 @@ function CrmSidebarContent() {
         <div
           style={{
             padding: '24px 20px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            borderBottom: '1px solid #18181b',
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
+            background: '#09090b',
           }}
         >
           <BrandLogo size={38} radius={10} />
@@ -122,8 +123,8 @@ function CrmSidebarContent() {
             <div
               style={{
                 fontSize: '0.65rem',
-                fontWeight: 700,
-                color: '#38bdf8',
+                fontWeight: 800,
+                color: '#facc15',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
               }}
@@ -138,9 +139,9 @@ function CrmSidebarContent() {
           <div
             style={{
               fontSize: '0.675rem',
-              fontWeight: 700,
+              fontWeight: 800,
               textTransform: 'uppercase',
-              color: 'var(--text-dim)',
+              color: '#71717a',
               letterSpacing: '0.08em',
               padding: '6px 12px 4px',
             }}
@@ -162,22 +163,41 @@ function CrmSidebarContent() {
                   justifyContent: 'space-between',
                   padding: '10px 12px',
                   borderRadius: 'var(--radius-md)',
-                  color: isActive ? '#ffffff' : 'var(--text-muted)',
-                  background: isActive ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-                  fontWeight: isActive ? 600 : 500,
+                  color: isActive ? '#facc15' : '#a1a1aa',
+                  background: isActive ? 'rgba(250, 204, 21, 0.12)' : 'transparent',
+                  fontWeight: isActive ? 700 : 500,
                   fontSize: '0.84rem',
-                  border: isActive ? '1px solid rgba(99, 102, 241, 0.35)' : '1px solid transparent',
+                  border: isActive ? '1px solid rgba(250, 204, 21, 0.35)' : '1px solid transparent',
                   transition: 'all 0.15s ease',
+                  textDecoration: 'none',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.color = '#ffffff';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.color = '#a1a1aa';
+                    e.currentTarget.style.background = 'transparent';
+                  }
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Icon size={17} color={isActive ? '#818cf8' : 'var(--text-dim)'} />
+                  <Icon size={17} color={isActive ? '#facc15' : '#71717a'} />
                   <span>{item.label}</span>
                 </div>
                 {item.badge && (
                   <span
-                    className={`badge badge-${item.badgeType}`}
-                    style={{ fontSize: '0.68rem', padding: '2px 7px' }}
+                    style={{
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      padding: '2px 8px',
+                      borderRadius: '9999px',
+                      background: isActive ? '#facc15' : '#27272a',
+                      color: isActive ? '#09090b' : '#e4e4e7',
+                    }}
                   >
                     {item.badge}
                   </span>
@@ -190,9 +210,9 @@ function CrmSidebarContent() {
           <div
             style={{
               fontSize: '0.675rem',
-              fontWeight: 700,
+              fontWeight: 800,
               textTransform: 'uppercase',
-              color: 'var(--text-dim)',
+              color: '#71717a',
               letterSpacing: '0.08em',
               padding: '16px 12px 4px',
             }}
@@ -212,17 +232,18 @@ function CrmSidebarContent() {
                   justifyContent: 'space-between',
                   padding: '9px 12px',
                   borderRadius: 'var(--radius-md)',
-                  color: 'var(--text-dim)',
+                  color: '#a1a1aa',
                   fontSize: '0.82rem',
                   fontWeight: 500,
                   transition: 'all 0.15s ease',
+                  textDecoration: 'none',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.color = '#ffffff';
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'var(--text-dim)';
+                  e.currentTarget.style.color = '#a1a1aa';
                   e.currentTarget.style.background = 'transparent';
                 }}
               >
@@ -242,20 +263,20 @@ function CrmSidebarContent() {
         {/* Pipeline Mini Card */}
         <div
           style={{
-            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(6, 182, 212, 0.1) 100%)',
-            border: '1px solid rgba(99, 102, 241, 0.25)',
+            background: 'rgba(250, 204, 21, 0.06)',
+            border: '1px solid rgba(250, 204, 21, 0.3)',
             borderRadius: 'var(--radius-md)',
             padding: '12px 14px',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '11px', color: '#93c5fd', fontWeight: 600 }}>Active Pipeline</span>
-            <Sparkles size={13} color="#93c5fd" />
+            <span style={{ fontSize: '11px', color: '#facc15', fontWeight: 700 }}>Active Pipeline</span>
+            <Sparkles size={13} color="#facc15" />
           </div>
           <div style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff', marginTop: '4px' }}>
             {formatETB(totalPipelineValue)}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
+          <div style={{ fontSize: '11px', color: '#a1a1aa', marginTop: '2px' }}>
             {activeLeads.length} Open Inquiries in Flight
           </div>
         </div>
@@ -271,18 +292,22 @@ function CrmSidebarContent() {
             padding: '10px',
             borderRadius: 'var(--radius-md)',
             background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid var(--border-subtle)',
-            color: 'var(--text-main)',
+            border: '1px solid #27272a',
+            color: '#ffffff',
             fontSize: '12px',
-            fontWeight: 600,
+            fontWeight: 700,
             textDecoration: 'none',
-            transition: 'background 0.15s ease',
+            transition: 'all 0.15s ease',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+            e.currentTarget.style.background = '#facc15';
+            e.currentTarget.style.color = '#09090b';
+            e.currentTarget.style.borderColor = '#facc15';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+            e.currentTarget.style.color = '#ffffff';
+            e.currentTarget.style.borderColor = '#27272a';
           }}
         >
           <ArrowLeft size={14} />
@@ -298,10 +323,16 @@ function CrmSidebarContent() {
             justifyContent: 'center',
             gap: '8px',
             padding: '8px',
-            color: 'var(--text-dim)',
+            color: '#a1a1aa',
             fontSize: '11px',
-            fontWeight: 500,
+            fontWeight: 600,
             textDecoration: 'none',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#facc15';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = '#a1a1aa';
           }}
         >
           <LayoutGrid size={13} />

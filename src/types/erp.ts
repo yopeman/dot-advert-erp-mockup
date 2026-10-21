@@ -216,6 +216,7 @@ export interface SiteSurvey {
   status?: 'scheduled' | 'completed' | 'verified';
   leadId?: string;
   customerId?: string;
+  orderId?: string;
 }
 
 export interface Lead {
@@ -288,6 +289,7 @@ export interface CustomerOrder {
   priority: 'low' | 'normal' | 'high' | 'urgent';
   notes?: string;
   designProofId?: string;
+  siteSurveyIds?: string[]; // 1-to-many: Linked site surveys for this order
 }
 
 export type DesignStatus =

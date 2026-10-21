@@ -65,10 +65,10 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
     <header
       style={{
         height: '68px',
-        background: isHr ? '#0a0a0a' : 'var(--bg-header)',
+        background: '#ffffff',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: isHr ? '1px solid #27272a' : '1px solid var(--border-subtle)',
+        borderBottom: '1px solid #e4e4e7',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -76,6 +76,7 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
         position: 'sticky',
         top: 0,
         zIndex: 50,
+        boxShadow: '0 1px 3px rgba(10, 10, 10, 0.04)',
       }}
     >
       {/* Left: Organization & Currency */}
@@ -93,10 +94,10 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
           >
             <BrandLogo size={34} radius={8} />
             <div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>
+              <div style={{ fontSize: '0.95rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#09090b' }}>
                 DOT ADVERT
               </div>
-              <div style={{ fontSize: '0.62rem', fontWeight: 600, color: '#818cf8', letterSpacing: '0.08em' }}>
+              <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#ca8a04', letterSpacing: '0.08em' }}>
                 SYSTEM DIRECTORY
               </div>
             </div>
@@ -108,11 +109,11 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
                 width: '10px',
                 height: '10px',
                 borderRadius: '50%',
-                background: '#10b981',
-                boxShadow: '0 0 10px #10b981',
+                background: '#facc15',
+                boxShadow: '0 0 8px rgba(250, 204, 21, 0.8)',
               }}
             />
-            <span style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-main)' }}>
+            <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#09090b' }}>
               Dot Advert & Print Solutions PLC
             </span>
           </div>
@@ -121,10 +122,12 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
         <span
           style={{
             fontSize: '0.7rem',
-            color: 'var(--text-dim)',
-            background: 'rgba(255,255,255,0.06)',
-            padding: '2px 8px',
-            borderRadius: '4px',
+            color: '#71717a',
+            background: '#f4f4f5',
+            border: '1px solid #e4e4e7',
+            padding: '3px 10px',
+            borderRadius: '9999px',
+            fontWeight: 600,
           }}
         >
           Addis Ababa • ETB (15% VAT)
@@ -132,7 +135,7 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
       </div>
 
       {/* Right Controls: Role Switcher, Guided Story, Reset */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         {/* Low Stock Warning Pill */}
         {lowStockItems.length > 0 && (
           <div
@@ -159,7 +162,7 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
 
         {/* Persona / Role Selector */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <UserCheck size={16} color="var(--text-muted)" />
+          <UserCheck size={16} color="#71717a" />
           <select
             className="form-select"
             value={currentRole}
@@ -168,10 +171,10 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
               padding: '6px 12px',
               fontSize: '0.8rem',
               fontWeight: 600,
-              background: 'var(--bg-input)',
-              border: '1px solid var(--border-medium)',
+              background: '#ffffff',
+              border: '1px solid #d4d4d8',
               borderRadius: 'var(--radius-md)',
-              color: '#a5b4fc',
+              color: '#09090b',
               cursor: 'pointer',
             }}
           >
@@ -219,8 +222,9 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
           className="btn btn-primary btn-sm"
           onClick={onOpenGoldenStory}
           style={{
-            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-            boxShadow: '0 2px 10px rgba(139, 92, 246, 0.35)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
           }}
         >
           <Sparkles size={14} />

@@ -79,48 +79,46 @@ export default function DashboardPage() {
 
   return (
     <div>
-      {/* Top Welcome & Quick Actions Bar */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: '24px',
-          flexWrap: 'wrap',
-          gap: '16px',
-        }}
-      >
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: '#818cf8',
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-              }}
-            >
-              Executive Command Center
-            </span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>• Live Telemetry</span>
+      {/* Top Welcome Hero Banner */}
+      <div className="hero-banner" style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', position: 'relative', zIndex: 1 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <span className="hero-pill">
+                EXECUTIVE TELEMETRY
+              </span>
+              <span style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>• Real-Time Ethiopian Advertising ERP Engine</span>
+            </div>
+            <h1 style={{ fontSize: '1.65rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', margin: 0 }}>
+              Factory Operations & Order Profitability
+            </h1>
+            <p style={{ fontSize: '0.825rem', color: '#a1a1aa', margin: '6px 0 0', maxWidth: '640px' }}>
+              True job-level margin tracking with 15% Ethiopian VAT compliance, real-time BOM rollups, and shopfloor capacity monitoring.
+            </p>
           </div>
-          <h1 style={{ marginTop: '2px' }}>Factory Operations & Order Profitability</h1>
-        </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Link href="/orders" className="btn btn-secondary btn-sm">
-            <Cog size={14} />
-            <span>Work Orders</span>
-          </Link>
-          <Link href="/sales" className="btn btn-secondary btn-sm">
-            <Receipt size={14} />
-            <span>Generate Invoice</span>
-          </Link>
-          <Link href="/dashboard/collections" className="btn btn-primary btn-sm">
-            <Wallet size={14} />
-            <span>Record Collection</span>
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Link
+              href="/orders"
+              className="btn btn-secondary btn-sm"
+              style={{ background: '#18181b', color: '#ffffff', borderColor: '#27272a' }}
+            >
+              <Cog size={14} color="#facc15" />
+              <span>Work Orders</span>
+            </Link>
+            <Link
+              href="/sales"
+              className="btn btn-secondary btn-sm"
+              style={{ background: '#18181b', color: '#ffffff', borderColor: '#27272a' }}
+            >
+              <Receipt size={14} color="#facc15" />
+              <span>Generate Invoice</span>
+            </Link>
+            <Link href="/dashboard/collections" className="btn btn-primary btn-sm">
+              <Wallet size={14} />
+              <span>Record Collection</span>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -296,43 +294,51 @@ export default function DashboardPage() {
         {/* The Golden Demo Story Quick Pitch */}
         <div
           style={{
-            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(20, 30, 51, 0.9) 100%)',
-            border: '1px solid rgba(99, 102, 241, 0.3)',
+            background: '#09090b',
+            border: '1px solid #27272a',
+            borderTop: '3px solid #facc15',
             borderRadius: 'var(--radius-lg)',
             padding: '20px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
           }}
         >
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Sparkles size={18} color="#818cf8" />
-                <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#a5b4fc', textTransform: 'uppercase' }}>
+                <Sparkles size={18} color="#facc15" />
+                <span style={{ fontSize: '0.825rem', fontWeight: 800, color: '#facc15', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   The Factory Evaluation Journey
                 </span>
               </div>
-              <span className="badge badge-primary">7 Integrated Steps</span>
+              <span className="badge" style={{ background: '#fef9c3', color: '#854d0e', border: '1px solid #fde047', fontWeight: 700 }}>
+                7 Integrated Steps
+              </span>
             </div>
 
             <div style={{ marginTop: '12px' }}>
-              <h3 style={{ fontSize: '1rem', color: '#ffffff' }}>
+              <h3 style={{ fontSize: '1.05rem', color: '#ffffff', fontWeight: 800 }}>
                 Awash Bank 3D Rooftop Signage (ORD-2026-081)
               </h3>
-              <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '4px', lineHeight: 1.5 }}>
-                Witness real factory cost collection: 69.3k ETB raw materials + 8.6k ETB operator labor + 27k ETB machine runtime + 4.2k ETB cracked acrylic scrap = <strong>329,660 ETB True Net Profit</strong>.
+              <p style={{ fontSize: '0.825rem', color: '#a1a1aa', marginTop: '4px', lineHeight: 1.5 }}>
+                Witness real factory cost collection: 69.3k ETB raw materials + 8.6k ETB operator labor + 27k ETB machine runtime + 4.2k ETB cracked acrylic scrap = <strong style={{ color: '#facc15' }}>329,660 ETB True Net Profit</strong>.
               </p>
             </div>
           </div>
 
           <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '0.775rem', color: '#34d399', fontWeight: 600 }}>
+            <span style={{ fontSize: '0.775rem', color: '#facc15', fontWeight: 700 }}>
               ★ 68.7% Net Margin Achieved
             </span>
-            <Link href="/dashboard/orders" className="btn btn-secondary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Link
+              href="/dashboard/orders"
+              className="btn btn-secondary btn-sm"
+              style={{ background: '#18181b', color: '#ffffff', borderColor: '#27272a', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
               <span>View Profitability Ledger</span>
-              <ChevronRight size={13} />
+              <ChevronRight size={13} color="#facc15" />
             </Link>
           </div>
         </div>
@@ -352,10 +358,25 @@ export default function DashboardPage() {
         >
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Cog size={18} color="#818cf8" />
-              <h2>Order Profitability Engine</h2>
+              <div
+                style={{
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: '#09090b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#facc15',
+                }}
+              >
+                <Cog size={16} />
+              </div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
+                Order Profitability Engine
+              </h2>
             </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '3px' }}>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
               True job-level margin tracking: Net Invoiced Revenue − (Direct Materials + Direct Labor + Machine Rate + Overhead + Scrap)
             </p>
           </div>
@@ -386,24 +407,24 @@ export default function DashboardPage() {
               {allOrderProfitability.map((job) => {
                 const marginColor =
                   job.profitMarginPct >= 40
-                    ? '#34d399'
+                    ? '#059669'
                     : job.profitMarginPct >= 20
-                    ? '#fbbf24'
-                    : '#fb7185';
+                    ? '#d97706'
+                    : '#e11d48';
 
                 return (
                   <tr key={job.orderId}>
                     <td>
-                      <div style={{ fontWeight: 600, color: '#ffffff' }}>{job.orderNumber}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{job.orderNumber}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {job.orderTitle}
                       </div>
                     </td>
                     <td>
-                      <span style={{ fontWeight: 500 }}>{job.customerName}</span>
+                      <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{job.customerName}</span>
                     </td>
                     <td>
-                      <strong style={{ color: '#ffffff' }}>{formatETB(job.orderRevenue)}</strong>
+                      <strong style={{ color: 'var(--text-main)' }}>{formatETB(job.orderRevenue)}</strong>
                     </td>
                     <td style={{ color: 'var(--text-muted)' }}>{formatETB(job.directMaterialCost)}</td>
                     <td style={{ color: 'var(--text-muted)' }}>
@@ -491,14 +512,15 @@ export default function DashboardPage() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 padding: '10px 14px',
-                background: 'rgba(255,255,255,0.03)',
+                background: 'var(--bg-app)',
                 borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-light)',
               }}
             >
               <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                 Output VAT (15% on standard sales):
               </span>
-              <strong style={{ color: '#ffffff' }}>{formatETB(companyFinancials.totalOutputVat)}</strong>
+              <strong style={{ color: 'var(--text-main)', fontWeight: 700 }}>{formatETB(companyFinancials.totalOutputVat)}</strong>
             </div>
 
             <div

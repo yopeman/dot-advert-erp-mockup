@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import AppShell from '@/components/layout/AppShell';
 
@@ -9,6 +9,12 @@ export const metadata: Metadata = {
   icons: {
     icon: '/logo.png',
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#facc15',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({

@@ -126,6 +126,7 @@ interface ErpContextType {
   updatePurchaseOrderStatus: (poId: string, status: POStatus) => void;
   createCustomerOrder: (order: Omit<CustomerOrder, 'id' | 'orderNumber' | 'date' | 'status'>) => CustomerOrder;
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
+  updateOrderSurveys: (orderId: string, siteSurveyIds: string[]) => void;
 
   // Graphic Design & Artwork Proof Actions
   createDesignProof: (proof: Omit<DesignProof, 'id' | 'designNumber' | 'createdDate' | 'revisions' | 'revisionCount'>) => DesignProof;
@@ -954,6 +955,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         orderNumber: `ORD-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
         date: new Date().toISOString().split('T')[0],
         status: 'pending',
+        siteSurveyIds: orderData.siteSurveyIds || [],
       };
       setOrders((prev) => [newOrder, ...prev]);
       return newOrder;
@@ -964,6 +966,13 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
   // MUTATOR: Update Order Status
   const updateOrderStatus = useCallback((orderId: string, status: OrderStatus) => {
     setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status } : o)));
+  }, []);
+
+  // MUTATOR: Update / Link Site Surveys for Order (1-to-many)
+  const updateOrderSurveys = useCallback((orderId: string, siteSurveyIds: string[]) => {
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, siteSurveyIds } : o))
+    );
   }, []);
 
   // MUTATOR: Graphic Design & Proofing Engine
@@ -1567,6 +1576,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         updatePurchaseOrderStatus,
         createCustomerOrder,
         updateOrderStatus,
+        updateOrderSurveys,
         createDesignProof,
         updateDesignProof,
         addDesignRevision,

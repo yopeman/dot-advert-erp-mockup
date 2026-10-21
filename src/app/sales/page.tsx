@@ -329,74 +329,54 @@ function SalesPageContent() {
 
   return (
     <div>
-      {/* Top Header & Quick Actions */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: '22px',
-          flexWrap: 'wrap',
-          gap: '16px',
-        }}
-      >
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span
-              style={{
-                fontSize: '0.72rem',
-                fontWeight: 700,
-                color: '#c084fc',
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
+      {/* Top Hero Banner */}
+      <div className="hero-banner" style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', position: 'relative', zIndex: 1 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <span className="hero-pill">
+                MODULE 3 • COMMERCIAL DESK
+              </span>
+              <span style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>
+                • Dual 15% VAT, Telebirr & CBE Reconciled
+              </span>
+            </div>
+            <h1 style={{ fontSize: '1.65rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', margin: 0 }}>
+              Customer Invoicing, Credit Limits & Digital Collections
+            </h1>
+            <p style={{ fontSize: '0.825rem', color: '#a1a1aa', margin: '6px 0 0', maxWidth: '640px' }}>
+              Issue certified tax invoices, manage customer proformas, track overdue accounts receivable, and log real-time digital receipts.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <button
+              className="btn btn-secondary btn-sm"
+              style={{ background: '#18181b', color: '#ffffff', borderColor: '#27272a' }}
+              onClick={() => {
+                const firstDue = invoices.find((i) => i.balanceDue > 0) || invoices[0];
+                if (firstDue) handleOpenCollectForInvoice(firstDue);
               }}
             >
-              Sales, Billing, Credit & Collections Desk
-            </span>
-            <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
-              • Dual 15% VAT, Telebirr & CBE Reconciled
-            </span>
+              <CreditCard size={14} color="#facc15" />
+              <span>+ Record Collection</span>
+            </button>
+            <button
+              className="btn btn-secondary btn-sm"
+              style={{ background: '#18181b', color: '#ffffff', borderColor: '#27272a' }}
+              onClick={() => setShowNewProformaModal(true)}
+            >
+              <FileSpreadsheet size={14} color="#facc15" />
+              <span>+ New Proforma</span>
+            </button>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => setShowNewInvoiceModal(true)}
+            >
+              <PlusCircle size={14} />
+              <span>+ Issue Tax Invoice</span>
+            </button>
           </div>
-          <h1 style={{ marginTop: '2px', fontSize: '1.65rem' }}>Customer Invoicing, Credit Limits & Digital Collections</h1>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => {
-              const firstDue = invoices.find((i) => i.balanceDue > 0) || invoices[0];
-              if (firstDue) handleOpenCollectForInvoice(firstDue);
-            }}
-            style={{
-              borderColor: 'rgba(16, 185, 129, 0.4)',
-              color: '#6ee7b7',
-            }}
-          >
-            <CreditCard size={14} />
-            <span>+ Record Collection</span>
-          </button>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => setShowNewProformaModal(true)}
-            style={{
-              borderColor: 'rgba(168, 85, 247, 0.4)',
-              color: '#d8b4fe',
-            }}
-          >
-            <FileSpreadsheet size={14} />
-            <span>+ New Proforma</span>
-          </button>
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={() => setShowNewInvoiceModal(true)}
-            style={{
-              background: 'linear-gradient(135deg, #9333ea 0%, #7c3aed 100%)',
-              boxShadow: '0 2px 10px rgba(147, 51, 234, 0.35)',
-            }}
-          >
-            <PlusCircle size={14} />
-            <span>+ Issue Tax Invoice</span>
-          </button>
         </div>
       </div>
 
@@ -404,7 +384,7 @@ function SalesPageContent() {
       {notification && (
         <div
           style={{
-            background: 'rgba(16, 185, 129, 0.15)',
+            background: '#ecfdf5',
             border: '1px solid #10b981',
             borderRadius: 'var(--radius-md)',
             padding: '12px 18px',
@@ -415,7 +395,7 @@ function SalesPageContent() {
           }}
         >
           <CheckCircle2 size={18} color="#10b981" />
-          <span style={{ fontSize: '0.85rem', color: '#a7f3d0', fontWeight: 600 }}>
+          <span style={{ fontSize: '0.85rem', color: '#065f46', fontWeight: 600 }}>
             {notification}
           </span>
         </div>
@@ -423,10 +403,10 @@ function SalesPageContent() {
 
       {/* Primary KPI Stats */}
       <div className="stat-grid" style={{ marginBottom: '24px' }}>
-        <div className="stat-card" style={{ borderTop: '2px solid #818cf8' }}>
+        <div className="stat-card">
           <div className="stat-card-title">
             <span>Net Invoiced Revenue (Excl. VAT)</span>
-            <Receipt size={16} color="#818cf8" />
+            <Receipt size={16} color="#71717a" />
           </div>
           <div className="stat-card-value">{formatETB(companyFinancials.totalRevenueNet)}</div>
           <div className="stat-card-subtext">
@@ -434,12 +414,12 @@ function SalesPageContent() {
           </div>
         </div>
 
-        <div className="stat-card" style={{ borderTop: '2px solid #c084fc' }}>
+        <div className="stat-card">
           <div className="stat-card-title">
             <span>Output VAT (15% MoR Liability)</span>
-            <ShieldCheck size={16} color="#c084fc" />
+            <ShieldCheck size={16} color="#ca8a04" />
           </div>
-          <div className="stat-card-value" style={{ color: '#c084fc' }}>
+          <div className="stat-card-value" style={{ color: '#854d0e' }}>
             {formatETB(companyFinancials.totalOutputVat)}
           </div>
           <div className="stat-card-subtext">
@@ -447,7 +427,7 @@ function SalesPageContent() {
           </div>
         </div>
 
-        <div className="stat-card" style={{ borderTop: '2px solid #10b981' }}>
+        <div className="stat-card">
           <div className="stat-card-title">
             <span>Reconciled Collections</span>
             <Wallet size={16} color="#10b981" />
@@ -460,12 +440,12 @@ function SalesPageContent() {
           </div>
         </div>
 
-        <div className="stat-card" style={{ borderTop: '2px solid #fbbf24' }}>
+        <div className="stat-card">
           <div className="stat-card-title">
             <span>Outstanding Due (AR Balance)</span>
-            <AlertTriangle size={16} color="#fbbf24" />
+            <AlertTriangle size={16} color="#b45309" />
           </div>
-          <div className="stat-card-value" style={{ color: '#fbbf24' }}>
+          <div className="stat-card-value" style={{ color: '#b45309' }}>
             {formatETB(totalOutstandingBalance)}
           </div>
           <div className="stat-card-subtext">
@@ -480,113 +460,54 @@ function SalesPageContent() {
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          borderBottom: '1px solid var(--border-subtle)',
+          borderBottom: '1px solid var(--border-light)',
           marginBottom: '20px',
+          flexWrap: 'wrap',
         }}
       >
         <button
           onClick={() => setTab('invoices')}
-          style={{
-            padding: '10px 18px',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'invoices' ? '2px solid #a855f7' : '2px solid transparent',
-            color: activeTab === 'invoices' ? '#ffffff' : 'var(--text-muted)',
-            fontWeight: activeTab === 'invoices' ? 600 : 500,
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
+          className={`tab-btn ${activeTab === 'invoices' ? 'active' : ''}`}
         >
-          <Receipt size={16} color={activeTab === 'invoices' ? '#c084fc' : undefined} />
+          <Receipt size={16} color={activeTab === 'invoices' ? '#854d0e' : '#71717a'} />
           <span>Invoices Ledger</span>
           <span className="badge badge-gray">{invoices.length}</span>
         </button>
 
         <button
           onClick={() => setTab('proformas')}
-          style={{
-            padding: '10px 18px',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'proformas' ? '2px solid #a855f7' : '2px solid transparent',
-            color: activeTab === 'proformas' ? '#ffffff' : 'var(--text-muted)',
-            fontWeight: activeTab === 'proformas' ? 600 : 500,
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
+          className={`tab-btn ${activeTab === 'proformas' ? 'active' : ''}`}
         >
-          <FileSpreadsheet size={16} color={activeTab === 'proformas' ? '#c084fc' : undefined} />
+          <FileSpreadsheet size={16} color={activeTab === 'proformas' ? '#854d0e' : '#71717a'} />
           <span>Proformas & Quotations</span>
           <span className="badge badge-gray">{proformas.length}</span>
         </button>
 
         <button
           onClick={() => setTab('collections')}
-          style={{
-            padding: '10px 18px',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'collections' ? '2px solid #10b981' : '2px solid transparent',
-            color: activeTab === 'collections' ? '#10b981' : 'var(--text-muted)',
-            fontWeight: activeTab === 'collections' ? 600 : 500,
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
+          className={`tab-btn ${activeTab === 'collections' ? 'active' : ''}`}
         >
-          <CreditCard size={16} color={activeTab === 'collections' ? '#10b981' : undefined} />
+          <CreditCard size={16} color={activeTab === 'collections' ? '#854d0e' : '#71717a'} />
           <span>Collections & Receipts</span>
           <span className="badge badge-emerald">{collections.length}</span>
         </button>
 
         <button
           onClick={() => setTab('customers')}
-          style={{
-            padding: '10px 18px',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'customers' ? '2px solid #38bdf8' : '2px solid transparent',
-            color: activeTab === 'customers' ? '#38bdf8' : 'var(--text-muted)',
-            fontWeight: activeTab === 'customers' ? 600 : 500,
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
+          className={`tab-btn ${activeTab === 'customers' ? 'active' : ''}`}
         >
-          <Users size={16} color={activeTab === 'customers' ? '#38bdf8' : undefined} />
+          <Users size={16} color={activeTab === 'customers' ? '#854d0e' : '#71717a'} />
           <span>Customer Accounts & Credit</span>
           <span className="badge badge-gray">{customers.length}</span>
         </button>
 
         <button
           onClick={() => setTab('vat_reports')}
-          style={{
-            padding: '10px 18px',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'vat_reports' ? '2px solid #a855f7' : '2px solid transparent',
-            color: activeTab === 'vat_reports' ? '#ffffff' : 'var(--text-muted)',
-            fontWeight: activeTab === 'vat_reports' ? 600 : 500,
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
+          className={`tab-btn ${activeTab === 'vat_reports' ? 'active' : ''}`}
         >
-          <ShieldCheck size={16} color={activeTab === 'vat_reports' ? '#c084fc' : undefined} />
+          <ShieldCheck size={16} color={activeTab === 'vat_reports' ? '#854d0e' : '#71717a'} />
           <span>MoR VAT Compliance</span>
-          <span className="badge badge-purple">MoR 15%</span>
+          <span className="badge" style={{ background: '#fef9c3', color: '#854d0e', border: '1px solid #fde047', fontWeight: 700 }}>MoR 15%</span>
         </button>
       </div>
 
@@ -738,12 +659,12 @@ function SalesPageContent() {
                         </button>
                       </td>
                       <td>
-                        <div style={{ fontSize: '0.8rem', fontWeight: 500, color: '#ffffff' }}>{inv.date}</div>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>Due: {inv.dueDate}</div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)' }}>{inv.date}</div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Due: {inv.dueDate}</div>
                       </td>
                       <td>
-                        <div style={{ fontWeight: 600, color: '#ffffff' }}>{inv.customerName}</div>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', fontFamily: 'monospace' }}>
+                        <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{inv.customerName}</div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
                           TIN: {inv.customerTin}
                         </div>
                       </td>
@@ -753,7 +674,8 @@ function SalesPageContent() {
                           style={{
                             fontSize: '0.78rem',
                             fontFamily: 'monospace',
-                            color: '#38bdf8',
+                            color: '#09090b',
+                            fontWeight: 700,
                             textDecoration: 'none',
                           }}
                         >
@@ -762,7 +684,7 @@ function SalesPageContent() {
                       </td>
                       <td>
                         {inv.invoiceType === 'vat_15' ? (
-                          <span className="badge badge-purple" style={{ fontSize: '0.7rem' }}>
+                          <span className="badge" style={{ background: '#fef9c3', color: '#854d0e', border: '1px solid #fde047', fontSize: '0.7rem', fontWeight: 700 }}>
                             15% Standard VAT
                           </span>
                         ) : (
@@ -770,7 +692,7 @@ function SalesPageContent() {
                             <span className="badge badge-amber" style={{ fontSize: '0.7rem' }}>
                               Exempt Sale
                             </span>
-                            <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)', marginTop: '2px', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '2px', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {inv.exemptReason || 'Legal Directive Exemption'}
                             </div>
                           </div>
@@ -779,10 +701,10 @@ function SalesPageContent() {
                       <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>
                         {formatETB(inv.subtotalNet)}
                       </td>
-                      <td style={{ textAlign: 'right', fontFamily: 'monospace', color: inv.vatAmount > 0 ? '#c084fc' : 'var(--text-dim)' }}>
+                      <td style={{ textAlign: 'right', fontFamily: 'monospace', color: inv.vatAmount > 0 ? '#ca8a04' : 'var(--text-muted)', fontWeight: 600 }}>
                         {inv.vatAmount > 0 ? formatETB(inv.vatAmount) : '—'}
                       </td>
-                      <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: '#ffffff' }}>
+                      <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 800, color: 'var(--text-main)' }}>
                         {formatETB(inv.grandTotal)}
                       </td>
                       <td style={{ textAlign: 'center' }}>
@@ -1021,34 +943,34 @@ function SalesPageContent() {
                               <span>{prof.proformaNumber}</span>
                             </button>
                           </td>
-                          <td style={{ fontSize: '0.8rem', color: '#ffffff' }}>{prof.date}</td>
+                          <td style={{ fontSize: '0.8rem', color: 'var(--text-main)' }}>{prof.date}</td>
                           <td>
-                            <div style={{ fontSize: '0.8rem', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <div style={{ fontSize: '0.8rem', color: '#b45309', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
                               <Clock size={12} />
                               <span>{prof.validUntil}</span>
                             </div>
                           </td>
                           <td>
-                            <div style={{ fontWeight: 600, color: '#ffffff' }}>{prof.customerName}</div>
-                            <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', fontFamily: 'monospace' }}>
+                            <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{prof.customerName}</div>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
                               TIN: {prof.customerTin}
                             </div>
                           </td>
                           <td>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-bright)', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: 500, maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {prof.items[0]?.description || 'Custom Signage Fabrication'}
                             </div>
-                            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                               {prof.items.length} Line Item{prof.items.length > 1 ? 's' : ''}
                             </div>
                           </td>
                           <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>
                             {formatETB(prof.subtotalNet)}
                           </td>
-                          <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#c084fc' }}>
+                          <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#854d0e', fontWeight: 600 }}>
                             {formatETB(prof.vatAmount)}
                           </td>
-                          <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: '#ffffff' }}>
+                          <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 800, color: 'var(--text-main)' }}>
                             {formatETB(prof.grandTotal)}
                           </td>
                           <td style={{ textAlign: 'center' }}>
@@ -1141,10 +1063,10 @@ function SalesPageContent() {
                 </span>
                 <Smartphone size={16} color="#10b981" />
               </div>
-              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#ffffff', fontFamily: 'monospace' }}>
+              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-main)', fontFamily: 'monospace' }}>
                 {formatETB(telebirrTotal)}
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                 Instant API reconciled via Ethio Telecom
               </div>
             </div>
@@ -1156,10 +1078,10 @@ function SalesPageContent() {
                 </span>
                 <Building2 size={16} color="#3b82f6" />
               </div>
-              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#ffffff', fontFamily: 'monospace' }}>
+              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-main)', fontFamily: 'monospace' }}>
                 {formatETB(bankTotal)}
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                 Wire transfers & RTGS corporate settlements
               </div>
             </div>
@@ -1171,25 +1093,25 @@ function SalesPageContent() {
                 </span>
                 <Banknote size={16} color="#f59e0b" />
               </div>
-              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#ffffff', fontFamily: 'monospace' }}>
+              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-main)', fontFamily: 'monospace' }}>
                 {formatETB(cashTotal)}
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                 Counter cash receipts with physical deposit
               </div>
             </div>
 
-            <div className="card" style={{ borderLeft: '4px solid #a855f7' }}>
+            <div className="card" style={{ borderLeft: '4px solid #09090b' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#a855f7', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#09090b', textTransform: 'uppercase' }}>
                   Total Collected To Date
                 </span>
-                <Wallet size={16} color="#a855f7" />
+                <Wallet size={16} color="#ca8a04" />
               </div>
-              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#a855f7', fontFamily: 'monospace' }}>
+              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#09090b', fontFamily: 'monospace' }}>
                 {formatETB(companyFinancials.totalCollected)}
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                 {collections.length} reconciled digital receipt vouchers
               </div>
             </div>
@@ -1324,8 +1246,8 @@ function SalesPageContent() {
                             <span>{col.receiptNumber}</span>
                           </button>
                         </td>
-                        <td style={{ fontSize: '0.8rem', color: '#ffffff' }}>{col.date}</td>
-                        <td style={{ fontWeight: 600, color: '#ffffff' }}>{col.customerName}</td>
+                        <td style={{ fontSize: '0.8rem', color: 'var(--text-main)' }}>{col.date}</td>
+                        <td style={{ fontWeight: 700, color: 'var(--text-main)' }}>{col.customerName}</td>
                         <td>
                           <span style={{ fontFamily: 'monospace', color: '#c084fc', fontSize: '0.8rem' }}>
                             {col.invoiceNumber}
@@ -1443,30 +1365,30 @@ function SalesPageContent() {
                   return (
                     <tr key={c.id}>
                       <td>
-                        <div style={{ fontWeight: 600, color: '#ffffff', fontSize: '0.85rem' }}>{c.name}</div>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>{c.address}</div>
+                        <div style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.85rem' }}>{c.name}</div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{c.address}</div>
                       </td>
                       <td>
-                        <div style={{ fontFamily: 'monospace', fontWeight: 600, color: '#c084fc' }}>TIN: {c.tin}</div>
-                        <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>
+                        <div style={{ fontFamily: 'monospace', fontWeight: 600, color: '#854d0e' }}>TIN: {c.tin}</div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
                           {c.isVatRegistered ? '✓ VAT Registered' : 'Non-VAT Entity'}
                         </div>
                       </td>
                       <td>
-                        <span className="badge badge-purple" style={{ fontSize: '0.68rem' }}>
+                        <span className="badge badge-secondary" style={{ fontSize: '0.68rem' }}>
                           {c.customerType?.toUpperCase() || 'BUSINESS'}
                         </span>
                       </td>
                       <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 600 }}>
                         {formatETB(creditLimit)}
                       </td>
-                      <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: c.outstandingBalance > 0 ? '#fbbf24' : '#10b981' }}>
+                      <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: c.outstandingBalance > 0 ? '#b45309' : '#10b981' }}>
                         {formatETB(c.outstandingBalance)}
                       </td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                          <span style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>{ratio}% Used</span>
-                          <span style={{ fontSize: '0.68rem', color: isHighRisk ? '#ef4444' : isMedRisk ? '#f59e0b' : '#10b981' }}>
+                          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{ratio}% Used</span>
+                          <span style={{ fontSize: '0.68rem', color: isHighRisk ? '#ef4444' : isMedRisk ? '#b45309' : '#10b981', fontWeight: 600 }}>
                             {formatETB(Math.max(0, creditLimit - c.outstandingBalance))} left
                           </span>
                         </div>
@@ -1474,7 +1396,7 @@ function SalesPageContent() {
                           style={{
                             width: '100%',
                             height: '6px',
-                            background: 'rgba(255, 255, 255, 0.08)',
+                            background: '#e4e4e7',
                             borderRadius: '3px',
                             overflow: 'hidden',
                           }}
@@ -1498,8 +1420,8 @@ function SalesPageContent() {
                         </span>
                       </td>
                       <td>
-                        <div style={{ fontSize: '0.8rem', color: '#ffffff' }}>{c.contactPerson}</div>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>{c.phone}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: 600 }}>{c.contactPerson}</div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{c.phone}</div>
                       </td>
                       <td style={{ textAlign: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
@@ -1610,32 +1532,32 @@ function SalesPageContent() {
 
           {/* 3-Box Tax Formula Strip */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-            <div className="card" style={{ borderLeft: '4px solid #c084fc' }}>
+            <div className="card" style={{ borderLeft: '4px solid #ca8a04' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#c084fc', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#854d0e', textTransform: 'uppercase' }}>
                   Box A • Output VAT Collected
                 </span>
-                <BadgePercent size={16} color="#c084fc" />
+                <BadgePercent size={16} color="#ca8a04" />
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ffffff', fontFamily: 'monospace' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', fontFamily: 'monospace' }}>
                 {formatETB(companyFinancials.totalOutputVat)}
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '4px' }}>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                 15% VAT charged to commercial clients on sales invoices
               </div>
             </div>
 
-            <div className="card" style={{ borderLeft: '4px solid #38bdf8' }}>
+            <div className="card" style={{ borderLeft: '4px solid #71717a' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#71717a', textTransform: 'uppercase' }}>
                   Box B • Input VAT Deductible
                 </span>
-                <ShieldCheck size={16} color="#38bdf8" />
+                <ShieldCheck size={16} color="#71717a" />
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ffffff', fontFamily: 'monospace' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', fontFamily: 'monospace' }}>
                 {formatETB(companyFinancials.totalInputVat || companyFinancials.totalOutputVat * 0.42)}
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '4px' }}>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                 15% VAT paid on raw materials (acrylic, vinyl, aluminum profiles)
               </div>
             </div>
@@ -1647,10 +1569,10 @@ function SalesPageContent() {
                 </span>
                 <Landmark size={16} color="#10b981" />
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#10b981', fontFamily: 'monospace' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#065f46', fontFamily: 'monospace' }}>
                 {formatETB(companyFinancials.netVatPayable || companyFinancials.totalOutputVat * 0.58)}
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '4px' }}>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                 Remittance due to Ministry of Revenues by the 30th of each month
               </div>
             </div>
@@ -1658,7 +1580,7 @@ function SalesPageContent() {
 
           {/* Official MoR Filing Table Breakdown */}
           <div className="card">
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '16px' }}>
               Official Monthly VAT Declaration Schedule Breakdown
             </h3>
 
@@ -1677,8 +1599,8 @@ function SalesPageContent() {
                   <td style={{ fontFamily: 'monospace', fontWeight: 600 }}>01</td>
                   <td>Standard Rated Supplies (Large-Format Printing, Fabrication, Billboards)</td>
                   <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>{formatETB(companyFinancials.totalRevenueNet * 0.82)}</td>
-                  <td style={{ textAlign: 'center' }}><span className="badge badge-purple">15.0%</span></td>
-                  <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: '#c084fc' }}>
+                  <td style={{ textAlign: 'center' }}><span className="badge" style={{ background: '#fef9c3', color: '#854d0e', border: '1px solid #fde047', fontWeight: 700 }}>15.0%</span></td>
+                  <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: '#ca8a04' }}>
                     {formatETB(companyFinancials.totalOutputVat)}
                   </td>
                 </tr>
@@ -1696,14 +1618,14 @@ function SalesPageContent() {
                   <td style={{ textAlign: 'center' }}><span className="badge badge-amber">Exempt</span></td>
                   <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>ETB 0</td>
                 </tr>
-                <tr style={{ background: 'rgba(255, 255, 255, 0.04)', fontWeight: 700 }}>
+                <tr style={{ background: 'var(--bg-app)', fontWeight: 700 }}>
                   <td style={{ fontFamily: 'monospace' }}>04</td>
                   <td>TOTAL TAXABLE & EXEMPT TURNOVER</td>
-                  <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#ffffff' }}>
+                  <td style={{ textAlign: 'right', fontFamily: 'monospace', color: 'var(--text-main)', fontWeight: 800 }}>
                     {formatETB(companyFinancials.totalRevenueNet)}
                   </td>
                   <td style={{ textAlign: 'center' }}>—</td>
-                  <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#c084fc' }}>
+                  <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#ca8a04', fontWeight: 800 }}>
                     {formatETB(companyFinancials.totalOutputVat)}
                   </td>
                 </tr>

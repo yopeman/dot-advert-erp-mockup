@@ -33,6 +33,9 @@ import {
   Receipt,
   Check,
   ShieldCheck,
+  MapPin,
+  Zap,
+  Compass,
 } from 'lucide-react';
 import {
   CustomerOrder,
@@ -43,6 +46,7 @@ import {
   WastageReason,
   WorkOrderBomItem,
   Expense,
+  SiteSurvey,
 } from '@/types/erp';
 import DesignProofCard, { getStatusBadge } from '@/components/orders/DesignProofCard';
 import DesignSpecsModal from '@/components/orders/DesignSpecsModal';
@@ -85,6 +89,8 @@ function OrdersPageContent() {
     calculateOrderProfitability,
     allOrderProfitability,
     addStockMovement,
+    leads,
+    updateOrderSurveys,
   } = useErp();
 
   // Active Tab synchronized with query string
@@ -118,6 +124,10 @@ function OrdersPageContent() {
   const [showIssueBomModal, setShowIssueBomModal] = useState(false);
   const [targetWoForBom, setTargetWoForBom] = useState<WorkOrder | null>(null);
 
+  // Manage Order Site Surveys Modal State (1-to-many)
+  const [showManageSurveysModal, setShowManageSurveysModal] = useState(false);
+  const [editOrderSurveyIds, setEditOrderSurveyIds] = useState<string[]>([]);
+
   // Design Proof Modals State
   const [inspectingProof, setInspectingProof] = useState<DesignProof | null>(null);
   const [approvingProof, setApprovingProof] = useState<DesignProof | null>(null);
@@ -140,7 +150,7 @@ function OrdersPageContent() {
     setTimeout(() => setNotification(null), 4000);
   };
 
-  // New Order Form State
+  // New Order Form State (supporting 1-to-many linked site surveys)
   const [newOrderForm, setNewOrderForm] = useState({
     customerId: customers[0]?.id || '',
     title: '',
@@ -150,6 +160,7 @@ function OrdersPageContent() {
     expectedDeliveryDate: '2026-10-30',
     priority: 'normal' as 'low' | 'normal' | 'high' | 'urgent',
     notes: '',
+    siteSurveyIds: [] as string[],
   });
 
   // Enhanced Multi-Item New Work Order Form State
@@ -195,6 +206,77 @@ function OrdersPageContent() {
   const orderExpenses = expenses.filter((e) => e.orderId === selectedOrderId);
   const orderWastages = wastages.filter((w) => w.orderId === selectedOrderId);
 
+  // 1-to-Many Site Survey Link calculations
+  const allSystemSurveys = React.useMemo(() => {
+    const map = new Map<string, SiteSurvey>();
+    customers.forEach((c) => (c.siteSurveys || []).forEach((s) => map.set(s.id, s)));
+    leads.forEach((l) => (l.siteSurveys || []).forEach((s) => map.set(s.id, s)));
+    return map;
+  }, [customers, leads]);
+
+  const selectedOrderSurveys = React.useMemo(() => {
+    if (!selectedOrder?.siteSurveyIds) return [];
+    return selectedOrder.siteSurveyIds
+      .map((id) => allSystemSurveys.get(id))
+      .filter((s): s is SiteSurvey => Boolean(s));
+  }, [selectedOrder, allSystemSurveys]);
+
+  const totalSelectedSurveysArea = React.useMemo(() => {
+    return selectedOrderSurveys.reduce(
+      (sum, s) => sum + (s.widthMeters || 0) * (s.heightMeters || 0),
+      0
+    );
+  }, [selectedOrderSurveys]);
+
+  // Available surveys for the customer currently selected in New Order Modal
+  const availableCustomerSurveys = React.useMemo(() => {
+    const cust = customers.find((c) => c.id === newOrderForm.customerId);
+    if (!cust) return [];
+    const custSurveys = cust.siteSurveys || [];
+    const leadSurveys =
+      leads.find(
+        (l) =>
+          l.convertedCustomerId === cust.id ||
+          l.companyName.toLowerCase() === cust.name.toLowerCase()
+      )?.siteSurveys || [];
+    const combined = [...custSurveys];
+    leadSurveys.forEach((ls) => {
+      if (!combined.some((s) => s.id === ls.id)) combined.push(ls);
+    });
+    return combined;
+  }, [newOrderForm.customerId, customers, leads]);
+
+  // Available surveys for managing an existing order's linked surveys
+  const orderTargetCustomer = customers.find((c) => c.id === selectedOrder?.customerId);
+  const availableForEditSurveys = React.useMemo(() => {
+    if (!orderTargetCustomer) return [];
+    const custSurveys = orderTargetCustomer.siteSurveys || [];
+    const leadSurveys =
+      leads.find(
+        (l) =>
+          l.convertedCustomerId === orderTargetCustomer.id ||
+          l.companyName.toLowerCase() === orderTargetCustomer.name.toLowerCase()
+      )?.siteSurveys || [];
+    const combined = [...custSurveys];
+    leadSurveys.forEach((ls) => {
+      if (!combined.some((s) => s.id === ls.id)) combined.push(ls);
+    });
+    return combined;
+  }, [orderTargetCustomer, leads]);
+
+  const handleOpenManageSurveys = () => {
+    if (!selectedOrder) return;
+    setEditOrderSurveyIds(selectedOrder.siteSurveyIds || []);
+    setShowManageSurveysModal(true);
+  };
+
+  const handleSaveOrderSurveys = () => {
+    if (!selectedOrder) return;
+    updateOrderSurveys(selectedOrder.id, editOrderSurveyIds);
+    setShowManageSurveysModal(false);
+    showToast(`Linked site surveys updated for ${selectedOrder.orderNumber}!`);
+  };
+
   // Design approval breakdown for this specific order
   const orderApprovedDesignsCount = orderDesigns.filter((d) => d.status === 'approved').length;
   const orderPendingDesignsCount = orderDesigns.filter((d) => d.status === 'client_proofing').length;
@@ -209,7 +291,7 @@ function OrdersPageContent() {
     : 0;
   const isOverCredit = newOrderForm.quantity * newOrderForm.unitPrice > availableCredit;
 
-  // Handle New Order Submit
+  // Handle New Order Submit (with 1-to-many siteSurveyIds)
   const handleCreateOrder = (e: React.FormEvent) => {
     e.preventDefault();
     if (!targetCustomer || !newOrderForm.title) return;
@@ -234,11 +316,12 @@ function OrdersPageContent() {
       expectedDeliveryDate: newOrderForm.expectedDeliveryDate,
       priority: newOrderForm.priority,
       notes: newOrderForm.notes,
+      siteSurveyIds: newOrderForm.siteSurveyIds,
     });
 
     setShowNewOrderModal(false);
     setSelectedOrderId(created.id);
-    showToast(`Order ${created.orderNumber} placed for ${targetCustomer.name}!`);
+    showToast(`Order ${created.orderNumber} placed for ${targetCustomer.name} with ${newOrderForm.siteSurveyIds.length} site surveys!`);
   };
 
   // Handle Create Work Order (Multi-Item BOM)
@@ -441,59 +524,51 @@ function OrdersPageContent() {
 
   return (
     <div>
-      {/* Top Header Controls */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: '20px',
-          flexWrap: 'wrap',
-          gap: '16px',
-        }}
-      >
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: '#38bdf8',
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-              }}
-            >
-              Order & Production Desk
-            </span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-              • Advertising Design Proofing & Factory BOM Engine
-            </span>
+      {/* Top Hero Banner */}
+      <div className="hero-banner" style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', position: 'relative', zIndex: 1 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <span className="hero-pill">
+                MODULE 2 • FACTORY OPERATIONS
+              </span>
+              <span style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>
+                Advertising Design Proofing & Workshop BOM Engine
+              </span>
+            </div>
+            <h1 style={{ fontSize: '1.65rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', margin: 0 }}>
+              Customer Jobs, CMYK Proofs & Workshop BOMs
+            </h1>
+            <p style={{ fontSize: '0.825rem', color: '#a1a1aa', margin: '6px 0 0', maxWidth: '640px' }}>
+              Track live job profitability, manage client artwork sign-offs, and monitor real-time CNC & Roland eco-solvent printing queues.
+            </p>
           </div>
-          <h1 style={{ marginTop: '2px' }}>Customer Jobs, CMYK Proofs & Workshop BOMs</h1>
-        </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => setShowNewDesignModal(true)}
-          >
-            <Palette size={14} color="#c084fc" />
-            <span>+ New Artwork Proof</span>
-          </button>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => setShowNewWoModal(true)}
-          >
-            <Cog size={14} color="#38bdf8" />
-            <span>Schedule Work Order</span>
-          </button>
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={() => setShowNewOrderModal(true)}
-          >
-            <PlusCircle size={14} />
-            <span>New Customer Order</span>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <button
+              className="btn btn-secondary btn-sm"
+              style={{ background: '#18181b', color: '#ffffff', borderColor: '#27272a' }}
+              onClick={() => setShowNewDesignModal(true)}
+            >
+              <Palette size={14} color="#facc15" />
+              <span>+ New Artwork Proof</span>
+            </button>
+            <button
+              className="btn btn-secondary btn-sm"
+              style={{ background: '#18181b', color: '#ffffff', borderColor: '#27272a' }}
+              onClick={() => setShowNewWoModal(true)}
+            >
+              <Cog size={14} color="#facc15" />
+              <span>Schedule Work Order</span>
+            </button>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => setShowNewOrderModal(true)}
+            >
+              <PlusCircle size={14} />
+              <span>New Customer Order</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -501,7 +576,7 @@ function OrdersPageContent() {
       {notification && (
         <div
           style={{
-            background: 'rgba(16, 185, 129, 0.15)',
+            background: '#ecfdf5',
             border: '1px solid #10b981',
             borderRadius: 'var(--radius-md)',
             padding: '12px 18px',
@@ -512,7 +587,7 @@ function OrdersPageContent() {
           }}
         >
           <CheckCircle2 size={18} color="#10b981" />
-          <span style={{ fontSize: '0.85rem', color: '#a7f3d0', fontWeight: 600 }}>
+          <span style={{ fontSize: '0.85rem', color: '#065f46', fontWeight: 600 }}>
             {notification}
           </span>
         </div>
@@ -523,7 +598,7 @@ function OrdersPageContent() {
         <div className="stat-card">
           <div className="stat-card-title">
             <span>Orders Pipeline Revenue</span>
-            <TrendingUp size={16} color="#818cf8" />
+            <TrendingUp size={16} color="#ca8a04" />
           </div>
           <div className="stat-card-value">{formatETB(totalPipelineRevenue)}</div>
           <div className="stat-card-subtext">
@@ -534,13 +609,13 @@ function OrdersPageContent() {
         <div className="stat-card">
           <div className="stat-card-title">
             <span>Artwork Proofs Status</span>
-            <Palette size={16} color="#a855f7" />
+            <Palette size={16} color="#854d0e" />
           </div>
-          <div className="stat-card-value" style={{ color: '#c084fc' }}>
+          <div className="stat-card-value" style={{ color: '#09090b' }}>
             {approvedDesignsCount} / {designProofs.length} Approved
           </div>
           <div className="stat-card-subtext">
-            <span style={{ color: pendingProofCount > 0 ? '#fbbf24' : 'var(--text-dim)' }}>
+            <span style={{ color: pendingProofCount > 0 ? '#b45309' : 'var(--text-muted)' }}>
               {pendingProofCount} currently awaiting client sign-off
             </span>
           </div>
@@ -549,9 +624,9 @@ function OrdersPageContent() {
         <div className="stat-card">
           <div className="stat-card-title">
             <span>Active Production WOs</span>
-            <Cog size={16} color="#38bdf8" />
+            <Cog size={16} color="#09090b" />
           </div>
-          <div className="stat-card-value" style={{ color: '#38bdf8' }}>
+          <div className="stat-card-value" style={{ color: '#09090b' }}>
             {activeWOCount} In Production
           </div>
           <div className="stat-card-subtext">
@@ -562,9 +637,9 @@ function OrdersPageContent() {
         <div className="stat-card">
           <div className="stat-card-title">
             <span>Factory Scrap / Wastage</span>
-            <Trash2 size={16} color="#fb7185" />
+            <Trash2 size={16} color="#ef4444" />
           </div>
-          <div className="stat-card-value" style={{ color: '#fb7185' }}>
+          <div className="stat-card-value" style={{ color: '#ef4444' }}>
             {formatETB(totalScrapCost)}
           </div>
           <div className="stat-card-subtext">
@@ -579,7 +654,7 @@ function OrdersPageContent() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderBottom: '1px solid var(--border-subtle)',
+          borderBottom: '1px solid var(--border-light)',
           marginBottom: '20px',
           flexWrap: 'wrap',
           gap: '12px',
@@ -588,47 +663,23 @@ function OrdersPageContent() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
             onClick={() => handleTabChange('orders')}
-            style={{
-              padding: '10px 18px',
-              background: 'transparent',
-              border: 'none',
-              borderBottom: activeTab === 'orders' ? '2px solid #38bdf8' : '2px solid transparent',
-              color: activeTab === 'orders' ? '#ffffff' : 'var(--text-muted)',
-              fontWeight: activeTab === 'orders' ? 700 : 500,
-              fontSize: '0.875rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
+            className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
           >
-            <Boxes size={15} color={activeTab === 'orders' ? '#38bdf8' : 'var(--text-dim)'} />
+            <Boxes size={15} color={activeTab === 'orders' ? '#854d0e' : '#71717a'} />
             <span>Customer Orders & Profitability ({orders.length})</span>
           </button>
 
           <button
             onClick={() => handleTabChange('designs')}
-            style={{
-              padding: '10px 18px',
-              background: 'transparent',
-              border: 'none',
-              borderBottom: activeTab === 'designs' ? '2px solid #a855f7' : '2px solid transparent',
-              color: activeTab === 'designs' ? '#c084fc' : 'var(--text-muted)',
-              fontWeight: activeTab === 'designs' ? 700 : 500,
-              fontSize: '0.875rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
+            className={`tab-btn ${activeTab === 'designs' ? 'active' : ''}`}
           >
-            <Palette size={15} color={activeTab === 'designs' ? '#c084fc' : 'var(--text-dim)'} />
+            <Palette size={15} color={activeTab === 'designs' ? '#854d0e' : '#71717a'} />
             <span>Graphic Design Proofing Hub ({designProofs.length})</span>
             {pendingProofCount > 0 && (
               <span
                 style={{
-                  background: '#f59e0b',
-                  color: '#000000',
+                  background: '#facc15',
+                  color: '#09090b',
                   fontSize: '0.65rem',
                   fontWeight: 800,
                   padding: '1px 6px',
@@ -642,21 +693,9 @@ function OrdersPageContent() {
 
           <button
             onClick={() => handleTabChange('work_orders')}
-            style={{
-              padding: '10px 18px',
-              background: 'transparent',
-              border: 'none',
-              borderBottom: activeTab === 'work_orders' ? '2px solid #38bdf8' : '2px solid transparent',
-              color: activeTab === 'work_orders' ? '#38bdf8' : 'var(--text-muted)',
-              fontWeight: activeTab === 'work_orders' ? 700 : 500,
-              fontSize: '0.875rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
+            className={`tab-btn ${activeTab === 'work_orders' ? 'active' : ''}`}
           >
-            <Cog size={15} color={activeTab === 'work_orders' ? '#38bdf8' : 'var(--text-dim)'} />
+            <Cog size={15} color={activeTab === 'work_orders' ? '#854d0e' : '#71717a'} />
             <span>Shopfloor Production & BOM ({workOrders.length})</span>
           </button>
         </div>
@@ -723,13 +762,14 @@ function OrdersPageContent() {
                   key={ord.id}
                   onClick={() => setSelectedOrderId(ord.id)}
                   style={{
-                    background: isSelected ? 'rgba(56, 189, 248, 0.12)' : 'var(--bg-card)',
+                    background: isSelected ? '#fef9c3' : 'var(--bg-card)',
                     border: isSelected
-                      ? '1px solid #38bdf8'
-                      : '1px solid var(--border-subtle)',
+                      ? '1px solid #ca8a04'
+                      : '1px solid var(--border-light)',
                     borderRadius: 'var(--radius-lg)',
                     padding: '16px 18px',
                     cursor: 'pointer',
+                    boxShadow: isSelected ? '0 4px 12px rgba(202, 138, 4, 0.12)' : 'none',
                     transition: 'all 0.15s ease',
                   }}
                 >
@@ -742,7 +782,7 @@ function OrdersPageContent() {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.9rem' }}>
+                      <span style={{ fontWeight: 700, color: isSelected ? '#854d0e' : 'var(--text-main)', fontSize: '0.9rem' }}>
                         {ord.orderNumber}
                       </span>
                       <span
@@ -811,10 +851,28 @@ function OrdersPageContent() {
                           No Design Proof Linked
                         </span>
                       )}
+
+                      {ord.siteSurveyIds && ord.siteSurveyIds.length > 0 && (
+                        <div
+                          style={{
+                            fontSize: '0.7rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            color: '#38bdf8',
+                            marginTop: '3px',
+                          }}
+                        >
+                          <Ruler size={11} />
+                          <span>
+                            {ord.siteSurveyIds.length} {ord.siteSurveyIds.length === 1 ? 'Survey' : 'Surveys'} Linked
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>
                         {formatETB(ord.totalAgreedPrice)}
                       </span>
                       <span style={{ fontSize: '0.75rem', fontWeight: 700, color: marginColor, marginLeft: '8px' }}>
@@ -837,18 +895,18 @@ function OrdersPageContent() {
                   alignItems: 'flex-start',
                   justifyContent: 'space-between',
                   marginBottom: '16px',
-                  borderBottom: '1px solid var(--border-subtle)',
+                  borderBottom: '1px solid var(--border-light)',
                   paddingBottom: '16px',
                 }}
               >
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '0.8rem', fontFamily: 'monospace', color: '#38bdf8', fontWeight: 700 }}>
+                    <span style={{ fontSize: '0.8rem', fontFamily: 'monospace', color: '#09090b', fontWeight: 800 }}>
                       {selectedOrder.orderNumber}
                     </span>
                     <span className="badge badge-primary">{selectedOrder.status.replace('_', ' ')}</span>
                   </div>
-                  <h2 style={{ fontSize: '1.25rem', marginTop: '6px', color: '#ffffff' }}>
+                  <h2 style={{ fontSize: '1.25rem', marginTop: '6px', color: 'var(--text-main)' }}>
                     {selectedOrder.title}
                   </h2>
                   <div style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -908,7 +966,7 @@ function OrdersPageContent() {
                     gap: '8px',
                   }}
                 >
-                  {/* Step 1: Lead / Client */}
+                  {/* Step 1: Lead / Client & Surveys */}
                   <div
                     style={{
                       background: 'rgba(16, 185, 129, 0.1)',
@@ -920,36 +978,38 @@ function OrdersPageContent() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                       <CheckCircle2 size={14} color="#10b981" />
                       <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#34d399' }}>
-                        1. Lead / Client
+                        1. Client & Surveys
                       </span>
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: '#ffffff', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {selectedOrder.customerName}
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-main)', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {selectedOrderSurveys.length > 0
+                        ? `${selectedOrderSurveys.length} Signs (${totalSelectedSurveysArea.toFixed(1)}m²)`
+                        : selectedOrder.customerName}
                     </div>
                     <div style={{ fontSize: '0.675rem', color: 'var(--text-muted)' }}>
-                      Surveys & CRM Profile
+                      {selectedOrderSurveys.length > 0 ? selectedOrder.customerName : 'No surveys linked'}
                     </div>
                   </div>
 
                   {/* Step 2: Contracted Order */}
                   <div
                     style={{
-                      background: 'rgba(56, 189, 248, 0.1)',
-                      border: '1px solid rgba(56, 189, 248, 0.3)',
+                      background: '#fef9c3',
+                      border: '1px solid #fde047',
                       borderRadius: 'var(--radius-md)',
                       padding: '10px',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                      <CheckCircle2 size={14} color="#38bdf8" />
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#38bdf8' }}>
+                      <CheckCircle2 size={14} color="#854d0e" />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#854d0e' }}>
                         2. Order Placed
                       </span>
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: '#ffffff', fontWeight: 600 }}>
+                    <div style={{ fontSize: '0.72rem', color: '#09090b', fontWeight: 700 }}>
                       {selectedOrder.orderNumber}
                     </div>
-                    <div style={{ fontSize: '0.675rem', color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: '0.675rem', color: '#71717a' }}>
                       {formatETB(selectedOrder.totalAgreedPrice)} Contract
                     </div>
                   </div>
@@ -984,16 +1044,16 @@ function OrdersPageContent() {
                           fontSize: '0.75rem',
                           fontWeight: 700,
                           color: allOrderDesignsApproved
-                            ? '#34d399'
+                            ? '#059669'
                             : orderRevisionDesignsCount > 0
-                            ? '#fb7185'
-                            : '#fbbf24',
+                            ? '#e11d48'
+                            : '#d97706',
                         }}
                       >
                         3. Design Proofs
                       </span>
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: '#ffffff', fontWeight: 600 }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-main)', fontWeight: 700 }}>
                       {orderApprovedDesignsCount} / {orderDesigns.length} Approved
                     </div>
                     <div style={{ fontSize: '0.675rem', color: 'var(--text-muted)' }}>
@@ -1005,11 +1065,11 @@ function OrdersPageContent() {
                   <div
                     style={{
                       background:
-                        selectedWOs.length > 0 ? 'rgba(129, 140, 248, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                        selectedWOs.length > 0 ? '#f4f4f5' : 'var(--bg-app)',
                       border:
                         selectedWOs.length > 0
-                          ? '1px solid rgba(129, 140, 248, 0.35)'
-                          : '1px solid var(--border-subtle)',
+                          ? '1px solid #d4d4d8'
+                          : '1px solid var(--border-light)',
                       borderRadius: 'var(--radius-md)',
                       padding: '10px',
                     }}
@@ -1017,20 +1077,20 @@ function OrdersPageContent() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                       <Cog
                         size={14}
-                        color={selectedWOs.length > 0 ? '#818cf8' : 'var(--text-dim)'}
+                        color={selectedWOs.length > 0 ? '#09090b' : 'var(--text-muted)'}
                         className={selectedWOs.some((w) => w.status === 'in_progress') ? 'spin' : ''}
                       />
                       <span
                         style={{
                           fontSize: '0.75rem',
                           fontWeight: 700,
-                          color: selectedWOs.length > 0 ? '#a5b4fc' : 'var(--text-dim)',
+                          color: selectedWOs.length > 0 ? '#09090b' : 'var(--text-muted)',
                         }}
                       >
                         4. Production
                       </span>
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: '#ffffff', fontWeight: 600 }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-main)', fontWeight: 700 }}>
                       {selectedWOs.length} Work Orders
                     </div>
                     <div style={{ fontSize: '0.675rem', color: 'var(--text-muted)' }}>
@@ -1038,6 +1098,219 @@ function OrdersPageContent() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* ========================================================= */}
+              {/* LINKED SITE SURVEYS & ARCHITECTURAL DIMENSIONS SECTION   */}
+              {/* (Order has 1-to-many site surveys with physical specs)    */}
+              {/* ========================================================= */}
+              <div
+                style={{
+                  background: '#fafafa',
+                  border: '1px solid var(--border-light)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: '18px 20px',
+                  marginBottom: '20px',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '14px',
+                    flexWrap: 'wrap',
+                    gap: '10px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '8px',
+                        background: '#09090b',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#facc15',
+                      }}
+                    >
+                      <Ruler size={17} />
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <h3 style={{ fontSize: '1rem', margin: 0, color: 'var(--text-main)', fontWeight: 800 }}>
+                          Linked Site Surveys & Dimensions ({selectedOrderSurveys.length})
+                        </h3>
+                        {selectedOrderSurveys.length > 0 && (
+                          <span className="badge badge-cyan" style={{ fontSize: '10px' }}>
+                            {totalSelectedSurveysArea.toFixed(1)} m² Total Area
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        Physical architectural measurements, ground elevation, depth, and electrical source specifications.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Link
+                      href="/crm?tab=surveys"
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <Compass size={13} />
+                      <span>Survey Center</span>
+                    </Link>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      onClick={handleOpenManageSurveys}
+                    >
+                      <Ruler size={13} />
+                      <span>Manage Linked Surveys</span>
+                    </button>
+                  </div>
+                </div>
+
+                {selectedOrderSurveys.length === 0 ? (
+                  <div
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px dashed var(--border-subtle)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '24px',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <Ruler size={32} color="var(--text-dim)" style={{ margin: '0 auto 8px' }} />
+                    <h4 style={{ fontSize: '0.9rem', color: 'var(--text-main)', margin: '0 0 4px' }}>
+                      No Site Surveys Linked Yet
+                    </h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', maxWidth: '480px', margin: '0 auto 12px' }}>
+                      Link on-site measurements for {selectedOrder.customerName} so design artwork scaling and workshop fabrication cutlists have precise dimensions.
+                    </p>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={handleOpenManageSurveys}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <PlusCircle size={14} />
+                      <span>+ Link Site Surveys for this Order</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                      gap: '12px',
+                    }}
+                  >
+                    {selectedOrderSurveys.map((survey, srvIdx) => {
+                      const area = (survey.widthMeters * survey.heightMeters).toFixed(2);
+                      return (
+                        <div
+                          key={survey.id}
+                          style={{
+                            background: 'var(--bg-app)',
+                            border: '1px solid var(--border-subtle)',
+                            borderRadius: 'var(--radius-md)',
+                            padding: '14px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '10px',
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                              <div style={{ fontSize: '0.675rem', fontWeight: 700, color: '#ca8a04', textTransform: 'uppercase' }}>
+                                Signboard #{srvIdx + 1} • {survey.indoorOutdoor.toUpperCase()}
+                              </div>
+                              <h4 style={{ fontSize: '0.9rem', color: 'var(--text-main)', margin: '2px 0 0', fontWeight: 700 }}>
+                                {survey.title}
+                              </h4>
+                            </div>
+                            <span className="badge badge-emerald" style={{ fontSize: '10px' }}>
+                              {survey.status || 'Verified'}
+                            </span>
+                          </div>
+
+                          {/* Dimensions Box */}
+                          <div
+                            style={{
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(3, 1fr)',
+                              gap: '6px',
+                              background: 'rgba(255, 255, 255, 0.02)',
+                              border: '1px solid var(--border-subtle)',
+                              borderRadius: 'var(--radius-sm)',
+                              padding: '8px',
+                              textAlign: 'center',
+                            }}
+                          >
+                            <div>
+                              <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)' }}>Width × Height</div>
+                              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#38bdf8' }}>
+                                {survey.widthMeters}m × {survey.heightMeters}m
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)' }}>Surface Area</div>
+                              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#34d399' }}>
+                                {area} m²
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)' }}>3D Depth</div>
+                              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#f59e0b' }}>
+                                {survey.depthMeters ? `${survey.depthMeters}m` : 'Flat / 2D'}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Technical & Installation Specs */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <MapPin size={12} color="#38bdf8" />
+                              <span style={{ color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {survey.locationAddress}
+                              </span>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <Zap size={12} color={survey.powerSourceAvailable ? '#34d399' : '#f59e0b'} />
+                                <span>{survey.powerSourceAvailable ? '220V Power Ready' : 'No Direct Power'}</span>
+                              </span>
+                              <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+                                Ground Clearance: <strong>{survey.installationHeightMeters}m</strong>
+                              </span>
+                            </div>
+
+                            {survey.notes && (
+                              <div
+                                style={{
+                                  fontSize: '0.7rem',
+                                  color: 'var(--text-muted)',
+                                  background: 'rgba(255, 255, 255, 0.02)',
+                                  padding: '6px 8px',
+                                  borderRadius: 'var(--radius-sm)',
+                                  marginTop: '4px',
+                                  fontStyle: 'italic',
+                                }}
+                              >
+                                &ldquo;{survey.notes}&rdquo;
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* ========================================================= */}
@@ -1069,17 +1342,17 @@ function OrdersPageContent() {
                         width: '32px',
                         height: '32px',
                         borderRadius: '8px',
-                        background: 'rgba(168, 85, 247, 0.15)',
+                        background: '#09090b',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#c084fc',
+                        color: '#facc15',
                       }}
                     >
                       <Palette size={18} />
                     </div>
                     <div>
-                      <h3 style={{ fontSize: '1rem', margin: 0, color: '#ffffff' }}>
+                      <h3 style={{ fontSize: '1rem', margin: 0, color: 'var(--text-main)', fontWeight: 800 }}>
                         Order Designs & Customer Approval Gate ({orderDesigns.length})
                       </h3>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -1248,7 +1521,7 @@ function OrdersPageContent() {
                                   {badge.label}
                                 </span>
                               </div>
-                              <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#ffffff', marginTop: '2px' }}>
+                              <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', marginTop: '2px' }}>
                                 {proof.title}
                               </div>
                               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -1440,7 +1713,7 @@ function OrdersPageContent() {
                     <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
                       Invoiced Revenue (Excl. 15% VAT):
                     </span>
-                    <strong style={{ color: '#ffffff' }}>
+                    <strong style={{ color: 'var(--text-main)' }}>
                       + {formatETB(selectedProfitability.orderRevenue)}
                     </strong>
                   </div>
@@ -1622,7 +1895,7 @@ function OrdersPageContent() {
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <Receipt size={16} color="#fb7185" />
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>
                         Logged Direct Expenses for {selectedOrder.orderNumber} ({orderExpenses.length})
                       </span>
                     </div>
@@ -1658,7 +1931,7 @@ function OrdersPageContent() {
                                   {exp.categoryLabel || exp.category.replace('_', ' ')}
                                 </span>
                               </td>
-                              <td style={{ color: '#ffffff', fontWeight: 600 }}>{exp.supplierOrPayee}</td>
+                              <td style={{ color: 'var(--text-main)', fontWeight: 600 }}>{exp.supplierOrPayee}</td>
                               <td>{exp.paymentMethod.replace('_', ' ')}</td>
                               <td style={{ fontFamily: 'monospace', color: 'var(--text-dim)' }}>
                                 {exp.receiptRef || exp.expenseNumber}
@@ -1697,7 +1970,7 @@ function OrdersPageContent() {
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <Trash2 size={16} color="#ef4444" />
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>
                         Logged Scrap & Material Wastage for {selectedOrder.orderNumber} ({orderWastages.length})
                       </span>
                     </div>
@@ -1728,7 +2001,7 @@ function OrdersPageContent() {
                           {orderWastages.map((wst) => (
                             <tr key={wst.id}>
                               <td>{wst.date}</td>
-                              <td style={{ color: '#ffffff', fontWeight: 600 }}>{wst.itemName}</td>
+                              <td style={{ color: 'var(--text-main)', fontWeight: 600 }}>{wst.itemName}</td>
                               <td>
                                 {wst.quantity} {wst.unit}
                               </td>
@@ -2165,6 +2438,132 @@ function OrdersPageContent() {
                     onChange={(e) => setNewOrderForm({ ...newOrderForm, notes: e.target.value })}
                   />
                 </div>
+
+                {/* 1-to-Many: Link Site Surveys & Dimensions Section */}
+                <div
+                  style={{
+                    background: 'rgba(56, 189, 248, 0.05)',
+                    border: '1px solid rgba(56, 189, 248, 0.25)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '14px',
+                    marginBottom: '16px',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Ruler size={16} color="#38bdf8" />
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#38bdf8' }}>
+                        Link Site Surveys & Dimensions ({newOrderForm.siteSurveyIds.length} Selected)
+                      </span>
+                    </div>
+
+                    {availableCustomerSurveys.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (newOrderForm.siteSurveyIds.length === availableCustomerSurveys.length) {
+                            setNewOrderForm({ ...newOrderForm, siteSurveyIds: [] });
+                          } else {
+                            setNewOrderForm({
+                              ...newOrderForm,
+                              siteSurveyIds: availableCustomerSurveys.map((s) => s.id),
+                            });
+                          }
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#38bdf8',
+                          fontSize: '11px',
+                          cursor: 'pointer',
+                          textDecoration: 'underline',
+                        }}
+                      >
+                        {newOrderForm.siteSurveyIds.length === availableCustomerSurveys.length
+                          ? 'Deselect All'
+                          : 'Select All'}
+                      </button>
+                    )}
+                  </div>
+
+                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '10px' }}>
+                    Select one or more measured signboards/facades to link to this order. The physical dimensions, depths, and electrical access will be passed to Design and Production BOM.
+                  </p>
+
+                  {availableCustomerSurveys.length === 0 ? (
+                    <div
+                      style={{
+                        padding: '10px 12px',
+                        background: 'var(--bg-app)',
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: '12px',
+                        color: 'var(--text-dim)',
+                        fontStyle: 'italic',
+                      }}
+                    >
+                      No recorded site surveys for this client yet. You can still create this order and link site surveys later, or add them via CRM.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '190px', overflowY: 'auto' }}>
+                      {availableCustomerSurveys.map((srv) => {
+                        const isChecked = newOrderForm.siteSurveyIds.includes(srv.id);
+                        const area = (srv.widthMeters * srv.heightMeters).toFixed(1);
+                        return (
+                          <label
+                            key={srv.id}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: '10px',
+                              padding: '10px 12px',
+                              background: isChecked ? 'rgba(56, 189, 248, 0.12)' : 'var(--bg-app)',
+                              border: isChecked ? '1px solid #38bdf8' : '1px solid var(--border-subtle)',
+                              borderRadius: 'var(--radius-sm)',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                const nextIds = e.target.checked
+                                  ? [...newOrderForm.siteSurveyIds, srv.id]
+                                  : newOrderForm.siteSurveyIds.filter((id) => id !== srv.id);
+                                setNewOrderForm({ ...newOrderForm, siteSurveyIds: nextIds });
+                              }}
+                              style={{ marginTop: '3px' }}
+                            />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)' }}>
+                                  {srv.title}
+                                </span>
+                                <span className="badge badge-cyan" style={{ fontSize: '10px' }}>
+                                  {srv.widthMeters}m × {srv.heightMeters}m ({area} m²)
+                                </span>
+                              </div>
+                              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                                <span>📍 {srv.locationAddress}</span>
+                                <span>• Type: {srv.signageType?.replace('_', ' ') || 'Signage'}</span>
+                                {srv.depthMeters ? <span>• Depth: {srv.depthMeters}m</span> : null}
+                                <span>• Elev: {srv.installationHeightMeters}m</span>
+                                <span>• {srv.powerSourceAvailable ? '⚡ Power Source Ready' : '⚠️ No Direct Power'}</span>
+                              </div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="modal-footer">
@@ -2589,6 +2988,137 @@ function OrdersPageContent() {
         onClose={() => setShowLogWastageModal(false)}
         onConfirmWastage={handleConfirmOrderWastage}
       />
+
+      {/* ========================================================= */}
+      {/* MODAL 12: MANAGE ORDER LINKED SITE SURVEYS (1-to-many)     */}
+      {/* ========================================================= */}
+      {showManageSurveysModal && selectedOrder && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '640px' }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Ruler size={20} color="#ca8a04" />
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-main)', fontWeight: 800 }}>
+                    Manage Site Surveys for {selectedOrder.orderNumber}
+                  </h3>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Client: {selectedOrder.customerName}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowManageSurveysModal(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: '14px' }}>
+                Select which architectural site surveys / signboards are included in this production order. Multiple signboards can be linked to one order.
+              </p>
+
+              {availableForEditSurveys.length === 0 ? (
+                <div
+                  style={{
+                    padding: '24px',
+                    textAlign: 'center',
+                    background: 'var(--bg-app)',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-light)',
+                  }}
+                >
+                  <AlertCircle size={28} color="#f59e0b" style={{ margin: '0 auto 8px' }} />
+                  <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                    No Site Surveys Found for {selectedOrder.customerName}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    You can record site surveys with physical dimensions in the CRM module.
+                  </div>
+                  <Link
+                    href="/crm?tab=surveys"
+                    className="btn btn-secondary btn-sm"
+                    style={{ marginTop: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <span>Go to CRM Survey Center →</span>
+                  </Link>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '340px', overflowY: 'auto' }}>
+                  {availableForEditSurveys.map((survey) => {
+                    const isChecked = editOrderSurveyIds.includes(survey.id);
+                    const area = (survey.widthMeters * survey.heightMeters).toFixed(2);
+                    return (
+                      <label
+                        key={survey.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '12px',
+                          padding: '12px 14px',
+                          background: isChecked ? '#fef9c3' : 'var(--bg-app)',
+                          border: isChecked ? '1px solid #ca8a04' : '1px solid var(--border-light)',
+                          borderRadius: 'var(--radius-md)',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            const next = e.target.checked
+                              ? [...editOrderSurveyIds, survey.id]
+                              : editOrderSurveyIds.filter((id) => id !== survey.id);
+                            setEditOrderSurveyIds(next);
+                          }}
+                          style={{ marginTop: '4px' }}
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                              {survey.title}
+                            </span>
+                            <span className="badge badge-cyan" style={{ fontSize: '10px' }}>
+                              {survey.widthMeters}m × {survey.heightMeters}m ({area} m²)
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                            📍 {survey.locationAddress} • {survey.indoorOutdoor.toUpperCase()} • Elev: {survey.installationHeightMeters}m
+                            {survey.depthMeters ? ` • Depth: ${survey.depthMeters}m` : ''}
+                          </div>
+                          <div style={{ fontSize: '0.7rem', color: survey.powerSourceAvailable ? '#34d399' : '#f59e0b', marginTop: '2px' }}>
+                            {survey.powerSourceAvailable ? '⚡ 220V Power Ready' : '⚠️ No Direct Power'}
+                          </div>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setShowManageSurveysModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={handleSaveOrderSurveys}
+              >
+                Save Linked Surveys ({editOrderSurveyIds.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
