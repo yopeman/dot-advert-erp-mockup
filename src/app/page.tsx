@@ -182,7 +182,7 @@ export default function ModulesDirectoryPage() {
         description:
           'Workforce administration: manage production technicians and office staff, monitor daily clock-in/out attendance, allocate rush overtime (1.25x/1.5x) to client jobs, and process Ethiopian statutory payroll (11% + 7% pension).',
         icon: CalendarCheck,
-        primaryHref: '/payroll',
+        primaryHref: '/hr',
         primaryLabel: 'Open HR & Payroll',
         badge: { text: `${employees.length} Staff Members`, type: 'purple' },
         tags: ['Staff Roster', 'Shift Attendance', 'Overtime Direct Cost', '11% Employer Pension', '7% Employee Pension'],
