@@ -64,7 +64,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
       title: 'Issue Materials & Log Production Wastage',
       icon: Trash2,
       color: '#f59e0b',
-      moduleLink: '/dashboard/inventory',
+      moduleLink: '/inventory',
       moduleName: 'Inventory & Stores',
       summary:
         'Materials are transferred to the production floor; any cracked or scrap material is tracked.',

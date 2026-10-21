@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useErp } from '@/context/ErpDataContext';
-import { Item, Store, WastageReason } from '@/types/erp';
+import { Item, Store, WastageReason, POStatus, PurchaseOrder, Supplier } from '@/types/erp';
 import {
   CycleCountTask,
   StoreApprovalRequest,
@@ -26,6 +27,7 @@ import {
 } from '@/data/storeMockData';
 import StoreAdminHighlights from '@/components/store/StoreAdminHighlights';
 import StoreReports from '@/components/store/StoreReports';
+import StorePurchasingDesk from '@/components/store/StorePurchasingDesk';
 import {
   Activity,
   AlertTriangle,
@@ -71,6 +73,8 @@ import {
   Settings,
   ShieldAlert,
   ShieldCheck,
+  ShoppingCart,
+  ShoppingBag,
   Sparkles,
   Target,
   Timer,
@@ -114,6 +118,8 @@ const REQUEST_TYPE_META: Record<
 > = {
   goods_receipt: { label: 'Goods Receipt (GRN)', short: 'GRN', bg: '#ecfdf5', color: '#047857' },
   material_issue: { label: 'Material Issue', short: 'ISSUE', bg: '#eff6ff', color: '#1d4ed8' },
+  staff_requisition: { label: 'Staff Item Requisition', short: 'STAFF REQ', bg: '#f0f9ff', color: '#0369a1' },
+  staff_return: { label: 'Staff Item Return', short: 'RETURN', bg: '#ecfeff', color: '#0e7490' },
   inter_store_transfer: { label: 'Inter-Store Transfer', short: 'TRANSFER', bg: '#f5f3ff', color: '#6d28d9' },
   stock_adjustment: { label: 'Stock Adjustment', short: 'ADJUST', bg: '#fffbeb', color: '#b45309' },
   cycle_count: { label: 'Cycle Count Variance', short: 'COUNT', bg: '#f0fdfa', color: '#0f766e' },
@@ -319,12 +325,54 @@ type NewMovementInput = {
   priority: StorePriority;
   direction: StoreApprovalRequest['direction'];
   qcResult?: StoreApprovalRequest['qcResult'];
+  acceptedQty?: number;
+  rejectedQty?: number;
+  binCode?: string;
+  evidence?: string[];
   systemQty?: number;
   countedQty?: number;
   varianceQty?: number;
 };
 
+export type StoreTab =
+  | 'overview'
+  | 'purchasing'
+  | 'suppliers'
+  | 'catalog'
+  | 'inbound'
+  | 'outbound'
+  | 'adjustments'
+  | 'wastage'
+  | 'approvals'
+  | 'admin'
+  | 'reports'
+  | 'warehouses'
+  | 'analytics'
+  | 'audit'
+  | 'staff';
+
+const STORE_TABS: StoreTab[] = [
+  'overview',
+  'purchasing',
+  'suppliers',
+  'catalog',
+  'inbound',
+  'outbound',
+  'adjustments',
+  'wastage',
+  'approvals',
+  'admin',
+  'reports',
+  'warehouses',
+  'analytics',
+  'audit',
+  'staff',
+];
+
 export default function StoreModule() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const {
     items,
     stores,
@@ -336,8 +384,15 @@ export default function StoreModule() {
     lowStockItems,
     currentRole,
     setCurrentRole,
+    addItem,
+    addSupplier,
+    updateSupplier,
     addStockMovement,
     recordWastage,
+    createPurchaseOrder,
+    receivePurchaseOrder,
+    approvePurchaseOrder,
+    updatePurchaseOrderStatus,
   } = useErp();
 
   const roleView: StoreModuleRole =
@@ -345,12 +400,21 @@ export default function StoreModule() {
       ? 'admin'
       : currentRole === 'super_admin'
         ? 'super_admin'
-        : currentRole === 'production_supervisor' || currentRole === 'storekeeper'
-          ? 'store_supervisor'
-          : 'storekeeper';
-  const [activeTab, setActiveTab] = useState<
-    'overview' | 'catalog' | 'inbound' | 'outbound' | 'adjustments' | 'wastage' | 'approvals' | 'admin' | 'reports' | 'warehouses' | 'analytics' | 'audit'
-  >('overview');
+        : currentRole === 'procurement_officer'
+          ? 'purchasing'
+          : currentRole === 'employee' || currentRole === 'machine_operator'
+            ? 'staff'
+            : currentRole === 'production_supervisor'
+              ? 'store_supervisor'
+              : 'storekeeper';
+  const tabParam = searchParams.get('tab');
+  const activeTab: StoreTab =
+    tabParam && STORE_TABS.includes(tabParam as StoreTab) ? (tabParam as StoreTab) : 'overview';
+  const setActiveTab = (tab: StoreTab) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tab);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   const [requests, setRequests] = useState<StoreApprovalRequest[]>(INITIAL_STORE_REQUESTS);
   const [notifications, setNotifications] = useState<StoreNotification[]>(INITIAL_STORE_NOTIFICATIONS);
@@ -368,11 +432,22 @@ export default function StoreModule() {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [decisionTarget, setDecisionTarget] = useState<{ request: StoreApprovalRequest; action: 'approved' | 'rejected' } | null>(null);
   const [decisionNotes, setDecisionNotes] = useState('');
+  const [decisionEvidence, setDecisionEvidence] = useState<string[]>([]);
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
+  const [receivedTransferIds, setReceivedTransferIds] = useState<string[]>([]);
+  const [manuallyIssuedStaffRequestIds, setManuallyIssuedStaffRequestIds] = useState<string[]>(['sreq-staff-03']);
+  const [returnTarget, setReturnTarget] = useState<StoreApprovalRequest | null>(null);
+  const [returnQty, setReturnQty] = useState('1');
+  const [returnCondition, setReturnCondition] = useState<'reusable' | 'damaged'>('reusable');
+  const [returnReason, setReturnReason] = useState('');
 
   // Catalog filters
   const [catalogSearch, setCatalogSearch] = useState('');
   const [catalogFilter, setCatalogFilter] = useState<'all' | 'low' | 'expiring' | 'dead' | 'quarantine'>('all');
   const [catalogType, setCatalogType] = useState('all');
+  const [catalogSort, setCatalogSort] = useState<'value_desc' | 'name_asc' | 'stock_asc' | 'stock_desc'>('value_desc');
+  const [catalogPage, setCatalogPage] = useState(1);
+  const CATALOG_PAGE_SIZE = 6;
 
   // Approval filters
   const [approvalFilter, setApprovalFilter] = useState<'pending' | 'all' | 'approved' | 'rejected'>('pending');
@@ -400,8 +475,13 @@ export default function StoreModule() {
   const [formQc, setFormQc] = useState<NonNullable<StoreApprovalRequest['qcResult']>>('passed');
   const [formSystemQty, setFormSystemQty] = useState(0);
   const [formCountedQty, setFormCountedQty] = useState(0);
+  const [formAcceptedQty, setFormAcceptedQty] = useState(1);
+  const [formRejectedQty, setFormRejectedQty] = useState(0);
+  const [formBin, setFormBin] = useState('A-01');
+  const [formEvidence, setFormEvidence] = useState<string[]>([]);
   const [formNewItemName, setFormNewItemName] = useState('');
   const [formNewItemCode, setFormNewItemCode] = useState('');
+  const [formDepartment, setFormDepartment] = useState('Production');
   const [requestSeq, setRequestSeq] = useState(1042);
 
   // Cycle count schedule form
@@ -412,21 +492,50 @@ export default function StoreModule() {
   const [countDate, setCountDate] = useState('2026-10-23');
   const [countSeq, setCountSeq] = useState(93);
 
+  // Purchasing State
+  const [showPoModal, setShowPoModal] = useState(false);
+  const [poSupplierId, setPoSupplierId] = useState(suppliers[0]?.id || '');
+  const [poItemId, setPoItemId] = useState(items[0]?.id || '');
+  const [poQty, setPoQty] = useState(20);
+  const [poUnitPrice, setPoUnitPrice] = useState(items[0]?.purchasePrice || 100);
+  const [poDeliveryDate, setPoDeliveryDate] = useState('2026-10-28');
+  const [poDeliveryStoreId, setPoDeliveryStoreId] = useState(stores[0]?.id || '');
+  const [poPaymentTerms, setPoPaymentTerms] = useState(suppliers[0]?.paymentTerms || '30 Days');
+  const [poNotes, setPoNotes] = useState('');
+  const [poStatusFilter, setPoStatusFilter] = useState<'all' | POStatus>('all');
+  const [poSearch, setPoSearch] = useState('');
+  const [viewingPo, setViewingPo] = useState<PurchaseOrder | null>(null);
+
+  // GRN Receiving State (from PO)
+  const [receivingPo, setReceivingPo] = useState<PurchaseOrder | null>(null);
+  const [receivingStoreId, setReceivingStoreId] = useState(stores[0]?.id || '');
+  const [receivingDeliveryNote, setReceivingDeliveryNote] = useState('DN-8921-ET');
+  const [receivingInspector, setReceivingInspector] = useState('Dawit Bekele (Quality Inspector)');
+  const [receivingQuality, setReceivingQuality] = useState<'passed' | 'partial' | 'failed'>('passed');
+
   const isAdmin = roleView === 'admin' || roleView === 'super_admin';
+  const isStaff = roleView === 'staff';
+  const isPurchasing = roleView === 'purchasing';
   const roleLabel: Record<StoreModuleRole, string> = {
+    staff: 'Staff Requester',
     storekeeper: 'Storekeeper',
+    purchasing: 'Purchasing & Procurement',
     store_supervisor: 'Store Supervisor',
     admin: 'Admin Operations',
     super_admin: 'Super Admin Master',
   };
   const currentUserName =
-    roleView === 'storekeeper'
-      ? 'Dawit Bekele'
-      : roleView === 'store_supervisor'
-        ? 'Hanna Girma'
-        : roleView === 'admin'
-          ? 'Mulugeta Teshome'
-          : 'Sofiya Alemu';
+    roleView === 'staff'
+      ? 'Yonas Kebede'
+      : roleView === 'storekeeper'
+        ? 'Dawit Bekele'
+        : roleView === 'purchasing'
+          ? 'Almaz Tadesse (Purchasing)'
+          : roleView === 'store_supervisor'
+            ? 'Hanna Girma'
+            : roleView === 'admin'
+              ? 'Mulugeta Teshome'
+              : 'Sofiya Alemu';
 
   const notify = (message: string) => {
     setToast(message);
@@ -434,10 +543,13 @@ export default function StoreModule() {
   };
 
   const handleSwitchRole = (next: StoreModuleRole) => {
-    if (next === 'storekeeper') setCurrentRole('storekeeper');
+    if (next === 'staff') setCurrentRole('employee');
+    else if (next === 'storekeeper') setCurrentRole('storekeeper');
+    else if (next === 'purchasing') setCurrentRole('procurement_officer');
     else if (next === 'store_supervisor') setCurrentRole('production_supervisor');
     else if (next === 'admin') setCurrentRole('admin');
     else setCurrentRole('super_admin');
+    setActiveTab(next === 'purchasing' ? 'purchasing' : 'overview');
   };
 
   const addAudit = (event: Omit<StoreAuditEvent, 'id'>) => {
@@ -457,11 +569,11 @@ export default function StoreModule() {
   };
 
   const visibleNotifications = useMemo(() => {
-    const audience = isAdmin ? 'admin' : 'storekeeper';
+    const audience = isAdmin ? 'admin' : isStaff ? 'staff' : 'storekeeper';
     return notifications
       .filter((n) => n.audience === 'all' || n.audience === audience)
       .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
-  }, [notifications, isAdmin]);
+  }, [notifications, isAdmin, isStaff]);
 
   const unreadCount = visibleNotifications.filter((n) => !n.read).length;
   const pendingRequests = requests.filter((r) => r.status === 'pending_admin');
@@ -526,6 +638,55 @@ export default function StoreModule() {
     return matchesSearch && matchesType && matchesFilter;
   });
 
+  const catalogSorted = [...catalogFiltered].sort((a, b) => {
+    if (catalogSort === 'name_asc') return a.name.localeCompare(b.name);
+    if (catalogSort === 'stock_asc') return a.currentStock - b.currentStock;
+    if (catalogSort === 'stock_desc') return b.currentStock - a.currentStock;
+    return catalogVal(b) - catalogVal(a);
+  });
+  const totalCatalogPages = Math.max(1, Math.ceil(catalogSorted.length / CATALOG_PAGE_SIZE));
+  const currentCatalogPage = Math.min(catalogPage, totalCatalogPages);
+  const catalogPageRows = catalogSorted.slice((currentCatalogPage - 1) * CATALOG_PAGE_SIZE, currentCatalogPage * CATALOG_PAGE_SIZE);
+
+  const approvedSupplierReturns = requests
+    .filter((request) => request.type === 'supplier_return' && request.status === 'approved')
+    .sort((a, b) => (b.approvedAt || '').localeCompare(a.approvedAt || ''));
+  const approvedTransfers = requests
+    .filter((request) => request.type === 'inter_store_transfer' && request.status === 'approved')
+    .sort((a, b) => (b.approvedAt || '').localeCompare(a.approvedAt || ''));
+  const staffRequests = requests
+    .filter((request) => request.type === 'staff_requisition')
+    .sort((a, b) => b.requestedAt.localeCompare(a.requestedAt));
+  const myStaffRequests = staffRequests.filter((request) => request.requestedBy === currentUserName);
+  const issuedStaffRequestIds = Array.from(
+    new Set([
+      ...manuallyIssuedStaffRequestIds,
+      ...staffRequests
+        .filter((request) =>
+          stockMovements.some(
+            (movement) =>
+              movement.referenceNumber === request.requestNumber &&
+              movement.movementType === 'production_issue'
+          )
+        )
+        .map((request) => request.id),
+    ])
+  );
+  const staffIssueQueue = staffRequests.filter(
+    (request) => request.status === 'approved' && !issuedStaffRequestIds.includes(request.id)
+  );
+  const staffReturns = requests
+    .filter((request) => request.type === 'staff_return')
+    .sort((a, b) => b.requestedAt.localeCompare(a.requestedAt));
+  const myStaffReturns = staffReturns.filter((request) => request.requestedBy === currentUserName);
+  const reservedReturnQty = (sourceRequestId: string) =>
+    staffReturns
+      .filter(
+        (request) =>
+          request.returnOfRequestId === sourceRequestId && request.status !== 'rejected'
+      )
+      .reduce((sum, request) => sum + request.quantity, 0);
+
   const approvalFiltered = requests
     .filter((request) => {
       if (approvalFilter === 'pending') return request.status === 'pending_admin';
@@ -562,6 +723,9 @@ export default function StoreModule() {
     .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
 
   const formItem = items.find((item) => item.id === formItemId);
+  const returnAvailableQty = returnTarget
+    ? returnTarget.quantity - reservedReturnQty(returnTarget.id)
+    : 0;
 
   const openMovement = (type: StoreRequestType, itemId?: string, storeId?: string) => {
     if (settings.freezeAllMovements) {
@@ -570,17 +734,16 @@ export default function StoreModule() {
     }
     const item = items.find((i) => i.id === (itemId || formItemId)) || items[0];
     const from = storeId || stores[0]?.id || '';
+    const initialQty = type === 'reorder_request' ? item?.reorderQuantity || 1 : 1;
     setFormType(type);
     setFormItemId(item?.id || '');
     setFormFromStore(from);
     setFormToStore(stores[1]?.id || stores[0]?.id || '');
-    setFormQty(
-      type === 'reorder_request'
-        ? item?.reorderQuantity || 1
-        : type === 'item_onboarding'
-          ? 1
-          : 1
-    );
+    setFormQty(initialQty);
+    setFormAcceptedQty(initialQty);
+    setFormRejectedQty(0);
+    setFormBin('A-01');
+    setFormEvidence([]);
     setFormUnitCost(item?.purchasePrice || 0);
     setFormUnit(item?.unit || 'piece');
     setFormSupplier(item?.preferredSupplierName || suppliers[0]?.name || '');
@@ -656,6 +819,36 @@ export default function StoreModule() {
       notify('Item name is required.');
       return;
     }
+    if (isOnboarding) {
+      const code = formNewItemCode.trim();
+      if (!code) {
+        notify('A unique SKU code is required for onboarding.');
+        return;
+      }
+      if (items.some((i) => i.code.toLowerCase() === code.toLowerCase())) {
+        notify(`SKU code ${code} already exists in the catalog.`);
+        return;
+      }
+      if (requests.some((request) => request.type === 'item_onboarding' && request.status === 'pending_admin' && request.itemCode?.toLowerCase() === code.toLowerCase())) {
+        notify(`SKU code ${code} already has a pending onboarding request.`);
+        return;
+      }
+    }
+
+    let acceptedQty: number | undefined;
+    let rejectedQty: number | undefined;
+    if (formType === 'goods_receipt') {
+      acceptedQty = Math.max(0, Number(formAcceptedQty) || 0);
+      rejectedQty = Math.max(0, Number(formRejectedQty) || 0);
+      if (acceptedQty + rejectedQty !== quantity) {
+        notify('Accepted and rejected quantities must equal the delivered quantity.');
+        return;
+      }
+      if (acceptedQty === 0 && formQc !== 'failed') {
+        notify('A receipt with zero accepted quantity must be marked as failed QC.');
+        return;
+      }
+    }
 
     const unitCost = isOnboarding ? Number(formUnitCost) || 0 : item?.purchasePrice || 0;
     const totalValue = quantity * unitCost;
@@ -683,6 +876,8 @@ export default function StoreModule() {
     const typeTitles: Record<StoreRequestType, string> = {
       goods_receipt: 'Goods Receipt Request',
       material_issue: 'Material Issue Request',
+      staff_requisition: 'Staff Item Requisition',
+      staff_return: 'Staff Item Return Request',
       inter_store_transfer: 'Inter-Store Transfer Request',
       stock_adjustment: 'Stock Adjustment Request',
       cycle_count: 'Cycle Count Variance Request',
@@ -704,7 +899,7 @@ export default function StoreModule() {
       unitCost,
       fromStoreId: formType === 'goods_receipt' || formType === 'reorder_request' || formType === 'item_onboarding' ? undefined : formFromStore,
       toStoreId:
-        formType === 'material_issue' || formType === 'wastage' || formType === 'supplier_return'
+        formType === 'material_issue' || formType === 'wastage' || formType === 'supplier_return' || formType === 'staff_requisition'
           ? undefined
           : formType === 'stock_adjustment' || formType === 'cycle_count'
             ? direction === 'inbound'
@@ -720,6 +915,10 @@ export default function StoreModule() {
       priority,
       direction,
       qcResult: formType === 'goods_receipt' ? formQc : 'not_applicable',
+      acceptedQty,
+      rejectedQty,
+      binCode: formType === 'goods_receipt' ? formBin.trim() || undefined : undefined,
+      evidence: formEvidence.length ? formEvidence : undefined,
       systemQty,
       countedQty,
       varianceQty,
@@ -738,12 +937,14 @@ export default function StoreModule() {
       requestNumber,
       fromStoreName: sourceStore?.name,
       toStoreName:
-        formType === 'material_issue'
-          ? formReference.trim() || 'Production Floor'
-          : destinationStore?.name,
+        formType === 'staff_requisition'
+          ? `Staff Pickup — ${formDepartment}`
+          : formType === 'material_issue'
+            ? formReference.trim() || 'Production Floor'
+            : destinationStore?.name,
       requestedBy: currentUserName,
       requestedByRole:
-        roleView === 'storekeeper' ? 'Storekeeper' : 'Store Supervisor',
+        isStaff ? 'Staff' : roleView === 'storekeeper' ? 'Storekeeper' : 'Store Supervisor',
       requestedAt: nowStamp(),
       status: 'pending_admin',
       slaHours,
@@ -770,27 +971,230 @@ export default function StoreModule() {
       severity: priority === 'critical' ? 'critical' : 'info',
       requestNumber,
     });
+    if (formType === 'staff_requisition') {
+      pushNotification({
+        type: 'approval_request',
+        severity: 'info',
+        title: `Item request submitted — ${requestNumber}`,
+        message: `Your request for ${quantity} ${item?.unit || formUnit} of ${itemName} is pending Admin approval. The storekeeper will be notified once approved.`,
+        requestId: newRequest.id,
+        requestNumber,
+        audience: 'staff',
+      });
+    }
     setShowMovementModal(false);
-    notify(`${requestNumber} submitted. Admin notified — stock ledger will post only after approval.`);
+    notify(
+      formType === 'staff_requisition'
+        ? `${requestNumber} submitted. Admin notified — the storekeeper will prepare the item after approval.`
+        : `${requestNumber} submitted. Admin notified — stock ledger will post only after approval.`
+    );
   };
 
   const applyApprovedRequest = (request: StoreApprovalRequest) => {
+    if (request.type === 'item_onboarding') {
+      const supplier = suppliers.find((s) => s.name === request.supplierName) || suppliers[0];
+      const createdItem = addItem({
+        code: request.itemCode?.trim() || `SKU-${request.requestNumber.slice(-4)}`,
+        name: request.itemName || 'New SKU',
+        type: 'raw_material',
+        unit: request.unit,
+        purchasePrice: request.unitCost,
+        sellingPrice: request.unitCost,
+        vatRate: supplier?.isVatRegistered ? 0.15 : 0,
+        vatType: supplier?.isVatRegistered ? 'standard_15' : 'exempt',
+        reorderLevel: Math.max(1, Math.ceil(request.quantity * 0.5)),
+        reorderQuantity: Math.max(1, request.quantity),
+        currentStock: 0,
+        averageDailyUsage: 0,
+        preferredSupplierId: supplier?.id,
+        preferredSupplierName: supplier?.name || request.supplierName,
+        storeBalances: {},
+      });
+      addAudit({
+        timestamp: nowStamp(),
+        action: 'SKU_ACTIVATED',
+        entity: 'Stock Catalog',
+        actor: `${currentUserName} (Admin)`,
+        detail: `${createdItem.code} — ${createdItem.name} activated in the catalog from ${request.requestNumber}. No stock posted; receive quantity via GRN into ${request.toStoreName || 'Main Store'}.`,
+        severity: 'success',
+        requestNumber: request.requestNumber,
+      });
+      pushNotification({
+        type: 'approved',
+        severity: 'success',
+        title: `New SKU activated — ${createdItem.code}`,
+        message: `${createdItem.name} is now available in the stock catalog and can be received, issued or counted.`,
+        requestNumber: request.requestNumber,
+        audience: 'all',
+      });
+      return;
+    }
+
     if (!request.itemId) return;
     const item = items.find((i) => i.id === request.itemId);
     if (!item) return;
     const unitCost = request.unitCost || item.purchasePrice;
 
-    if (request.type === 'goods_receipt') {
+    if (request.type === 'staff_requisition') {
+      addAudit({
+        timestamp: nowStamp(),
+        action: 'STAFF_REQUISITION_APPROVED',
+        entity: item.name,
+        actor: `${currentUserName} (Admin)`,
+        detail: `${request.requestNumber} approved for ${request.requestedBy} — ${request.quantity} ${item.unit}. Routed to Storekeeper for issue from ${request.fromStoreName || 'main store'}.`,
+        severity: 'success',
+        requestNumber: request.requestNumber,
+      });
+      pushNotification({
+        type: 'approved',
+        severity: 'success',
+        title: `Issue approved item — ${request.requestNumber}`,
+        message: `Admin approved ${request.quantity} ${item.unit} of ${item.name} for ${request.requestedBy}. Prepare the item for collection at ${request.fromStoreName || 'main store'}.`,
+        requestId: request.id,
+        requestNumber: request.requestNumber,
+        audience: 'storekeeper',
+      });
+      pushNotification({
+        type: 'approved',
+        severity: 'success',
+        title: `Request approved — ${request.requestNumber}`,
+        message: `Admin approved your request for ${request.quantity} ${item.unit} of ${item.name}. The storekeeper is preparing it for collection at ${request.fromStoreName || 'the store'}.`,
+        requestId: request.id,
+        requestNumber: request.requestNumber,
+        audience: 'staff',
+      });
+      return;
+    }
+
+    if (request.type === 'staff_return') {
+      const storeId = request.fromStoreId || stores[0]?.id;
+      if (!storeId) return;
       addStockMovement({
         itemId: request.itemId,
-        toStoreId: request.toStoreId || stores[0]?.id,
-        movementType: 'purchase_receipt',
+        toStoreId: storeId,
+        movementType: 'return',
         quantity: request.quantity,
         unitCost,
-        referenceType: 'PO',
-        referenceNumber: request.referenceNumber || request.requestNumber,
-        notes: `Admin-approved receipt ${request.requestNumber}. ${request.notes || ''}`,
+        referenceType: 'ADJUSTMENT',
+        referenceNumber: request.requestNumber,
+        notes: `Admin-approved staff return ${request.requestNumber} from ${request.requestedBy}. Condition: ${request.returnCondition || 'reusable'}.`,
       });
+      if (request.returnCondition === 'damaged') {
+        recordWastage({
+          itemId: request.itemId,
+          quantity: request.quantity,
+          storeId,
+          reason: 'damaged',
+          notes: `Damaged item returned by ${request.requestedBy} under ${request.requestNumber}. Wastage write-off covered by the same Admin approval.`,
+        });
+      }
+      addAudit({
+        timestamp: nowStamp(),
+        action: request.returnCondition === 'damaged' ? 'STAFF_RETURN_DAMAGED_WRITTEN_OFF' : 'STAFF_RETURN_RESTOCKED',
+        entity: item.name,
+        actor: `${currentUserName} (Admin)`,
+        detail: `${request.quantity} ${item.unit} of ${item.name} returned by ${request.requestedBy} against ${request.referenceNumber || 'original issue'}. ${request.returnCondition === 'damaged' ? 'Wastage write-off posted after Admin approval.' : 'Returned to stock after Admin approval.'}`,
+        severity: request.returnCondition === 'damaged' ? 'warning' : 'success',
+        requestNumber: request.requestNumber,
+      });
+      pushNotification({
+        type: 'approved',
+        severity: request.returnCondition === 'damaged' ? 'warning' : 'success',
+        title: `Return approved — ${request.requestNumber}`,
+        message: request.returnCondition === 'damaged'
+          ? `${request.quantity} ${item.unit} of ${item.name} accepted back and written off as damaged with Admin approval.`
+          : `${request.quantity} ${item.unit} of ${item.name} returned to ${request.fromStoreName || 'the store'}. Stock has been restored.`,
+        requestId: request.id,
+        requestNumber: request.requestNumber,
+        audience: 'staff',
+      });
+      return;
+    }
+
+    if (request.type === 'reorder_request') {
+      const supplier = suppliers.find((s) => s.name === request.supplierName) || suppliers[0];
+      const vatRate = supplier?.isVatRegistered ? 0.15 : 0;
+      const vatAmount = request.totalValue * vatRate;
+      createPurchaseOrder({
+        supplierId: supplier?.id || 'supplier-1',
+        supplierName: supplier?.name || request.supplierName || 'Unassigned supplier',
+        supplierTin: supplier?.tin || 'N/A',
+        items: [
+          {
+            itemId: item.id,
+            itemName: item.name,
+            quantity: request.quantity,
+            unit: item.unit,
+            unitPrice: unitCost,
+            vatRate,
+            vatAmount,
+            totalAmount: request.totalValue + vatAmount,
+          },
+        ],
+        subtotal: request.totalValue,
+        vatTotal: vatAmount,
+        grandTotal: request.totalValue + vatAmount,
+        expectedDeliveryDate: new Date(NOW_MS + 7 * 86400000).toISOString().slice(0, 10),
+        requestedBy: request.requestedBy,
+        approvedBy: `${currentUserName} (Admin)`,
+        paymentTerms: supplier?.paymentTerms || '30 Days',
+        notes: `Auto-created from approved reorder ${request.requestNumber}.`,
+      });
+      addAudit({
+        timestamp: nowStamp(),
+        action: 'PURCHASE_ORDER_CREATED',
+        entity: 'Procurement',
+        actor: `${currentUserName} (Admin)`,
+        detail: `A purchase order was generated for ${request.quantity} ${item.unit} of ${item.name} from reorder ${request.requestNumber}. Supplier: ${supplier?.name || request.supplierName || 'Unassigned'}.`,
+        severity: 'success',
+        requestNumber: request.requestNumber,
+      });
+      pushNotification({
+        type: 'approved',
+        severity: 'success',
+        title: `Purchase order created — ${item.name}`,
+        message: `Reorder ${request.requestNumber} was converted into a purchase order for ${formatETB(request.totalValue + vatAmount)}. Track it under Inbound → Open POs.`,
+        requestNumber: request.requestNumber,
+        audience: 'all',
+      });
+      return;
+    }
+
+    if (request.type === 'goods_receipt') {
+      const acceptedQty = Math.max(0, request.acceptedQty ?? request.quantity);
+      const rejectedQty = Math.max(0, request.rejectedQty ?? 0);
+      const destination = stores.find((s) => s.id === (request.toStoreId || stores[0]?.id));
+      if (acceptedQty > 0) {
+        addStockMovement({
+          itemId: request.itemId,
+          toStoreId: request.toStoreId || stores[0]?.id,
+          movementType: 'purchase_receipt',
+          quantity: acceptedQty,
+          unitCost,
+          referenceType: 'PO',
+          referenceNumber: request.referenceNumber || request.requestNumber,
+          notes: `Admin-approved receipt ${request.requestNumber}. Accepted ${acceptedQty} ${item.unit}; rejected ${rejectedQty} ${item.unit}. Put-away bin ${request.binCode || 'unassigned'}. ${request.notes || ''}`,
+        });
+      }
+      addAudit({
+        timestamp: nowStamp(),
+        action: rejectedQty > 0 ? 'GRN_PARTIAL_ACCEPTANCE' : 'GRN_ACCEPTED',
+        entity: item.name,
+        actor: `${currentUserName} (Admin)`,
+        detail: `${request.requestNumber}: accepted ${acceptedQty} ${item.unit}${rejectedQty ? `, rejected ${rejectedQty} ${item.unit}` : ''} at ${destination?.name || 'Main Store'} / bin ${request.binCode || 'unassigned'}. QC ${request.qcResult?.replaceAll('_', ' ') || 'not applicable'}.`,
+        severity: rejectedQty > 0 ? 'warning' : 'success',
+        requestNumber: request.requestNumber,
+      });
+      if (rejectedQty > 0) {
+        pushNotification({
+          type: 'stock_alert',
+          severity: 'warning',
+          title: `QC rejection recorded — ${item.name}`,
+          message: `${rejectedQty} ${item.unit} rejected on ${request.requestNumber}. ${acceptedQty} ${item.unit} accepted and posted to ${destination?.name || 'store'}. Supplier debit note may be required.`,
+          requestNumber: request.requestNumber,
+          audience: 'all',
+        });
+      }
       return;
     }
 
@@ -820,6 +1224,15 @@ export default function StoreModule() {
         referenceNumber: request.referenceNumber || request.requestNumber,
         notes: `Admin-approved transfer ${request.requestNumber}. ${request.notes || ''}`,
       });
+      addAudit({
+        timestamp: nowStamp(),
+        action: 'TRANSFER_DISPATCHED',
+        entity: item.name,
+        actor: `${currentUserName} (Admin)`,
+        detail: `${request.requestNumber}: ${request.quantity} ${item.unit} dispatched from ${request.fromStoreName || 'source store'} to ${request.toStoreName || 'destination store'}. Awaiting physical receipt confirmation.`,
+        severity: 'info',
+        requestNumber: request.requestNumber,
+      });
       return;
     }
 
@@ -833,6 +1246,24 @@ export default function StoreModule() {
         referenceType: 'ADJUSTMENT',
         referenceNumber: request.requestNumber,
         notes: `Admin-approved supplier return ${request.requestNumber}. ${request.notes || ''}`,
+      });
+      const debitNoteNumber = `DN-2026-${request.requestNumber.split('-').pop()}`;
+      addAudit({
+        timestamp: nowStamp(),
+        action: 'SUPPLIER_DEBIT_NOTE_ISSUED',
+        entity: request.supplierName || 'Supplier Return',
+        actor: `${currentUserName} (Admin)`,
+        detail: `${debitNoteNumber} issued for ${request.quantity} ${item.unit} of ${item.name} returned to ${request.supplierName || 'supplier'}. Value ${formatETB(request.totalValue)} recoverable.`,
+        severity: 'warning',
+        requestNumber: request.requestNumber,
+      });
+      pushNotification({
+        type: 'approved',
+        severity: 'success',
+        title: `Debit note issued — ${debitNoteNumber}`,
+        message: `${formatETB(request.totalValue)} supplier return posted for ${item.name}. Debit note ${debitNoteNumber} is available in Outbound control.`,
+        requestNumber: request.requestNumber,
+        audience: 'all',
       });
       return;
     }
@@ -851,6 +1282,21 @@ export default function StoreModule() {
         referenceNumber: request.requestNumber,
         notes: `Admin-approved adjustment ${request.requestNumber}. Variance ${request.varianceQty}. ${request.notes || ''}`,
       });
+      if (request.referenceNumber?.startsWith('CC-')) {
+        setCycleCounts((prev) =>
+          prev.map((task) =>
+            task.countNumber === request.referenceNumber
+              ? {
+                  ...task,
+                  status: 'completed',
+                  countedQty: request.countedQty,
+                  varianceQty: request.varianceQty,
+                  varianceValue: Math.abs(request.varianceQty || 0) * unitCost,
+                }
+              : task
+          )
+        );
+      }
       return;
     }
 
@@ -888,6 +1334,13 @@ export default function StoreModule() {
 
     if (action === 'approved') applyApprovedRequest(request);
 
+    const evidenceSummary = decisionEvidence.length ? ` Evidence verified: ${decisionEvidence.join(', ')}.` : '';
+    const finalDecisionNotes =
+      (decisionNotes.trim() ||
+        (action === 'approved'
+          ? 'Approved after maker-checker verification. Stock ledger posting authorised.'
+          : 'Rejected by Admin. Please review evidence and resubmit.')) + evidenceSummary;
+
     setRequests((prev) =>
       prev.map((r) =>
         r.id === request.id
@@ -896,11 +1349,7 @@ export default function StoreModule() {
               status: action,
               approvedBy: `${currentUserName} (Admin)`,
               approvedAt: nowStamp(),
-              decisionNotes:
-                decisionNotes.trim() ||
-                (action === 'approved'
-                  ? 'Approved after maker-checker verification. Stock ledger posting authorised.'
-                  : 'Rejected by Admin. Please review evidence and resubmit.'),
+              decisionNotes: finalDecisionNotes,
             }
           : r
       )
@@ -919,17 +1368,37 @@ export default function StoreModule() {
       action: action === 'approved' ? 'REQUEST_APPROVED' : 'REQUEST_REJECTED',
       entity: REQUEST_TYPE_META[request.type].label,
       actor: `${currentUserName} (Admin)`,
-      detail: `${action === 'approved' ? 'Approved' : 'Rejected'} ${request.requestNumber}. ${decisionNotes.trim() || 'Decision recorded in approval ledger.'}`,
+      detail: `${action === 'approved' ? 'Approved' : 'Rejected'} ${request.requestNumber}. ${finalDecisionNotes}`,
       severity: action === 'approved' ? 'success' : 'critical',
       requestNumber: request.requestNumber,
     });
+    if ((request.type === 'staff_requisition' || request.type === 'staff_return') && action === 'rejected') {
+      pushNotification({
+        type: 'rejected',
+        severity: 'critical',
+        title: `${request.type === 'staff_return' ? 'Return' : 'Request'} rejected — ${request.requestNumber}`,
+        message: `${request.itemName} was not approved. Reason: ${finalDecisionNotes}`,
+        requestId: request.id,
+        requestNumber: request.requestNumber,
+        audience: 'staff',
+      });
+    }
     notify(
-      action === 'approved'
-        ? `${request.requestNumber} approved. Ledger posting applied and storekeeper notified.`
-        : `${request.requestNumber} rejected. Storekeeper notified with decision notes.`
+      request.type === 'staff_requisition'
+        ? action === 'approved'
+          ? `${request.requestNumber} approved. Storekeeper notified to prepare the item.`
+          : `${request.requestNumber} rejected. Requester notified with decision notes.`
+        : request.type === 'staff_return'
+          ? action === 'approved'
+            ? `${request.requestNumber} return approved. Stock ledger updated after Admin check.`
+            : `${request.requestNumber} return rejected. Staff notified with decision notes.`
+          : action === 'approved'
+            ? `${request.requestNumber} approved. Ledger posting applied and storekeeper notified.`
+            : `${request.requestNumber} rejected. Storekeeper notified with decision notes.`
     );
     setDecisionTarget(null);
     setDecisionNotes('');
+    setDecisionEvidence([]);
   };
 
   const bulkApprove = () => {
@@ -939,6 +1408,7 @@ export default function StoreModule() {
     }
     if (pendingRequests.length === 0) {
       notify('No pending requests to approve.');
+      setBulkConfirmOpen(false);
       return;
     }
     pendingRequests.forEach((request) => applyApprovedRequest(request));
@@ -971,6 +1441,168 @@ export default function StoreModule() {
       severity: 'success',
     });
     notify(`${pendingRequests.length} requests approved and posted to the stock ledger.`);
+    setBulkConfirmOpen(false);
+  };
+
+  const confirmTransferReceipt = (request: StoreApprovalRequest) => {
+    if (receivedTransferIds.includes(request.id)) return;
+    setReceivedTransferIds((prev) => [...prev, request.id]);
+    addAudit({
+      timestamp: nowStamp(),
+      action: 'TRANSFER_RECEIVED',
+      entity: request.itemName || 'Inter-Store Transfer',
+      actor: `${currentUserName} (${roleLabel[roleView]})`,
+      detail: `${request.requestNumber}: ${request.quantity} ${request.unit} physically received at ${request.toStoreName || 'destination store'} from ${request.fromStoreName || 'source store'}.`,
+      severity: 'success',
+      requestNumber: request.requestNumber,
+    });
+    pushNotification({
+      type: 'approved',
+      severity: 'success',
+      title: `Transfer received — ${request.requestNumber}`,
+      message: `${request.quantity} ${request.unit} of ${request.itemName} confirmed at ${request.toStoreName || 'destination store'}.`,
+      requestNumber: request.requestNumber,
+      audience: 'all',
+    });
+    notify(`${request.requestNumber} marked as physically received at ${request.toStoreName || 'destination store'}.`);
+  };
+
+  const issueStaffRequest = (request: StoreApprovalRequest) => {
+    if (isStaff) {
+      notify('Only the storekeeper or supervisor can issue stock against an approved staff request.');
+      return;
+    }
+    if (issuedStaffRequestIds.includes(request.id) || !request.itemId) return;
+    const item = items.find((i) => i.id === request.itemId);
+    if (!item) return;
+    if ((item.storeBalances[request.fromStoreId || stores[0]?.id] || 0) < request.quantity) {
+      notify(`Insufficient stock at ${request.fromStoreName || 'selected store'} to issue this request.`);
+      return;
+    }
+    addStockMovement({
+      itemId: request.itemId,
+      fromStoreId: request.fromStoreId || stores[0]?.id,
+      movementType: 'production_issue',
+      quantity: request.quantity,
+      unitCost: request.unitCost || item.purchasePrice,
+      referenceType: 'ADJUSTMENT',
+      referenceNumber: request.requestNumber,
+      notes: `Staff requisition ${request.requestNumber} issued to ${request.requestedBy} (${request.toStoreName || 'staff pickup'}).`,
+    });
+    setManuallyIssuedStaffRequestIds((prev) => [...prev, request.id]);
+    addAudit({
+      timestamp: nowStamp(),
+      action: 'STAFF_REQUISITION_ISSUED',
+      entity: item.name,
+      actor: `${currentUserName} (${roleLabel[roleView]})`,
+      detail: `${request.quantity} ${item.unit} of ${item.name} issued to ${request.requestedBy} against ${request.requestNumber}. Stock ledger posted.`,
+      severity: 'success',
+      requestNumber: request.requestNumber,
+    });
+    pushNotification({
+      type: 'approved',
+      severity: 'success',
+      title: `Item ready for collection — ${request.requestNumber}`,
+      message: `${request.quantity} ${item.unit} of ${item.name} was issued by ${currentUserName}. Collect from ${request.fromStoreName || 'the store'}.`,
+      requestId: request.id,
+      requestNumber: request.requestNumber,
+      audience: 'staff',
+    });
+    notify(`${request.requestNumber} issued to ${request.requestedBy}. Staff notified for collection.`);
+  };
+
+  const openStaffReturn = (request: StoreApprovalRequest) => {
+    if (!issuedStaffRequestIds.includes(request.id)) {
+      notify('Only issued items can be returned.');
+      return;
+    }
+    const available = request.quantity - reservedReturnQty(request.id);
+    if (available <= 0) {
+      notify('All issued quantity already has a return request or has been returned.');
+      return;
+    }
+    setReturnTarget(request);
+    setReturnQty('1');
+    setReturnCondition('reusable');
+    setReturnReason('');
+  };
+
+  const submitStaffReturn = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!returnTarget) return;
+    if (!isStaff) {
+      notify('Only staff can submit a return request for issued items.');
+      return;
+    }
+    const item = items.find((i) => i.id === returnTarget.itemId);
+    const storeId = returnTarget.fromStoreId || stores[0]?.id;
+    const quantity = Number(returnQty);
+    const available = returnTarget.quantity - reservedReturnQty(returnTarget.id);
+    if (!item || !storeId) return;
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      notify('Enter a valid return quantity.');
+      return;
+    }
+    if (quantity > available) {
+      notify(`You can return up to ${available} ${item.unit}.`);
+      return;
+    }
+    if (!returnReason.trim()) {
+      notify('Add a reason for the return.');
+      return;
+    }
+    const returnSeq = requests.filter((request) => request.type === 'staff_return').length + 1;
+    const returnRequest: StoreApprovalRequest = {
+      id: `sret-${String(returnSeq).padStart(4, '0')}`,
+      requestNumber: `STR-RET-2026-${String(returnSeq).padStart(4, '0')}`,
+      type: 'staff_return',
+      title: `Staff Return — ${item.name}`,
+      itemId: item.id,
+      itemCode: item.code,
+      itemName: item.name,
+      returnOfRequestId: returnTarget.id,
+      returnCondition,
+      quantity,
+      unit: item.unit,
+      unitCost: returnTarget.unitCost || item.purchasePrice,
+      totalValue: quantity * (returnTarget.unitCost || item.purchasePrice),
+      fromStoreId: storeId,
+      fromStoreName: returnTarget.fromStoreName,
+      toStoreName: 'Return to Store',
+      referenceNumber: returnTarget.requestNumber,
+      reason: returnReason.trim(),
+      notes: `Condition: ${returnCondition === 'damaged' ? 'Damaged — write off after approval' : 'Reusable — return to stock after approval'}.`,
+      requestedBy: currentUserName,
+      requestedByRole: 'Staff',
+      requestedAt: nowStamp(),
+      status: 'pending_admin',
+      priority: 'normal',
+      slaHours: 24,
+      direction: 'inbound',
+      signatureCode: `SIG-RET-${String(returnSeq).padStart(4, '0')}`,
+    };
+    setRequests((prev) => [returnRequest, ...prev]);
+    addAudit({
+      timestamp: nowStamp(),
+      action: 'STAFF_RETURN_REQUESTED',
+      entity: item.name,
+      actor: `${currentUserName} (Staff)`,
+      detail: `${quantity} ${item.unit} of ${item.name} submitted for return against ${returnTarget.requestNumber}. Condition: ${returnCondition}. Awaiting Admin approval before stock is updated.`,
+      severity: 'info',
+      requestNumber: returnRequest.requestNumber,
+    });
+    pushNotification({
+      type: 'approval_request',
+      severity: 'warning',
+      title: `Staff return awaiting approval — ${returnRequest.requestNumber}`,
+      message: `${currentUserName} wants to return ${quantity} ${item.unit} of ${item.name} (${returnCondition}). Approve to ${returnCondition === 'damaged' ? 'post the wastage write-off' : 'restock the item'}.`,
+      requestId: returnRequest.id,
+      requestNumber: returnRequest.requestNumber,
+      audience: 'admin',
+    });
+    notify(`${returnRequest.requestNumber} submitted. Stock will update only after Admin approval.`);
+    setReturnTarget(null);
+    setReturnReason('');
   };
 
   const openCountVariance = (task: CycleCountTask) => {
@@ -1073,10 +1705,11 @@ export default function StoreModule() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 14 }}>
         <StatCard label="Inventory Valuation" value={formatETB(totalValuation)} sub={`${items.length} active SKUs across ${stores.length} stores`} icon={<Boxes size={17} color={C.yellow} />} trend="4.8% MoM" trendUp />
         <StatCard label="Pending Admin Approval" value={String(pendingRequests.length)} sub={`${formatETB(pendingValue)} awaiting maker-checker release`} icon={<ShieldAlert size={17} color={C.yellow} />} accent={pendingRequests.length ? C.amber : C.text} onClick={() => setActiveTab('admin')} />
-        <StatCard label="Low Stock / Stockout Risk" value={`${lowStockItems.length} SKUs`} sub={lowStockItems[0]?.item.name ? `Critical: ${lowStockItems[0].item.name.split(' ').slice(0, 3).join(' ')}` : 'All items above safety stock'} icon={<AlertTriangle size={17} color={C.yellow} />} accent={lowStockItems.length ? C.red : C.text} onClick={() => { setCatalogFilter('low'); setActiveTab('catalog'); }} />
+        <StatCard label="Low Stock / Stockout Risk" value={`${lowStockItems.length} SKUs`} sub={lowStockItems[0]?.item.name ? `Critical: ${lowStockItems[0].item.name.split(' ').slice(0, 3).join(' ')}` : 'All items above safety stock'} icon={<AlertTriangle size={17} color={C.yellow} />} accent={lowStockItems.length ? C.red : C.text} onClick={() => { setCatalogFilter('low'); setCatalogPage(1); setActiveTab('catalog'); }} />
         <StatCard label="Wastage & Scrap" value={formatETB(totalWastageValue)} sub={`${wastages.length} approved incidents linked to job cost`} icon={<Trash2 size={17} color={C.yellow} />} accent={C.red} onClick={() => setActiveTab('wastage')} />
         <StatCard label="Inventory Accuracy" value={`${inventoryAccuracy.toFixed(1)}%`} sub={`${completedCounts.length} blind counts reconciled this period`} icon={<Target size={17} color={C.yellow} />} trend="1.2%" trendUp />
-        <StatCard label="Batches Expiring ≤ 30 Days" value={String(expiringBatches.length)} sub={`${formatETB(expiringBatches.reduce((sum, b) => sum + b.quantity * b.unitCost, 0))} at risk`} icon={<Timer size={17} color={C.yellow} />} accent={expiringBatches.length ? C.amber : C.text} onClick={() => { setCatalogFilter('expiring'); setActiveTab('catalog'); }} />
+        <StatCard label="Procurement & POs" value={`${purchaseOrders.length} Orders`} sub={`${purchaseOrders.filter((p) => p.status === 'approved').length} in transit • ${lowStockItems.length} to replenish`} icon={<ShoppingCart size={17} color={C.yellow} />} onClick={() => setActiveTab('purchasing')} />
+        <StatCard label="Batches Expiring ≤ 30 Days" value={String(expiringBatches.length)} sub={`${formatETB(expiringBatches.reduce((sum, b) => sum + b.quantity * b.unitCost, 0))} at risk`} icon={<Timer size={17} color={C.yellow} />} accent={expiringBatches.length ? C.amber : C.text} onClick={() => { setCatalogFilter('expiring'); setCatalogPage(1); setActiveTab('catalog'); }} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.65fr) minmax(320px, 1fr)', gap: 18 }}>
@@ -1125,14 +1758,14 @@ export default function StoreModule() {
                     <div style={{ display: 'flex', gap: 5 }}>
                       <button
                         title="Approve"
-                        onClick={() => { setDecisionTarget({ request, action: 'approved' }); setDecisionNotes(''); }}
+                        onClick={() => { setDecisionTarget({ request, action: 'approved' }); setDecisionNotes(''); setDecisionEvidence([]); }}
                         style={{ width: 30, height: 30, borderRadius: 7, border: `1px solid #a7f3d0`, background: C.greenBg, color: '#047857', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                       >
                         <Check size={14} />
                       </button>
                       <button
                         title="Reject"
-                        onClick={() => { setDecisionTarget({ request, action: 'rejected' }); setDecisionNotes(''); }}
+                        onClick={() => { setDecisionTarget({ request, action: 'rejected' }); setDecisionNotes(''); setDecisionEvidence([]); }}
                         style={{ width: 30, height: 30, borderRadius: 7, border: `1px solid #fecdd3`, background: C.redBg, color: '#be123c', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                       >
                         <X size={14} />
@@ -1269,14 +1902,20 @@ export default function StoreModule() {
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ position: 'relative', width: 300, maxWidth: '100%' }}>
             <Search size={15} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: C.dim }} />
-            <input className="hr-input" style={{ paddingLeft: 34 }} placeholder="Search code, English or Amharic name…" value={catalogSearch} onChange={(e) => setCatalogSearch(e.target.value)} />
+            <input className="hr-input" style={{ paddingLeft: 34 }} placeholder="Search code, English or Amharic name…" value={catalogSearch} onChange={(e) => { setCatalogSearch(e.target.value); setCatalogPage(1); }} />
           </div>
-          <select className="hr-select" style={{ width: 150 }} value={catalogType} onChange={(e) => setCatalogType(e.target.value)}>
+          <select className="hr-select" style={{ width: 150 }} value={catalogType} onChange={(e) => { setCatalogType(e.target.value); setCatalogPage(1); }}>
             <option value="all">All item types</option>
             <option value="raw_material">Raw materials</option>
             <option value="packaging">Packaging</option>
             <option value="finished_good">Finished goods</option>
             <option value="service">Service</option>
+          </select>
+          <select className="hr-select" style={{ width: 165 }} value={catalogSort} onChange={(e) => { setCatalogSort(e.target.value as typeof catalogSort); setCatalogPage(1); }}>
+            <option value="value_desc">Sort: Highest value</option>
+            <option value="name_asc">Sort: Name A–Z</option>
+            <option value="stock_desc">Sort: Stock high → low</option>
+            <option value="stock_asc">Sort: Stock low → high</option>
           </select>
         </div>
         <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
@@ -1289,7 +1928,7 @@ export default function StoreModule() {
           ] as const).map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setCatalogFilter(tab.id)}
+              onClick={() => { setCatalogFilter(tab.id); setCatalogPage(1); }}
               style={{
                 padding: '6px 11px',
                 borderRadius: 7,
@@ -1325,7 +1964,7 @@ export default function StoreModule() {
             </tr>
           </thead>
           <tbody>
-            {catalogFiltered.map((item) => {
+            {catalogPageRows.map((item) => {
               const isLow = item.currentStock <= item.reorderLevel;
               const hasExpiry = itemHasExpiringBatch(item.id);
               const isDead = item.averageDailyUsage === 0 && item.currentStock > 0;
@@ -1375,12 +2014,181 @@ export default function StoreModule() {
         {catalogFiltered.length === 0 && <EmptyState message="No SKUs match the selected inventory filters." />}
       </div>
 
-      <div style={{ padding: '11px 22px', borderTop: `1px solid #f1f5f9`, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, fontSize: '0.72rem', color: C.muted }}>
-        <span>Showing {catalogFiltered.length} of {items.length} SKUs • Valuation method: weighted average cost</span>
-        <span>Total catalog valuation: <strong style={{ color: C.text }}>{formatETB(totalValuation)}</strong></span>
+      <div style={{ padding: '11px 22px', borderTop: `1px solid #f1f5f9`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, fontSize: '0.72rem', color: C.muted }}>
+        <span>
+          Showing {catalogSorted.length === 0 ? 0 : (currentCatalogPage - 1) * CATALOG_PAGE_SIZE + 1}–{Math.min(currentCatalogPage * CATALOG_PAGE_SIZE, catalogSorted.length)} of {catalogSorted.length} matching SKUs • {items.length} total • Weighted average cost
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span>Total catalog valuation: <strong style={{ color: C.text }}>{formatETB(totalValuation)}</strong></span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <button className="btn-hr-outline" style={{ padding: '4px 8px', fontSize: '0.68rem' }} disabled={currentCatalogPage <= 1} onClick={() => setCatalogPage((p) => Math.max(1, p - 1))}>Prev</button>
+            <span style={{ fontWeight: 800, color: C.text, minWidth: 74, textAlign: 'center' }}>Page {currentCatalogPage} / {totalCatalogPages}</span>
+            <button className="btn-hr-outline" style={{ padding: '4px 8px', fontSize: '0.68rem' }} disabled={currentCatalogPage >= totalCatalogPages} onClick={() => setCatalogPage((p) => Math.min(totalCatalogPages, p + 1))}>Next</button>
+          </div>
+        </div>
       </div>
     </div>
   );
+
+  const renderStaffPortal = () => {
+    const myPending = myStaffRequests.filter((request) => request.status === 'pending_admin');
+    const myApproved = myStaffRequests.filter((request) => request.status === 'approved' && !issuedStaffRequestIds.includes(request.id));
+    const myIssued = myStaffRequests.filter((request) => request.status === 'approved' && issuedStaffRequestIds.includes(request.id));
+    const myRejected = myStaffRequests.filter((request) => request.status === 'rejected');
+    const myPendingReturns = myStaffReturns.filter((request) => request.status === 'pending_admin');
+
+    return (
+      <div style={{ display: 'grid', gap: 18 }}>
+        <div style={{ background: 'linear-gradient(120deg, #09090b 0%, #1c1c22 100%)', borderRadius: 14, padding: '22px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap', border: '1px solid #27272a' }}>
+          <div style={{ maxWidth: 720 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 6, background: 'rgba(250,204,21,0.14)', border: '1px solid rgba(250,204,21,0.4)', color: C.yellow, fontSize: '0.66rem', fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase' }}><User size={12} /> Staff Requisition Portal</span>
+            </div>
+            <h2 style={{ margin: 0, color: C.white, fontSize: '1.35rem', fontWeight: 900 }}>Need an item from the store?</h2>
+            <p style={{ margin: '6px 0 0', color: '#a1a1aa', fontSize: '0.8rem', lineHeight: 1.55 }}>
+              Submit a request with the item and quantity. Admin approves it first. The storekeeper is then notified to prepare the item for collection — every step is tracked.
+            </p>
+          </div>
+          <button className="btn-hr-yellow" onClick={() => openMovement('staff_requisition')}><PlusCircle size={15} /><span>Request an Item</span></button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 14 }}>
+          <StatCard label="Pending Admin" value={String(myPending.length)} sub="Awaiting approval" icon={<Clock size={17} color={C.yellow} />} accent={C.amber} />
+          <StatCard label="Approved — Preparing" value={String(myApproved.length)} sub="Storekeeper notified" icon={<PackageCheck size={17} color={C.yellow} />} />
+          <StatCard label="Issued / Collected" value={String(myIssued.length)} sub="Stock deducted from store" icon={<CheckCircle2 size={17} color={C.yellow} />} />
+          <StatCard label="Returns Pending" value={String(myPendingReturns.length)} sub="Awaiting Admin approval" icon={<RotateCcw size={17} color={C.yellow} />} accent={myPendingReturns.length ? C.amber : C.text} />
+          <StatCard label="Rejected" value={String(myRejected.length)} sub="Review decision notes" icon={<XCircle size={17} color={C.yellow} />} accent={myRejected.length ? C.red : C.text} />
+        </div>
+
+        <div className="hr-card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ padding: '18px 22px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 900 }}>My Item Requests</h3>
+              <p style={{ margin: '3px 0 0', fontSize: '0.75rem', color: C.muted }}>Only your requests are shown. The workflow is: Submitted → Admin approved → Storekeeper issued.</p>
+            </div>
+            <Chip bg="#f0f9ff" color="#0369a1" small>{myStaffRequests.length} TOTAL</Chip>
+          </div>
+          <div className="hr-table-container" style={{ border: 'none', boxShadow: 'none', borderRadius: 0 }}>
+            <table className="hr-table">
+              <thead>
+                <tr><th>Request</th><th>Item</th><th>Qty</th><th>Pickup / Department</th><th>Purpose</th><th>Admin Decision</th><th>Store Issue</th><th>Status</th><th style={{ textAlign: 'right' }}>Action</th></tr>
+              </thead>
+              <tbody>
+                {myStaffRequests.map((request) => {
+                  const issued = issuedStaffRequestIds.includes(request.id);
+                  const returnable = request.quantity - reservedReturnQty(request.id);
+                  const hasApprovedReturn = myStaffReturns.some(
+                    (returnRequest) =>
+                      returnRequest.returnOfRequestId === request.id && returnRequest.status === 'approved'
+                  );
+                  return (
+                    <tr key={request.id}>
+                      <td>
+                        <div style={{ marginBottom: 4 }}><TypeChip type={request.type} /></div>
+                        <div style={{ fontSize: '0.7rem', fontWeight: 800 }}>{request.requestNumber}</div>
+                        <div style={{ fontSize: '0.65rem', color: C.dim }}>{formatDateTime(request.requestedAt)}</div>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 700, fontSize: '0.78rem' }}>{request.itemName}</div>
+                        <div style={{ fontSize: '0.68rem', color: C.dim }}>{request.itemCode}</div>
+                      </td>
+                      <td><strong>{request.quantity} {request.unit}</strong></td>
+                      <td style={{ fontSize: '0.74rem' }}>
+                        <div>{request.fromStoreName || 'Store'}</div>
+                        <div style={{ color: C.dim, fontSize: '0.68rem' }}>{request.toStoreName || 'Staff pickup'}</div>
+                      </td>
+                      <td style={{ fontSize: '0.72rem', maxWidth: 220 }}>
+                        <div>{request.referenceNumber || 'General request'}</div>
+                        <div style={{ color: C.dim, fontSize: '0.66rem' }}>{request.reason}</div>
+                      </td>
+                      <td style={{ fontSize: '0.71rem', maxWidth: 210 }}>
+                        {request.status === 'pending_admin' ? (
+                          <span style={{ color: C.amber, fontWeight: 700 }}>Waiting for Admin</span>
+                        ) : request.status === 'approved' ? (
+                          <><div style={{ color: '#047857', fontWeight: 800 }}>Approved by {request.approvedBy || 'Admin'}</div><div style={{ color: C.dim, fontSize: '0.66rem' }}>{request.decisionNotes}</div></>
+                        ) : request.status === 'rejected' ? (
+                          <><div style={{ color: C.red, fontWeight: 800 }}>Rejected</div><div style={{ color: C.dim, fontSize: '0.66rem' }}>{request.decisionNotes}</div></>
+                        ) : (
+                          <span style={{ color: C.muted }}>{request.status.replaceAll('_', ' ')}</span>
+                        )}
+                      </td>
+                      <td style={{ fontSize: '0.71rem' }}>
+                        {request.status === 'approved' ? (
+                          issued ? <Chip bg={C.greenBg} color="#047857" small>ISSUED</Chip> : <Chip bg={C.amberBg} color="#b45309" small>PREPARING</Chip>
+                        ) : <span style={{ color: C.dim }}>—</span>}
+                      </td>
+                      <td><StatusChip status={request.status} /></td>
+                      <td style={{ textAlign: 'right' }}>
+                        {issued && returnable > 0 ? (
+                          <button className="btn-hr-outline" style={{ padding: '5px 8px', fontSize: '0.66rem' }} onClick={() => openStaffReturn(request)}><RotateCcw size={12} /><span>Return Item</span></button>
+                        ) : (request.status === 'rejected' || request.status === 'needs_revision') && request.itemId ? (
+                          <button className="btn-hr-outline" style={{ padding: '5px 8px', fontSize: '0.66rem' }} onClick={() => openMovement('staff_requisition', request.itemId)}><RefreshCw size={12} /><span>Request Again</span></button>
+                        ) : (
+                          <span style={{ fontSize: '0.66rem', color: C.dim }}>{issued ? (hasApprovedReturn ? 'Returned' : 'Return pending') : request.status === 'approved' ? 'Collect from store' : 'In progress'}</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {myStaffRequests.length === 0 && <EmptyState message="You have not requested any items yet. Use the Request an Item button to start." icon={<PackageOpen size={22} color={C.dim} />} />}
+          </div>
+        </div>
+
+        <div className="hr-card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ padding: '18px 22px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 900 }}>My Returns</h3>
+              <p style={{ margin: '3px 0 0', fontSize: '0.75rem', color: C.muted }}>Return issued items when no longer needed. Admin approval is required before stock or wastage is updated.</p>
+            </div>
+            <Chip bg="#ecfeff" color="#0e7490" small>{myStaffReturns.length} TOTAL</Chip>
+          </div>
+          <div className="hr-table-container" style={{ border: 'none', boxShadow: 'none', borderRadius: 0 }}>
+            <table className="hr-table">
+              <thead>
+                <tr><th>Return Request</th><th>Item</th><th>Qty</th><th>Original Issue</th><th>Condition</th><th>Reason</th><th>Admin Decision</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                {myStaffReturns.map((request) => (
+                  <tr key={request.id}>
+                    <td>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 800 }}>{request.requestNumber}</div>
+                      <div style={{ fontSize: '0.65rem', color: C.dim }}>{formatDateTime(request.requestedAt)}</div>
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 700, fontSize: '0.78rem' }}>{request.itemName}</div>
+                      <div style={{ fontSize: '0.68rem', color: C.dim }}>{request.itemCode}</div>
+                    </td>
+                    <td><strong>{request.quantity} {request.unit}</strong></td>
+                    <td style={{ fontSize: '0.72rem' }}>{request.referenceNumber || '—'}</td>
+                    <td><Chip bg={request.returnCondition === 'damaged' ? C.redBg : C.greenBg} color={request.returnCondition === 'damaged' ? '#be123c' : '#047857'} small>{request.returnCondition === 'damaged' ? 'DAMAGED' : 'REUSABLE'}</Chip></td>
+                    <td style={{ fontSize: '0.72rem', maxWidth: 240 }}>{request.reason}</td>
+                    <td style={{ fontSize: '0.71rem', maxWidth: 220 }}>
+                      {request.status === 'pending_admin' ? (
+                        <span style={{ color: C.amber, fontWeight: 700 }}>Waiting for Admin</span>
+                      ) : request.status === 'approved' ? (
+                        <><div style={{ color: '#047857', fontWeight: 800 }}>Approved by {request.approvedBy || 'Admin'}</div><div style={{ color: C.dim, fontSize: '0.66rem' }}>{request.decisionNotes}</div></>
+                      ) : (
+                        <><div style={{ color: C.red, fontWeight: 800 }}>Rejected</div><div style={{ color: C.dim, fontSize: '0.66rem' }}>{request.decisionNotes}</div></>
+                      )}
+                    </td>
+                    <td><StatusChip status={request.status} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {myStaffReturns.length === 0 && <EmptyState message="No return requests yet. Use Return Item on any issued request." icon={<RotateCcw size={22} color={C.dim} />} />}
+          </div>
+        </div>
+
+        <div style={{ padding: '10px 12px', borderRadius: 9, background: '#f8fafc', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.72rem', color: C.muted }}>
+          <Info size={14} color={C.amber} />
+          <span>Staff cannot approve their own request, return or stock change. Admin approval and storekeeper issue are both recorded in the audit trail. Damaged returns are written off as wastage only after Admin approval.</span>
+        </div>
+      </div>
+    );
+  };
 
   const renderInbound = () => {
     const inbound = requests
@@ -1449,7 +2257,12 @@ export default function StoreModule() {
                     </td>
                     <td style={{ fontSize: '0.77rem' }}>
                       <strong>{request.quantity} {request.unit}</strong>
-                      <div style={{ color: C.muted, fontSize: '0.7rem' }}>{formatETB(request.totalValue)}</div>
+                      {typeof request.acceptedQty === 'number' && (
+                        <div style={{ color: request.rejectedQty ? '#b45309' : '#047857', fontSize: '0.68rem', fontWeight: 700 }}>
+                          Accepted {request.acceptedQty}{request.rejectedQty ? ` • Rejected ${request.rejectedQty}` : ''}
+                        </div>
+                      )}
+                      <div style={{ color: C.muted, fontSize: '0.7rem' }}>{formatETB(request.totalValue)} • Bin {request.binCode || '—'}</div>
                     </td>
                     <td>
                       {request.qcResult === 'passed' ? <Chip bg={C.greenBg} color="#047857" small>PASSED</Chip> : request.qcResult === 'partial' ? <Chip bg={C.amberBg} color="#b45309" small>PARTIAL</Chip> : request.qcResult === 'failed' ? <Chip bg={C.redBg} color={C.red} small>FAILED</Chip> : <span style={{ color: C.dim, fontSize: '0.72rem' }}>N/A</span>}
@@ -1463,8 +2276,8 @@ export default function StoreModule() {
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 5 }}>
                         {request.status === 'pending_admin' && isAdmin ? (
                           <>
-                            <button onClick={() => { setDecisionTarget({ request, action: 'approved' }); setDecisionNotes(''); }} style={{ width: 29, height: 29, borderRadius: 7, border: '1px solid #a7f3d0', background: C.greenBg, color: '#047857', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={14} /></button>
-                            <button onClick={() => { setDecisionTarget({ request, action: 'rejected' }); setDecisionNotes(''); }} style={{ width: 29, height: 29, borderRadius: 7, border: '1px solid #fecdd3', background: C.redBg, color: '#be123c', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
+                            <button onClick={() => { setDecisionTarget({ request, action: 'approved' }); setDecisionNotes(''); setDecisionEvidence([]); }} style={{ width: 29, height: 29, borderRadius: 7, border: '1px solid #a7f3d0', background: C.greenBg, color: '#047857', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={14} /></button>
+                            <button onClick={() => { setDecisionTarget({ request, action: 'rejected' }); setDecisionNotes(''); setDecisionEvidence([]); }} style={{ width: 29, height: 29, borderRadius: 7, border: '1px solid #fecdd3', background: C.redBg, color: '#be123c', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
                           </>
                         ) : (
                           <span style={{ fontSize: '0.69rem', color: C.dim }}>{request.status === 'approved' ? request.approvedBy || 'Approved' : request.status === 'pending_admin' ? 'Admin only' : '—'}</span>
@@ -1564,8 +2377,8 @@ export default function StoreModule() {
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 5 }}>
                           {request.status === 'pending_admin' && isAdmin ? (
                             <>
-                              <button onClick={() => { setDecisionTarget({ request, action: 'approved' }); setDecisionNotes(''); }} style={{ width: 29, height: 29, borderRadius: 7, border: '1px solid #a7f3d0', background: C.greenBg, color: '#047857', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={14} /></button>
-                              <button onClick={() => { setDecisionTarget({ request, action: 'rejected' }); setDecisionNotes(''); }} style={{ width: 29, height: 29, borderRadius: 7, border: '1px solid #fecdd3', background: C.redBg, color: '#be123c', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
+                              <button onClick={() => { setDecisionTarget({ request, action: 'approved' }); setDecisionNotes(''); setDecisionEvidence([]); }} style={{ width: 29, height: 29, borderRadius: 7, border: '1px solid #a7f3d0', background: C.greenBg, color: '#047857', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={14} /></button>
+                              <button onClick={() => { setDecisionTarget({ request, action: 'rejected' }); setDecisionNotes(''); setDecisionEvidence([]); }} style={{ width: 29, height: 29, borderRadius: 7, border: '1px solid #fecdd3', background: C.redBg, color: '#be123c', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
                             </>
                           ) : (
                             <span style={{ fontSize: '0.69rem', color: C.dim }}>{request.status === 'pending_admin' ? 'Admin only' : request.status === 'approved' ? request.approvedBy || 'Approved' : '—'}</span>
@@ -1601,6 +2414,102 @@ export default function StoreModule() {
                 })}
               </div>
             </div>
+            <div className="hr-card" style={{ padding: 0, overflow: 'hidden' }}>
+              <div style={{ padding: '14px 16px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 900 }}>Staff Item Issue Queue</h3>
+                  <div style={{ fontSize: '0.68rem', color: C.muted, marginTop: 2 }}>Admin-approved staff requests waiting to be prepared</div>
+                </div>
+                <Chip bg={staffIssueQueue.length ? C.amberBg : C.greenBg} color={staffIssueQueue.length ? '#b45309' : '#047857'} small>{staffIssueQueue.length} TO ISSUE</Chip>
+              </div>
+              <div style={{ padding: 14, display: 'grid', gap: 9 }}>
+                {staffIssueQueue.slice(0, 5).map((request) => {
+                  const available = items.find((item) => item.id === request.itemId)?.storeBalances[request.fromStoreId || stores[0]?.id] || 0;
+                  const enough = available >= request.quantity;
+                  return (
+                    <div key={request.id} style={{ padding: '9px 10px', borderRadius: 8, border: `1px solid ${enough ? C.border : '#fecdd3'}`, background: enough ? '#fafafa' : C.redBg }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: '0.72rem', fontWeight: 800 }}>{request.itemName}</div>
+                          <div style={{ fontSize: '0.66rem', color: C.muted }}>{request.quantity} {request.unit} • {request.requestedBy}</div>
+                          <div style={{ fontSize: '0.64rem', color: C.dim }}>{request.toStoreName || 'Staff pickup'} • {request.referenceNumber || 'No reference'}</div>
+                        </div>
+                        <PriorityChip priority={request.priority} />
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 7 }}>
+                        <span style={{ fontSize: '0.64rem', fontWeight: 700, color: enough ? '#047857' : C.red }}>{available} {request.unit} available at {request.fromStoreName || 'store'}</span>
+                        <button className="btn-hr-black" disabled={!enough} style={{ padding: '4px 8px', fontSize: '0.66rem', opacity: enough ? 1 : 0.45 }} onClick={() => issueStaffRequest(request)}>
+                          <PackageCheck size={12} color={C.yellow} /><span>Issue Item</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+                {staffIssueQueue.length === 0 && <div style={{ padding: 12, textAlign: 'center', fontSize: '0.72rem', color: C.muted }}>No approved staff requests waiting. Staff are notified automatically when items are issued.</div>}
+              </div>
+            </div>
+
+            <div className="hr-card" style={{ padding: 0, overflow: 'hidden' }}>
+              <div style={{ padding: '14px 16px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 900 }}>Transfer Receipt Queue</h3>
+                  <div style={{ fontSize: '0.68rem', color: C.muted, marginTop: 2 }}>Dispatch → in-transit → destination confirmation</div>
+                </div>
+                <Chip bg="#f5f3ff" color="#6d28d9" small>{approvedTransfers.length} APPROVED</Chip>
+              </div>
+              <div style={{ padding: 14, display: 'grid', gap: 9 }}>
+                {approvedTransfers.slice(0, 5).map((request) => {
+                  const received = receivedTransferIds.includes(request.id);
+                  return (
+                    <div key={request.id} style={{ padding: '9px 10px', borderRadius: 8, border: `1px solid ${C.border}`, background: received ? C.greenBg : '#fafafa' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: '0.72rem', fontWeight: 800 }}>{request.itemName}</div>
+                          <div style={{ fontSize: '0.66rem', color: C.muted }}>{request.quantity} {request.unit} • {request.fromStoreName || 'Source'} → {request.toStoreName || 'Destination'}</div>
+                        </div>
+                        <Chip bg={received ? C.greenBg : C.amberBg} color={received ? '#047857' : '#b45309'} small>{received ? 'RECEIVED' : 'IN TRANSIT'}</Chip>
+                      </div>
+                      {received ? (
+                        <div style={{ fontSize: '0.65rem', color: '#047857', marginTop: 5, fontWeight: 700 }}>Receipt confirmed • {request.requestNumber}</div>
+                      ) : (
+                        <button className="btn-hr-outline" style={{ padding: '4px 8px', fontSize: '0.66rem', marginTop: 7 }} onClick={() => confirmTransferReceipt(request)}>
+                          <PackageCheck size={12} /><span>Confirm Receipt</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+                {approvedTransfers.length === 0 && <div style={{ padding: 12, textAlign: 'center', fontSize: '0.72rem', color: C.muted }}>No approved transfers awaiting receipt.</div>}
+              </div>
+            </div>
+
+            <div className="hr-card" style={{ padding: 0, overflow: 'hidden' }}>
+              <div style={{ padding: '14px 16px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 900 }}>Supplier Return Debit Notes</h3>
+                  <div style={{ fontSize: '0.68rem', color: C.muted, marginTop: 2 }}>Recoverable value from approved returns</div>
+                </div>
+                <RotateCcw size={16} color={C.muted} />
+              </div>
+              <div style={{ padding: 14, display: 'grid', gap: 9 }}>
+                {approvedSupplierReturns.slice(0, 4).map((request) => (
+                  <div key={request.id} style={{ padding: '9px 10px', borderRadius: 8, border: `1px solid ${C.border}`, background: '#fafafa' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                      <div>
+                        <div style={{ fontSize: '0.72rem', fontWeight: 800 }}>DN-2026-{request.requestNumber.split('-').pop()}</div>
+                        <div style={{ fontSize: '0.66rem', color: C.muted }}>{request.supplierName || 'Supplier'} • {request.quantity} {request.unit}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.73rem', fontWeight: 900, color: '#be185d' }}>{formatETB(request.totalValue)}</div>
+                        <Chip bg={C.greenBg} color="#047857" small>ISSUED</Chip>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {approvedSupplierReturns.length === 0 && <div style={{ padding: 12, textAlign: 'center', fontSize: '0.72rem', color: C.muted }}>No debit notes issued yet. Approve a supplier return to generate one.</div>}
+              </div>
+            </div>
+
             <div className="hr-card" style={{ background: '#09090b', color: C.white, border: '1px solid #27272a' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <ShieldCheck size={17} color={C.yellow} />
@@ -1703,8 +2612,8 @@ export default function StoreModule() {
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 5 }}>
                         {request.status === 'pending_admin' && isAdmin ? (
                           <>
-                            <button onClick={() => { setDecisionTarget({ request, action: 'approved' }); setDecisionNotes(''); }} style={{ width: 29, height: 29, borderRadius: 7, border: '1px solid #a7f3d0', background: C.greenBg, color: '#047857', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={14} /></button>
-                            <button onClick={() => { setDecisionTarget({ request, action: 'rejected' }); setDecisionNotes(''); }} style={{ width: 29, height: 29, borderRadius: 7, border: '1px solid #fecdd3', background: C.redBg, color: '#be123c', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
+                            <button onClick={() => { setDecisionTarget({ request, action: 'approved' }); setDecisionNotes(''); setDecisionEvidence([]); }} style={{ width: 29, height: 29, borderRadius: 7, border: '1px solid #a7f3d0', background: C.greenBg, color: '#047857', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={14} /></button>
+                            <button onClick={() => { setDecisionTarget({ request, action: 'rejected' }); setDecisionNotes(''); setDecisionEvidence([]); }} style={{ width: 29, height: 29, borderRadius: 7, border: '1px solid #fecdd3', background: C.redBg, color: '#be123c', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
                           </>
                         ) : <span style={{ fontSize: '0.69rem', color: C.dim }}>{request.status === 'pending_admin' ? 'Admin only' : request.approvedBy || '—'}</span>}
                       </div>
@@ -1763,8 +2672,8 @@ export default function StoreModule() {
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 5 }}>
                           {request.status === 'pending_admin' && isAdmin ? (
                             <>
-                              <button onClick={() => { setDecisionTarget({ request, action: 'approved' }); setDecisionNotes(''); }} style={{ width: 29, height: 29, borderRadius: 7, border: '1px solid #a7f3d0', background: C.greenBg, color: '#047857', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={14} /></button>
-                              <button onClick={() => { setDecisionTarget({ request, action: 'rejected' }); setDecisionNotes(''); }} style={{ width: 29, height: 29, borderRadius: 7, border: '1px solid #fecdd3', background: C.redBg, color: '#be123c', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
+                              <button onClick={() => { setDecisionTarget({ request, action: 'approved' }); setDecisionNotes(''); setDecisionEvidence([]); }} style={{ width: 29, height: 29, borderRadius: 7, border: '1px solid #a7f3d0', background: C.greenBg, color: '#047857', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={14} /></button>
+                              <button onClick={() => { setDecisionTarget({ request, action: 'rejected' }); setDecisionNotes(''); setDecisionEvidence([]); }} style={{ width: 29, height: 29, borderRadius: 7, border: '1px solid #fecdd3', background: C.redBg, color: '#be123c', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
                             </>
                           ) : <span style={{ fontSize: '0.69rem', color: C.dim }}>{request.status === 'pending_admin' ? 'Admin only' : request.approvedBy || '—'}</span>}
                         </div>
@@ -1868,8 +2777,8 @@ export default function StoreModule() {
           </div>
         </div>
         {isAdmin && (
-          <button className="btn-hr-yellow" style={{ fontSize: '0.8rem' }} onClick={bulkApprove}>
-            <CheckCircle2 size={15} /><span>Bulk Approve All ({pendingRequests.length})</span>
+          <button className="btn-hr-yellow" style={{ fontSize: '0.8rem' }} onClick={() => setBulkConfirmOpen(true)}>
+            <CheckCircle2 size={15} /><span>Review Bulk Approval ({pendingRequests.length})</span>
           </button>
         )}
       </div>
@@ -1948,8 +2857,8 @@ export default function StoreModule() {
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 5 }}>
                         {request.status === 'pending_admin' && isAdmin ? (
                           <>
-                            <button className="btn-hr-outline" style={{ padding: '5px 8px', fontSize: '0.68rem' }} onClick={() => { setDecisionTarget({ request, action: 'rejected' }); setDecisionNotes(''); }}><XCircle size={12} /><span>Reject</span></button>
-                            <button className="btn-hr-black" style={{ padding: '5px 9px', fontSize: '0.68rem' }} onClick={() => { setDecisionTarget({ request, action: 'approved' }); setDecisionNotes(''); }}><CheckCircle2 size={12} color={C.yellow} /><span>Approve</span></button>
+                            <button className="btn-hr-outline" style={{ padding: '5px 8px', fontSize: '0.68rem' }} onClick={() => { setDecisionTarget({ request, action: 'rejected' }); setDecisionNotes(''); setDecisionEvidence([]); }}><XCircle size={12} /><span>Reject</span></button>
+                            <button className="btn-hr-black" style={{ padding: '5px 9px', fontSize: '0.68rem' }} onClick={() => { setDecisionTarget({ request, action: 'approved' }); setDecisionNotes(''); setDecisionEvidence([]); }}><CheckCircle2 size={12} color={C.yellow} /><span>Approve</span></button>
                           </>
                         ) : (
                           <span style={{ fontSize: '0.69rem', color: C.dim }}>{request.status === 'pending_admin' ? 'Admin only' : 'Decision recorded'}</span>
@@ -2502,6 +3411,13 @@ export default function StoreModule() {
 
   const tabs = [
     { id: 'overview' as const, label: 'Command Overview', icon: Activity },
+    {
+      id: 'purchasing' as const,
+      label: 'Purchasing & POs',
+      icon: ShoppingCart,
+      badge: lowStockItems.length ? `${lowStockItems.length} Low` : String(purchaseOrders.length || ''),
+    },
+    { id: 'staff' as const, label: 'My Item Requests', icon: PackageOpen, badge: String(myStaffRequests.filter((r) => r.status === 'pending_admin' || (r.status === 'approved' && !issuedStaffRequestIds.includes(r.id))).length + myStaffReturns.filter((r) => r.status === 'pending_admin').length || '') },
     { id: 'catalog' as const, label: 'Stock Catalog', icon: PackageSearch, badge: String(items.length) },
     { id: 'inbound' as const, label: 'Inbound / GRN', icon: ArrowDownToLine, badge: String(requests.filter((r) => r.type === 'goods_receipt' && r.status === 'pending_admin').length || '') },
     { id: 'outbound' as const, label: 'Outbound / Transfers', icon: ArrowUpFromLine },
@@ -2514,6 +3430,8 @@ export default function StoreModule() {
     { id: 'analytics' as const, label: 'Inventory Analytics', icon: BarChart3 },
     { id: 'audit' as const, label: 'Audit & Governance', icon: FileText },
   ];
+
+  const visibleTabs = isStaff ? tabs.filter((tab) => tab.id === 'staff') : tabs;
 
   return (
     <div className="hr-page-shell" style={{ minHeight: '100vh', paddingBottom: 60 }}>
@@ -2538,7 +3456,7 @@ export default function StoreModule() {
             <ShieldCheck size={14} /> Active Store Role:
           </span>
           <div style={{ display: 'flex', gap: 5, background: C.blackSoft, padding: 4, borderRadius: 10, border: '1px solid #3f3f46', flexWrap: 'wrap' }}>
-            {(['storekeeper', 'store_supervisor', 'admin', 'super_admin'] as StoreModuleRole[]).map((role) => (
+            {(['staff', 'storekeeper', 'purchasing', 'store_supervisor', 'admin', 'super_admin'] as StoreModuleRole[]).map((role) => (
               <button
                 key={role}
                 onClick={() => handleSwitchRole(role)}
@@ -2556,7 +3474,7 @@ export default function StoreModule() {
                   gap: 6,
                 }}
               >
-                <span>{role === 'storekeeper' ? '📦' : role === 'store_supervisor' ? '🧭' : role === 'admin' ? '🛡️' : '⚡'}</span>
+                <span>{role === 'staff' ? '👤' : role === 'storekeeper' ? '📦' : role === 'purchasing' ? '🛒' : role === 'store_supervisor' ? '🧭' : role === 'admin' ? '🛡️' : '⚡'}</span>
                 <span>{roleLabel[role]}</span>
               </button>
             ))}
@@ -2622,21 +3540,46 @@ export default function StoreModule() {
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
-            <button className="btn-hr-black" style={{ background: '#18181b', border: '1px solid #3f3f46' }} onClick={() => openMovement('goods_receipt')}>
-              <ArrowDownToLine size={15} color={C.yellow} /><span>Goods Receipt</span>
-            </button>
-            <button className="btn-hr-black" style={{ background: '#18181b', border: '1px solid #3f3f46' }} onClick={() => openMovement('material_issue')}>
-              <ArrowUpFromLine size={15} color={C.yellow} /><span>Issue Material</span>
-            </button>
-            <button className="btn-hr-black" style={{ background: '#18181b', border: '1px solid #3f3f46' }} onClick={() => openMovement('inter_store_transfer')}>
-              <ArrowRightLeft size={15} color={C.yellow} /><span>Transfer</span>
-            </button>
-            <button className="btn-hr-black" style={{ background: '#18181b', border: '1px solid #3f3f46' }} onClick={() => openMovement('wastage')}>
-              <Trash2 size={15} color={C.yellow} /><span>Log Wastage</span>
-            </button>
-            <button className="btn-hr-yellow" onClick={() => setActiveTab('approvals')}>
-              <ShieldCheck size={15} /><span>Approve Queue ({pendingRequests.length})</span>
-            </button>
+            {isStaff ? (
+              <>
+                <button className="btn-hr-black" style={{ background: '#18181b', border: '1px solid #3f3f46' }} onClick={() => setActiveTab('staff')}>
+                  <PackageOpen size={15} color={C.yellow} /><span>My Requests ({myStaffRequests.length})</span>
+                </button>
+                <button className="btn-hr-yellow" onClick={() => openMovement('staff_requisition')}>
+                  <PlusCircle size={15} /><span>Request an Item</span>
+                </button>
+              </>
+            ) : isPurchasing ? (
+              <>
+                <button className="btn-hr-black" style={{ background: '#18181b', border: '1px solid #3f3f46' }} onClick={() => setActiveTab('inbound')}>
+                  <ArrowDownToLine size={15} color={C.yellow} /><span>Inbound GRNs</span>
+                </button>
+                <button className="btn-hr-black" style={{ background: '#18181b', border: '1px solid #3f3f46' }} onClick={() => openMovement('reorder_request')}>
+                  <RefreshCw size={15} color={C.yellow} /><span>Reorder Request</span>
+                </button>
+                <button className="btn-hr-yellow" onClick={() => setActiveTab('purchasing')}>
+                  <ShoppingCart size={15} /><span>Purchasing & PO Desk</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button className="btn-hr-black" style={{ background: '#18181b', border: '1px solid #3f3f46' }} onClick={() => openMovement('goods_receipt')}>
+                  <ArrowDownToLine size={15} color={C.yellow} /><span>Goods Receipt</span>
+                </button>
+                <button className="btn-hr-black" style={{ background: '#18181b', border: '1px solid #3f3f46' }} onClick={() => openMovement('material_issue')}>
+                  <ArrowUpFromLine size={15} color={C.yellow} /><span>Issue Material</span>
+                </button>
+                <button className="btn-hr-black" style={{ background: '#18181b', border: '1px solid #3f3f46' }} onClick={() => openMovement('inter_store_transfer')}>
+                  <ArrowRightLeft size={15} color={C.yellow} /><span>Transfer</span>
+                </button>
+                <button className="btn-hr-black" style={{ background: '#18181b', border: '1px solid #3f3f46' }} onClick={() => openMovement('wastage')}>
+                  <Trash2 size={15} color={C.yellow} /><span>Log Wastage</span>
+                </button>
+                <button className="btn-hr-yellow" onClick={() => setActiveTab('approvals')}>
+                  <ShieldCheck size={15} /><span>Approve Queue ({pendingRequests.length})</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
         <div style={{ marginTop: 20, paddingTop: 15, borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14, fontSize: '0.73rem', color: '#a1a1aa' }}>
@@ -2664,7 +3607,7 @@ export default function StoreModule() {
 
       {/* TABS */}
       <div style={{ display: 'flex', gap: 7, marginBottom: 18, overflowX: 'auto', paddingBottom: 3 }}>
-        {tabs.map((tab) => {
+        {visibleTabs.map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
           return (
@@ -2704,7 +3647,32 @@ export default function StoreModule() {
         <span>Control rule: every store action creates an Admin notification and remains non-posting until approved. Approvals are recorded with actor, timestamp, decision notes and signature code.</span>
       </div>
 
-      {activeTab === 'overview' && renderOverview()}
+      {activeTab === 'overview' && (isStaff ? renderStaffPortal() : renderOverview())}
+      {(activeTab === 'purchasing' || activeTab === 'suppliers') && (
+        <StorePurchasingDesk
+          items={items}
+          stores={stores}
+          suppliers={suppliers}
+          purchaseOrders={purchaseOrders}
+          lowStockItems={lowStockItems}
+          currentRole={roleView}
+          currentUserName={currentUserName}
+          isAdmin={isAdmin}
+          isPurchasing={isPurchasing}
+          initialTab={activeTab === 'suppliers' ? 'suppliers' : 'orders'}
+          onCreatePo={createPurchaseOrder}
+          onReceivePo={receivePurchaseOrder}
+          onApprovePo={approvePurchaseOrder}
+          onAddSupplier={addSupplier}
+          onAddItem={addItem}
+          onUpdatePoStatus={updatePurchaseOrderStatus}
+          onAudit={addAudit}
+          onNotification={pushNotification}
+          onNotify={notify}
+          onSwitchTab={setActiveTab}
+        />
+      )}
+      {activeTab === 'staff' && renderStaffPortal()}
       {activeTab === 'catalog' && renderCatalog()}
       {activeTab === 'inbound' && renderInbound()}
       {activeTab === 'outbound' && renderOutbound()}
@@ -2720,6 +3688,7 @@ export default function StoreModule() {
           onDecision={(request, action) => {
             setDecisionTarget({ request, action });
             setDecisionNotes('');
+            setDecisionEvidence([]);
           }}
           onOpenApprovals={() => {
             setApprovalFilter('pending');
@@ -2757,7 +3726,7 @@ export default function StoreModule() {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <ShieldCheck size={17} color={C.yellow} />
-                  <h3 style={{ margin: 0, color: C.white, fontSize: '0.98rem', fontWeight: 900 }}>New Store Action — Admin Approval Required</h3>
+                  <h3 style={{ margin: 0, color: C.white, fontSize: '0.98rem', fontWeight: 900 }}>{formType === 'staff_requisition' ? 'Request an Item from the Store' : 'New Store Action — Admin Approval Required'}</h3>
                 </div>
                 <div style={{ fontSize: '0.7rem', color: '#a1a1aa', marginTop: 4 }}>{REQUEST_TYPE_META[formType].label} • The request will be routed to Admin immediately.</div>
               </div>
@@ -2765,18 +3734,26 @@ export default function StoreModule() {
             </div>
             <form onSubmit={handleCreateRequest}>
               <div style={{ padding: 22, display: 'grid', gap: 14 }}>
-                <div>
-                  <label style={labelStyle}>Action Type</label>
-                  <select
-                    className="hr-select"
-                    value={formType}
-                    onChange={(e) => openMovement(e.target.value as StoreRequestType, formItemId, formFromStore)}
-                  >
-                    {Object.entries(REQUEST_TYPE_META).map(([key, meta]) => (
-                      <option key={key} value={key}>{meta.label}</option>
-                    ))}
-                  </select>
-                </div>
+                {formType === 'staff_requisition' ? (
+                  <div style={{ padding: '10px 12px', borderRadius: 9, background: C.blueBg, border: '1px solid #bfdbfe', fontSize: '0.74rem', color: '#1d4ed8', lineHeight: 1.5 }}>
+                    <strong>Staff item request.</strong> Submit the item, quantity and reason. Admin approves first, then the storekeeper is notified to prepare the item for collection.
+                  </div>
+                ) : (
+                  <div>
+                    <label style={labelStyle}>Action Type</label>
+                    <select
+                      className="hr-select"
+                      value={formType}
+                      onChange={(e) => openMovement(e.target.value as StoreRequestType, formItemId, formFromStore)}
+                    >
+                      {Object.entries(REQUEST_TYPE_META)
+                        .filter(([key]) => key !== 'staff_return')
+                        .map(([key, meta]) => (
+                          <option key={key} value={key}>{meta.label}</option>
+                        ))}
+                    </select>
+                  </div>
+                )}
 
                 {formType === 'item_onboarding' ? (
                   <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 0.8fr', gap: 12 }}>
@@ -2803,7 +3780,24 @@ export default function StoreModule() {
                         <option key={item.id} value={item.id}>{item.name} ({item.code}) — {item.currentStock} {item.unit} on hand</option>
                       ))}
                     </select>
-                    {formItem && <div style={{ fontSize: '0.68rem', color: C.muted, marginTop: 4 }}>Valuation {formatETB(catalogVal(formItem))} • Reorder level {formItem.reorderLevel} {formItem.unit} • Supplier {formItem.preferredSupplierName || '—'}</div>}
+                    {formItem && <div style={{ fontSize: '0.68rem', color: C.muted, marginTop: 4 }}>{formType === 'staff_requisition' ? `Available at ${formItem.storeBalances[formFromStore] || 0} ${formItem.unit} in selected store` : `Valuation ${formatETB(catalogVal(formItem))} • Reorder level ${formItem.reorderLevel} ${formItem.unit} • Supplier ${formItem.preferredSupplierName || '—'}`}</div>}
+                  </div>
+                )}
+
+                {formType === 'staff_requisition' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 12 }}>
+                    <div>
+                      <label style={labelStyle}>Collect From Store *</label>
+                      <select className="hr-select" value={formFromStore} onChange={(e) => setFormFromStore(e.target.value)}>
+                        {stores.map((store) => <option key={store.id} value={store.id}>{store.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Department / Section *</label>
+                      <select className="hr-select" value={formDepartment} onChange={(e) => setFormDepartment(e.target.value)}>
+                        {['Production', 'Design Studio', 'Installation', 'Sales', 'Administration', 'Maintenance'].map((department) => <option key={department} value={department}>{department}</option>)}
+                      </select>
+                    </div>
                   </div>
                 )}
 
@@ -2840,15 +3834,24 @@ export default function StoreModule() {
                     </div>
                   </>
                 ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: formType === 'staff_requisition' ? '1fr' : '1fr 1fr', gap: 12 }}>
                     <div>
                       <label style={labelStyle}>Quantity * ({formType === 'item_onboarding' ? formUnit : formItem?.unit || formUnit})</label>
-                      <input className="hr-input" type="number" min="0.01" step="any" value={formQty} onChange={(e) => setFormQty(Number(e.target.value))} />
+                      <input className="hr-input" type="number" min="0.01" step="any" value={formQty} onChange={(e) => {
+                        const nextQty = Number(e.target.value);
+                        setFormQty(nextQty);
+                        if (formType === 'goods_receipt') {
+                          setFormAcceptedQty(nextQty);
+                          setFormRejectedQty(0);
+                        }
+                      }} />
                     </div>
-                    <div>
-                      <label style={labelStyle}>Unit Cost (ETB) *</label>
-                      <input className="hr-input" type="number" min="0" step="any" value={formUnitCost} onChange={(e) => setFormUnitCost(Number(e.target.value))} />
-                    </div>
+                    {formType !== 'staff_requisition' && (
+                      <div>
+                        <label style={labelStyle}>Unit Cost (ETB) *</label>
+                        <input className="hr-input" type="number" min="0" step="any" value={formUnitCost} onChange={(e) => setFormUnitCost(Number(e.target.value))} />
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -2883,7 +3886,7 @@ export default function StoreModule() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
-                    <label style={labelStyle}>{formType === 'goods_receipt' ? 'Purchase Order / Delivery Note' : formType === 'material_issue' ? 'Work Order / Order Reference' : formType === 'wastage' ? 'Order Allocation (Job Cost)' : formType === 'stock_adjustment' ? 'Count / Evidence Reference' : 'Reference Number'}</label>
+                    <label style={labelStyle}>{formType === 'staff_requisition' ? 'Needed For / Job Reference' : formType === 'goods_receipt' ? 'Purchase Order / Delivery Note' : formType === 'material_issue' ? 'Work Order / Order Reference' : formType === 'wastage' ? 'Order Allocation (Job Cost)' : formType === 'stock_adjustment' ? 'Count / Evidence Reference' : 'Reference Number'}</label>
                     {formType === 'wastage' ? (
                       <select className="hr-select" value={formReference} onChange={(e) => setFormReference(e.target.value)}>
                         <option value="">General overhead (no order)</option>
@@ -2895,7 +3898,7 @@ export default function StoreModule() {
                         {purchaseOrders.map((po) => <option key={po.id} value={po.poNumber}>{po.poNumber} — {po.supplierName}</option>)}
                       </select>
                     ) : (
-                      <input className="hr-input" placeholder="Enter reference…" value={formReference} onChange={(e) => setFormReference(e.target.value)} />
+                      <input className="hr-input" placeholder={formType === 'staff_requisition' ? 'e.g. Awash Bank install — needed by 3 PM' : 'Enter reference…'} value={formReference} onChange={(e) => setFormReference(e.target.value)} />
                     )}
                   </div>
                   <div>
@@ -2922,15 +3925,43 @@ export default function StoreModule() {
                 )}
 
                 {formType === 'goods_receipt' && (
-                  <div>
-                    <label style={labelStyle}>Incoming Quality Result</label>
-                    <select className="hr-select" value={formQc} onChange={(e) => setFormQc(e.target.value as NonNullable<StoreApprovalRequest['qcResult']>)}>
-                      <option value="passed">Passed — full acceptance</option>
-                      <option value="partial">Partial — some units rejected</option>
-                      <option value="failed">Failed — reject delivery</option>
-                      <option value="not_applicable">Not applicable</option>
-                    </select>
-                  </div>
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', gap: 12 }}>
+                      <div>
+                        <label style={labelStyle}>Incoming Quality Result</label>
+                        <select className="hr-select" value={formQc} onChange={(e) => setFormQc(e.target.value as NonNullable<StoreApprovalRequest['qcResult']>)}>
+                          <option value="passed">Passed — full acceptance</option>
+                          <option value="partial">Partial — some units rejected</option>
+                          <option value="failed">Failed — reject delivery</option>
+                          <option value="not_applicable">Not applicable</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Accepted Qty</label>
+                        <input className="hr-input" type="number" min="0" step="any" value={formAcceptedQty} onChange={(e) => {
+                          const nextAccepted = Math.max(0, Number(e.target.value));
+                          setFormAcceptedQty(nextAccepted);
+                          setFormRejectedQty(Math.max(0, formQty - nextAccepted));
+                        }} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Rejected Qty</label>
+                        <input className="hr-input" type="number" min="0" step="any" value={formRejectedQty} onChange={(e) => {
+                          const nextRejected = Math.max(0, Number(e.target.value));
+                          setFormRejectedQty(nextRejected);
+                          setFormAcceptedQty(Math.max(0, formQty - nextRejected));
+                        }} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Put-away Bin</label>
+                        <input className="hr-input" placeholder="e.g. A-01" value={formBin} onChange={(e) => setFormBin(e.target.value)} />
+                      </div>
+                    </div>
+                    <div style={{ padding: '9px 12px', borderRadius: 9, background: formAcceptedQty + formRejectedQty === formQty ? C.blueBg : C.redBg, border: `1px solid ${formAcceptedQty + formRejectedQty === formQty ? '#bfdbfe' : '#fecdd3'}`, display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: '0.72rem', fontWeight: 800 }}>
+                      <span>Receipt posting preview: accepted {formAcceptedQty} {formUnit} → bin {formBin || 'unassigned'}</span>
+                      <span style={{ color: formAcceptedQty + formRejectedQty === formQty ? C.blue : C.red }}>{formAcceptedQty + formRejectedQty === formQty ? 'Balanced' : 'Quantities do not balance'}</span>
+                    </div>
+                  </>
                 )}
 
                 <div>
@@ -2940,6 +3971,28 @@ export default function StoreModule() {
                 <div>
                   <label style={labelStyle}>Evidence & Supporting Notes</label>
                   <textarea className="hr-input" rows={2} placeholder="Reference delivery note, count sheet, photos, machine ticket, supplier RA…" value={formNotes} onChange={(e) => setFormNotes(e.target.value)} />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Evidence Attached</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {[
+                      'Delivery note / GRN',
+                      'Supplier invoice',
+                      'Count sheet',
+                      'Photo evidence',
+                      'Dual signature',
+                    ].map((evidence) => {
+                      const checked = formEvidence.includes(evidence);
+                      return (
+                        <label key={evidence} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 8px', borderRadius: 7, border: `1px solid ${checked ? C.black : C.border}`, background: checked ? '#09090b' : C.white, color: checked ? C.yellow : C.muted, fontSize: '0.68rem', fontWeight: 800, cursor: 'pointer' }}>
+                          <input type="checkbox" checked={checked} onChange={() => setFormEvidence((prev) => checked ? prev.filter((item) => item !== evidence) : [...prev, evidence])} style={{ display: 'none' }} />
+                          {checked ? <Check size={11} /> : null}
+                          {evidence}
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div style={{ padding: '10px 12px', borderRadius: 9, background: '#f8fafc', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.7rem', color: C.muted }}>
@@ -3058,6 +4111,56 @@ export default function StoreModule() {
         </div>
       )}
 
+      {/* STAFF RETURN MODAL */}
+      {returnTarget && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(9,9,11,0.58)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: 18 }} onClick={() => setReturnTarget(null)}>
+          <div style={{ width: '100%', maxWidth: 560, borderRadius: 14, background: C.white, boxShadow: '0 24px 64px rgba(0,0,0,0.35)' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ background: C.black, padding: '16px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderRadius: '14px 14px 0 0' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <RotateCcw size={17} color={C.yellow} />
+                  <h3 style={{ margin: 0, color: C.white, fontSize: '0.98rem', fontWeight: 900 }}>Return Item to Store</h3>
+                </div>
+                <div style={{ fontSize: '0.7rem', color: '#a1a1aa', marginTop: 4 }}>Admin approval is required before stock is restored or wastage is posted.</div>
+              </div>
+              <button onClick={() => setReturnTarget(null)} style={{ background: 'transparent', border: 'none', color: '#a1a1aa', cursor: 'pointer', padding: 4 }}><X size={20} /></button>
+            </div>
+            <form onSubmit={submitStaffReturn}>
+              <div style={{ padding: 22, display: 'grid', gap: 14 }}>
+                <div style={{ padding: '10px 12px', borderRadius: 9, background: C.amberBg, border: '1px solid #fde68a', fontSize: '0.74rem', color: '#92400e', lineHeight: 1.5 }}>
+                  <strong>{returnTarget.itemName}</strong><br />
+                  Original issue {returnTarget.requestNumber} • Issued {returnTarget.quantity} {returnTarget.unit} • Available to return {returnAvailableQty} {returnTarget.unit}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label style={labelStyle}>Return Quantity *</label>
+                    <input className="hr-input" type="number" min="1" max={returnAvailableQty} value={returnQty} onChange={(e) => setReturnQty(e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Item Condition *</label>
+                    <select className="hr-select" value={returnCondition} onChange={(e) => setReturnCondition(e.target.value as 'reusable' | 'damaged')}>
+                      <option value="reusable">Reusable — return to stock</option>
+                      <option value="damaged">Damaged — write off as wastage</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label style={labelStyle}>Reason for Return *</label>
+                  <textarea className="hr-input" rows={3} value={returnReason} onChange={(e) => setReturnReason(e.target.value)} placeholder="e.g. Job completed, unused material. Or describe the damage." />
+                </div>
+                <div style={{ padding: '9px 11px', borderRadius: 8, background: '#f8fafc', border: `1px solid ${C.border}`, fontSize: '0.7rem', color: C.muted, lineHeight: 1.5 }}>
+                  Reusable returns increase stock only after Admin approval. Damaged returns are returned and written off as wastage under the same Admin approval.
+                </div>
+              </div>
+              <div style={{ padding: '14px 22px', borderTop: `1px solid ${C.border}`, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                <button type="button" className="btn-hr-outline" onClick={() => setReturnTarget(null)}>Cancel</button>
+                <button type="submit" className="btn-hr-black"><Send size={14} color={C.yellow} /><span>Submit Return</span></button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* DECISION MODAL */}
       {decisionTarget && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(9,9,11,0.58)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 320, padding: 18 }} onClick={() => setDecisionTarget(null)}>
@@ -3084,6 +4187,31 @@ export default function StoreModule() {
               </p>
               <label style={labelStyle}>Decision Notes {decisionTarget.action === 'rejected' ? '(recommended)' : ''}</label>
               <textarea className="hr-input" rows={3} value={decisionNotes} onChange={(e) => setDecisionNotes(e.target.value)} placeholder={decisionTarget.action === 'approved' ? 'e.g. Verified against PO, count sheet and CCTV. Approved for posting.' : 'e.g. Missing photographic evidence. Resubmit with countersignature.'} />
+
+              <div style={{ marginTop: 14 }}>
+                <label style={labelStyle}>Evidence Verified</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
+                  {[
+                    'Source document matched',
+                    'Quantity independently checked',
+                    'Supporting photo / scan reviewed',
+                    'Dual signature present',
+                  ].map((evidence) => {
+                    const checked = decisionEvidence.includes(evidence);
+                    return (
+                      <label key={evidence} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 9px', borderRadius: 7, border: `1px solid ${checked ? C.black : C.border}`, background: checked ? '#09090b' : C.white, color: checked ? C.yellow : C.muted, fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer' }}>
+                        <input type="checkbox" checked={checked} onChange={() => setDecisionEvidence((prev) => checked ? prev.filter((item) => item !== evidence) : [...prev, evidence])} style={{ display: 'none' }} />
+                        {checked ? <Check size={12} /> : <span style={{ width: 12, height: 12, borderRadius: 3, border: `1px solid ${C.borderStrong}` }} />}
+                        {evidence}
+                      </label>
+                    );
+                  })}
+                </div>
+                <div style={{ marginTop: 9, fontSize: '0.68rem', color: C.muted }}>
+                  Admin signature: <strong style={{ color: C.text }}>{currentUserName} • ADMIN-SIG-{decisionTarget.request.requestNumber.split('-').pop()}</strong>
+                </div>
+              </div>
+
               {!isAdmin && <div style={{ marginTop: 10, fontSize: '0.74rem', color: C.red, fontWeight: 800 }}>Access denied — Admin authority required.</div>}
             </div>
             <div style={{ padding: '13px 20px', borderTop: `1px solid ${C.border}`, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
@@ -3093,6 +4221,56 @@ export default function StoreModule() {
               ) : (
                 <button className="btn-hr-black" style={{ background: C.red, borderColor: C.red }} onClick={finalizeDecision}><XCircle size={15} color={C.white} /><span>Confirm Rejection</span></button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BULK APPROVAL CONFIRMATION */}
+      {bulkConfirmOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(9,9,11,0.58)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 330, padding: 18 }} onClick={() => setBulkConfirmOpen(false)}>
+          <div style={{ width: '100%', maxWidth: 560, borderRadius: 14, background: C.white, overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.35)' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ background: C.black, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <ShieldAlert size={18} color={C.yellow} />
+                <h3 style={{ margin: 0, color: C.white, fontSize: '0.95rem', fontWeight: 900 }}>Confirm Bulk Approval</h3>
+              </div>
+              <button onClick={() => setBulkConfirmOpen(false)} style={{ background: 'transparent', border: 'none', color: '#a1a1aa', cursor: 'pointer' }}><X size={19} /></button>
+            </div>
+            <div style={{ padding: 20, display: 'grid', gap: 14 }}>
+              <div style={{ padding: 12, borderRadius: 9, background: C.amberBg, border: '1px solid #fde68a', fontSize: '0.74rem', color: '#92400e', lineHeight: 1.55 }}>
+                You are about to approve <strong>{pendingRequests.length} pending store actions</strong> totalling <strong>{formatETB(pendingRequests.reduce((sum, request) => sum + request.totalValue, 0))}</strong>. This will post every movement to the live stock ledger and cannot be undone.
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                {[
+                  { label: 'Requests', value: String(pendingRequests.length), color: C.text },
+                  { label: 'Critical', value: String(pendingRequests.filter((request) => request.priority === 'critical').length), color: C.red },
+                  { label: 'SLA breaches', value: String(pendingRequests.filter((request) => hoursPending(request) > request.slaHours).length), color: C.amber },
+                ].map((metric) => (
+                  <div key={metric.label} style={{ padding: 10, borderRadius: 8, border: `1px solid ${C.border}`, background: '#f8fafc' }}>
+                    <div style={{ fontSize: '0.62rem', color: C.muted, textTransform: 'uppercase', fontWeight: 800 }}>{metric.label}</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 900, color: metric.color }}>{metric.value}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ maxHeight: 190, overflowY: 'auto', display: 'grid', gap: 7 }}>
+                {pendingRequests.map((request) => (
+                  <div key={request.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '8px 10px', borderRadius: 7, border: `1px solid ${C.border}` }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: '0.72rem', fontWeight: 800 }}>{request.requestNumber} • {request.itemName || request.title}</div>
+                      <div style={{ fontSize: '0.66rem', color: C.muted }}>{REQUEST_TYPE_META[request.type].label} • {request.requestedBy}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '0.72rem', fontWeight: 900 }}>{formatETB(request.totalValue)}</div>
+                      <PriorityChip priority={request.priority} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ padding: '13px 20px', borderTop: `1px solid ${C.border}`, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button className="btn-hr-outline" onClick={() => setBulkConfirmOpen(false)}>Cancel</button>
+              <button className="btn-hr-yellow" onClick={bulkApprove}><CheckCircle2 size={15} /><span>Approve All & Post</span></button>
             </div>
           </div>
         </div>

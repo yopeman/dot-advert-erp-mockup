@@ -8,6 +8,7 @@ import {
   WastageRecord,
   Supplier,
   PurchaseOrder,
+  POStatus,
   Customer,
   CustomerOrder,
   WorkOrder,
@@ -76,6 +77,7 @@ interface ErpContextType {
   setCurrentRole: (role: ErpRole) => void;
 
   // Actions
+  addItem: (itemData: Omit<Item, 'id'>) => Item;
   addStockMovement: (params: {
     itemId: string;
     fromStoreId?: string;
@@ -114,8 +116,14 @@ interface ErpContextType {
   updateCustomerSiteSurvey: (customerId: string, surveyId: string, updates: Partial<SiteSurvey>) => void;
   deleteCustomerSiteSurvey: (customerId: string, surveyId: string) => void;
 
-  createPurchaseOrder: (po: Omit<PurchaseOrder, 'id' | 'poNumber' | 'date' | 'status'>) => void;
+  // Suppliers
+  addSupplier: (supplierData: Omit<Supplier, 'id' | 'code'> & { code?: string }) => Supplier;
+  updateSupplier: (supplierId: string, updates: Partial<Supplier>) => void;
+
+  createPurchaseOrder: (po: Omit<PurchaseOrder, 'id' | 'poNumber' | 'date' | 'status'> & { status?: POStatus }) => PurchaseOrder;
   receivePurchaseOrder: (poId: string, storeId: string) => void;
+  approvePurchaseOrder: (poId: string, approvedBy: string, approvalNotes?: string) => void;
+  updatePurchaseOrderStatus: (poId: string, status: POStatus) => void;
   createCustomerOrder: (order: Omit<CustomerOrder, 'id' | 'orderNumber' | 'date' | 'status'>) => CustomerOrder;
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
   updateOrderSurveys: (orderId: string, siteSurveyIds: string[]) => void;
@@ -279,6 +287,11 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isHydrated) return;
+    save('suppliers', suppliers);
+  }, [suppliers, isHydrated, save]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
     save('leads', leads);
   }, [leads, isHydrated, save]);
 
@@ -364,6 +377,16 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     setCurrentRole('general_manager');
   }, []);
 
+  // MUTATOR: Add Item (SKU onboarding)
+  const addItem = useCallback((itemData: Omit<Item, 'id'>) => {
+    const newItem: Item = {
+      ...itemData,
+      id: `item-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
+    };
+    setItems((prev) => [newItem, ...prev]);
+    return newItem;
+  }, []);
+
   // MUTATOR: Add Stock Movement
   const addStockMovement = useCallback(
     ({
@@ -431,11 +454,18 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
           } else if (
             movementType === 'production_issue' ||
             movementType === 'sales_issue' ||
-            movementType === 'wastage' ||
-            movementType === 'return'
+            movementType === 'wastage'
           ) {
             newCurrentStock = Math.max(0, newCurrentStock - quantity);
             if (fromStoreId) {
+              newBalances[fromStoreId] = Math.max(0, (newBalances[fromStoreId] || 0) - quantity);
+            }
+          } else if (movementType === 'return') {
+            if (toStoreId) {
+              newCurrentStock += quantity;
+              newBalances[toStoreId] = (newBalances[toStoreId] || 0) + quantity;
+            } else if (fromStoreId) {
+              newCurrentStock = Math.max(0, newCurrentStock - quantity);
               newBalances[fromStoreId] = Math.max(0, (newBalances[fromStoreId] || 0) - quantity);
             }
           } else if (movementType === 'adjustment') {
@@ -524,37 +554,113 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     [items, stores, orders, currentRole, addStockMovement]
   );
 
-  // MUTATOR: Create Purchase Order
+  // MUTATOR: Add Supplier
+  const addSupplier = useCallback(
+    (supplierData: Omit<Supplier, 'id' | 'code'> & { code?: string }): Supplier => {
+      const code = supplierData.code || `SUP-${String(suppliers.length + 1).padStart(3, '0')}`;
+      const newSupplier: Supplier = {
+        ...supplierData,
+        id: `sup-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
+        code,
+      };
+      setSuppliers((prev) => [newSupplier, ...prev]);
+      return newSupplier;
+    },
+    [suppliers.length]
+  );
+
+  // MUTATOR: Update Supplier
+  const updateSupplier = useCallback((supplierId: string, updates: Partial<Supplier>) => {
+    setSuppliers((prev) => prev.map((s) => (s.id === supplierId ? { ...s, ...updates } : s)));
+  }, []);
+
+  // MUTATOR: Create Purchase Order (Requires Admin Approval by default unless admin creates it)
   const createPurchaseOrder = useCallback(
-    (poData: Omit<PurchaseOrder, 'id' | 'poNumber' | 'date' | 'status'>) => {
+    (poData: Omit<PurchaseOrder, 'id' | 'poNumber' | 'date' | 'status'> & { status?: POStatus }): PurchaseOrder => {
+      const isAdminRole = currentRole === 'admin' || currentRole === 'super_admin' || currentRole === 'general_manager';
+      const initialStatus: POStatus = poData.status || (isAdminRole ? 'approved' : 'pending_admin');
+
       const newPO: PurchaseOrder = {
         ...poData,
         id: `po-${Date.now()}`,
         poNumber: `PO-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
         date: new Date().toISOString().split('T')[0],
-        status: 'approved',
+        status: initialStatus,
+        approvedBy: initialStatus === 'approved' ? (poData.approvedBy || 'General Manager (Auto-Approved)') : undefined,
+        approvedAt: initialStatus === 'approved' ? new Date().toISOString() : undefined,
       };
+
       setPurchaseOrders((prev) => [newPO, ...prev]);
+      return newPO;
     },
-    []
+    [currentRole]
   );
 
-  // MUTATOR: Receive Goods Receipt from PO
+  // MUTATOR: Admin Approval for Purchase Order
+  const approvePurchaseOrder = useCallback((poId: string, approvedBy: string, approvalNotes?: string) => {
+    setPurchaseOrders((prev) =>
+      prev.map((po) =>
+        po.id === poId
+          ? {
+              ...po,
+              status: 'approved' as const,
+              approvedBy,
+              approvedAt: new Date().toISOString(),
+              approvalNotes,
+            }
+          : po
+      )
+    );
+  }, []);
+
+  // MUTATOR: Receive Goods Receipt from PO & Connect Directly to Store Stock
   const receivePurchaseOrder = useCallback(
     (poId: string, targetStoreId: string) => {
       const po = purchaseOrders.find((p) => p.id === poId);
       if (!po || po.status === 'received') return;
 
-      po.items.forEach((item) => {
+      const targetStore = stores.find((s) => s.id === targetStoreId) || stores[0];
+
+      po.items.forEach((poItem) => {
+        // Direct Store Connection: If item does not exist yet (e.g. newly onboarded item on PO), register it in items catalog!
+        setItems((currentItems) => {
+          const itemExists = currentItems.some(
+            (i) => i.id === poItem.itemId || (i.name && i.name.toLowerCase() === poItem.itemName.toLowerCase())
+          );
+          if (!itemExists) {
+            const newItem: Item = {
+              id: poItem.itemId || `item-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
+              code: poItem.itemCode || `SKU-${Math.floor(1000 + Math.random() * 9000)}`,
+              name: poItem.itemName,
+              type: (poItem.category as Item['type']) || 'raw_material',
+              unit: poItem.unit,
+              purchasePrice: poItem.unitPrice,
+              sellingPrice: Math.round(poItem.unitPrice * 1.35),
+              vatRate: poItem.vatRate ?? 0.15,
+              vatType: poItem.vatRate === 0 ? 'exempt' : 'standard_15',
+              reorderLevel: 10,
+              reorderQuantity: Math.max(poItem.quantity, 20),
+              currentStock: 0,
+              averageDailyUsage: 1,
+              preferredSupplierId: po.supplierId,
+              preferredSupplierName: po.supplierName,
+              storeBalances: {},
+            };
+            return [newItem, ...currentItems];
+          }
+          return currentItems;
+        });
+
+        // Add verified stock movement directly into target warehouse
         addStockMovement({
-          itemId: item.itemId,
-          toStoreId: targetStoreId,
+          itemId: poItem.itemId,
+          toStoreId: targetStore.id,
           movementType: 'purchase_receipt',
-          quantity: item.quantity,
-          unitCost: item.unitPrice,
+          quantity: poItem.quantity,
+          unitCost: poItem.unitPrice,
           referenceType: 'PO',
           referenceNumber: po.poNumber,
-          notes: `Goods received from supplier: ${po.supplierName}`,
+          notes: `Goods received from supplier: ${po.supplierName}${poItem.specifications ? ` [Specs: ${poItem.specifications}]` : ''}`,
         });
       });
 
@@ -562,8 +668,15 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         prev.map((p) => (p.id === poId ? { ...p, status: 'received' as const } : p))
       );
     },
-    [purchaseOrders, addStockMovement]
+    [purchaseOrders, stores, addStockMovement]
   );
+
+  // MUTATOR: Update Purchase Order Status
+  const updatePurchaseOrderStatus = useCallback((poId: string, status: POStatus) => {
+    setPurchaseOrders((prev) =>
+      prev.map((p) => (p.id === poId ? { ...p, status } : p))
+    );
+  }, []);
 
   // CRM: Create Lead
   const createLead = useCallback(
@@ -1452,10 +1565,15 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         addSiteSurveyToCustomer,
         updateCustomerSiteSurvey,
         deleteCustomerSiteSurvey,
+        addItem,
+        addSupplier,
+        updateSupplier,
         addStockMovement,
         recordWastage,
         createPurchaseOrder,
         receivePurchaseOrder,
+        approvePurchaseOrder,
+        updatePurchaseOrderStatus,
         createCustomerOrder,
         updateOrderStatus,
         updateOrderSurveys,

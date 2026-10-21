@@ -4,6 +4,7 @@ import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useErp } from '@/context/ErpDataContext';
+import BrandLogo from '@/components/layout/BrandLogo';
 import {
   Cog,
   Boxes,
@@ -83,7 +84,7 @@ function OrdersSidebarContent() {
     },
     {
       label: 'Inventory & Store Issuance',
-      href: '/dashboard/inventory',
+      href: '/inventory',
       icon: Layers,
     },
     {
@@ -121,22 +122,7 @@ function OrdersSidebarContent() {
             background: '#09090b',
           }}
         >
-          <div
-            style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: 'var(--radius-md)',
-              background: '#000000',
-              border: '1px solid #27272a',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
-              color: '#facc15',
-            }}
-          >
-            <Cog size={20} />
-          </div>
+          <BrandLogo size={38} radius={10} />
           <div>
             <div style={{ fontSize: '1.05rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>
               DOT ADVERT

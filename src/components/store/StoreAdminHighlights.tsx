@@ -52,6 +52,8 @@ const NOW_MS = new Date('2026-10-21T14:00:00').getTime();
 const TYPE_META: Record<StoreRequestType, { label: string; short: string; color: string; bg: string }> = {
   goods_receipt: { label: 'Goods Receipt', short: 'GRN', color: '#047857', bg: '#ecfdf5' },
   material_issue: { label: 'Material Issue', short: 'ISSUE', color: '#1d4ed8', bg: '#eff6ff' },
+  staff_requisition: { label: 'Staff Requisition', short: 'STAFF', color: '#0369a1', bg: '#f0f9ff' },
+  staff_return: { label: 'Staff Item Return', short: 'RETURN', color: '#0e7490', bg: '#ecfeff' },
   inter_store_transfer: { label: 'Inter-Store Transfer', short: 'TRANSFER', color: '#6d28d9', bg: '#f5f3ff' },
   stock_adjustment: { label: 'Stock Adjustment', short: 'ADJUST', color: '#b45309', bg: '#fffbeb' },
   cycle_count: { label: 'Cycle Count', short: 'COUNT', color: '#0f766e', bg: '#f0fdfa' },

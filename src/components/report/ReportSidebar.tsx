@@ -4,6 +4,7 @@ import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { useErp } from '@/context/ErpDataContext';
+import BrandLogo from '@/components/layout/BrandLogo';
 import {
   BarChart3,
   TrendingUp,
@@ -198,21 +199,7 @@ function ReportSidebarContent() {
         </Link>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '10px',
-              background: '#facc15',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(250, 204, 21, 0.25)',
-              color: '#000000',
-            }}
-          >
-            <BarChart3 size={22} strokeWidth={2.5} />
-          </div>
+          <BrandLogo size={40} radius={10} />
           <div>
             <div style={{ fontSize: '1.02rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em' }}>
               DOT ADVERT BI

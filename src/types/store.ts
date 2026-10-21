@@ -1,10 +1,12 @@
 import { UnitOfMeasure } from './erp';
 
-export type StoreModuleRole = 'storekeeper' | 'store_supervisor' | 'admin' | 'super_admin';
+export type StoreModuleRole = 'staff' | 'storekeeper' | 'purchasing' | 'store_supervisor' | 'admin' | 'super_admin';
 
 export type StoreRequestType =
   | 'goods_receipt'
   | 'material_issue'
+  | 'staff_requisition'
+  | 'staff_return'
   | 'inter_store_transfer'
   | 'stock_adjustment'
   | 'cycle_count'
@@ -25,6 +27,8 @@ export interface StoreApprovalRequest {
   itemId?: string;
   itemCode?: string;
   itemName?: string;
+  returnOfRequestId?: string;
+  returnCondition?: 'reusable' | 'damaged';
   quantity: number;
   unit: UnitOfMeasure;
   unitCost: number;
@@ -40,13 +44,17 @@ export interface StoreApprovalRequest {
   reason: string;
   notes?: string;
   requestedBy: string;
-  requestedByRole: 'Storekeeper' | 'Store Supervisor';
+  requestedByRole: 'Storekeeper' | 'Store Supervisor' | 'Purchasing Officer' | 'Staff' | 'Admin';
   requestedAt: string;
   status: StoreRequestStatus;
   priority: StorePriority;
   slaHours: number;
   direction: StoreRequestDirection;
   qcResult?: 'passed' | 'partial' | 'failed' | 'not_applicable';
+  acceptedQty?: number;
+  rejectedQty?: number;
+  binCode?: string;
+  evidence?: string[];
   systemQty?: number;
   countedQty?: number;
   varianceQty?: number;
@@ -66,7 +74,7 @@ export type StoreNotificationType =
   | 'system';
 
 export type StoreNotificationSeverity = 'info' | 'success' | 'warning' | 'critical';
-export type StoreNotificationAudience = 'admin' | 'storekeeper' | 'all';
+export type StoreNotificationAudience = 'admin' | 'storekeeper' | 'purchasing' | 'staff' | 'all';
 
 export interface StoreNotification {
   id: string;
