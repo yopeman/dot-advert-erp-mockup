@@ -107,6 +107,8 @@ interface ErpContextType {
     notes?: string;
   }) => void;
   recordExpense: (expense: Omit<Expense, 'id' | 'expenseNumber' | 'date' | 'status'>) => void;
+  addEmployee: (employee: Omit<Employee, 'id'>) => Employee;
+  updateEmployee: (empId: string, updates: Partial<Employee>) => void;
 
   // Order Profitability Engine
   calculateOrderProfitability: (orderId: string) => OrderProfitability | null;
@@ -717,6 +719,23 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  // MUTATOR: Add Employee
+  const addEmployee = useCallback((empData: Omit<Employee, 'id'>): Employee => {
+    const newEmp: Employee = {
+      ...empData,
+      id: `emp-${Date.now()}`,
+    };
+    setEmployees((prev) => [...prev, newEmp]);
+    return newEmp;
+  }, []);
+
+  // MUTATOR: Update Employee
+  const updateEmployee = useCallback((empId: string, updates: Partial<Employee>) => {
+    setEmployees((prev) =>
+      prev.map((e) => (e.id === empId ? { ...e, ...updates } : e))
+    );
+  }, []);
+
   // CALCULATION: Order Profitability Engine
   const calculateOrderProfitability = useCallback(
     (orderId: string): OrderProfitability | null => {
@@ -901,6 +920,8 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         createInvoice,
         recordCollection,
         recordExpense,
+        addEmployee,
+        updateEmployee,
         calculateOrderProfitability,
         allOrderProfitability,
         lowStockItems,

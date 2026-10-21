@@ -26,11 +26,20 @@ export default function Sidebar() {
   const activeOrders = orders.filter((o) => o.status === 'in_production' || o.status === 'pending');
   const activeLeads = leads.filter((l) => l.stage !== 'lost' && l.stage !== 'won');
 
+  const isHr = pathname?.startsWith('/hr');
+
   const navItems = [
     {
       label: 'Executive Overview',
       href: '/',
       icon: LayoutDashboard,
+    },
+    {
+      label: 'HR & Workforce Hub',
+      href: '/hr',
+      icon: Users,
+      badge: 'Dedicated Hub',
+      badgeType: 'yellow',
     },
     {
       label: 'Modules & Forms Hub',
@@ -79,8 +88,10 @@ export default function Sidebar() {
     },
     {
       label: 'Payroll & Labor',
-      href: '/payroll',
+      href: '/hr?tab=payroll',
       icon: Users,
+      badge: 'MoR Tax',
+      badgeType: 'yellow',
     },
     {
       label: 'Expenses & Overhead',
@@ -98,8 +109,8 @@ export default function Sidebar() {
     <aside
       style={{
         width: '275px',
-        background: 'var(--bg-sidebar)',
-        borderRight: '1px solid var(--border-subtle)',
+        background: isHr ? '#000000' : 'var(--bg-sidebar)',
+        borderRight: isHr ? '1px solid #1f1f23' : '1px solid var(--border-subtle)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -170,8 +181,13 @@ export default function Sidebar() {
 
           {navItems.map((item) => {
             const Icon = item.icon;
+            const isTabMatch =
+              item.href.includes('?') && typeof window !== 'undefined'
+                ? pathname + window.location.search === item.href
+                : false;
             const isActive =
-              pathname === item.href ||
+              isTabMatch ||
+              (!item.href.includes('?') && pathname === item.href) ||
               (item.href === '/modules' && (pathname === '/modules' || pathname === '/forms'));
 
             return (
@@ -184,18 +200,24 @@ export default function Sidebar() {
                   justifyContent: 'space-between',
                   padding: '9px 12px',
                   borderRadius: 'var(--radius-md)',
-                  color: isActive ? '#ffffff' : 'var(--text-muted)',
-                  background: isActive ? 'rgba(99, 102, 241, 0.16)' : 'transparent',
+                  color: isActive
+                    ? (isHr ? '#facc15' : '#ffffff')
+                    : 'var(--text-muted)',
+                  background: isActive
+                    ? (isHr ? 'rgba(250, 204, 21, 0.12)' : 'rgba(99, 102, 241, 0.16)')
+                    : 'transparent',
                   fontWeight: isActive ? 600 : 500,
                   fontSize: '0.84rem',
-                  border: isActive ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid transparent',
+                  border: isActive
+                    ? (isHr ? '1px solid rgba(250, 204, 21, 0.35)' : '1px solid rgba(99, 102, 241, 0.3)')
+                    : '1px solid transparent',
                   transition: 'all 0.15s ease',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <Icon
                     size={17}
-                    color={isActive ? '#818cf8' : '#94a3b8'}
+                    color={isActive ? (isHr ? '#facc15' : '#818cf8') : '#94a3b8'}
                   />
                   <span>{item.label}</span>
                 </div>

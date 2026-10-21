@@ -443,3 +443,199 @@ h3 {
   color: var(--text-main);
   margin-top: 2px;
 }
+
+/* =========================================================
+   HR MODULE DESIGN SYSTEM (Black Header/Sidebar, White-Gray Dominant, Yellow Accents)
+   ========================================================= */
+.badge-yellow {
+  background: rgba(234, 179, 8, 0.16);
+  color: #ca8a04;
+  border: 1px solid rgba(234, 179, 8, 0.4);
+}
+
+.hr-page-shell {
+  background-color: #f8fafc;
+  color: #0f172a;
+  min-height: 100vh;
+}
+
+.hr-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 22px 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+}
+.hr-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+}
+
+.hr-stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.hr-stat-card:hover {
+  transform: translateY(-2px);
+  border-color: #facc15;
+  box-shadow: 0 8px 24px rgba(234, 179, 8, 0.15);
+}
+.hr-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #09090b;
+  transition: background 0.2s ease;
+}
+.hr-stat-card:hover::before {
+  background: #facc15;
+}
+
+.btn-hr-black {
+  background: #09090b;
+  color: #ffffff;
+  border: 1px solid #18181b;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 8px 16px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn-hr-black:hover {
+  background: #facc15;
+  color: #09090b;
+  border-color: #eab308;
+  box-shadow: 0 4px 14px rgba(234, 179, 8, 0.35);
+  transform: translateY(-1px);
+}
+.btn-hr-black:focus-visible {
+  outline: 2px solid #eab308;
+  outline-offset: 2px;
+}
+
+.btn-hr-yellow {
+  background: #facc15;
+  color: #09090b;
+  border: 1px solid #eab308;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.btn-hr-yellow:hover {
+  background: #eab308;
+  color: #000000;
+  box-shadow: 0 4px 16px rgba(234, 179, 8, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-hr-outline {
+  background: #ffffff;
+  color: #09090b;
+  border: 1px solid #d1d5db;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.btn-hr-outline:hover {
+  background: #fefce8;
+  border-color: #facc15;
+  color: #854d0e;
+}
+.btn-hr-outline:focus-visible {
+  outline: 2px solid #eab308;
+  outline-offset: 2px;
+}
+
+.hr-table-container {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.hr-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.85rem;
+}
+.hr-table th {
+  background: #f8fafc;
+  padding: 12px 16px;
+  font-size: 0.725rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 2px solid #e2e8f0;
+}
+.hr-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #0f172a;
+  vertical-align: middle;
+}
+.hr-table tbody tr:hover {
+  background: #fafaf9;
+}
+
+.hr-input {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #0f172a;
+  font-size: 0.875rem;
+  width: 100%;
+  transition: all 0.15s ease;
+}
+.hr-input:focus {
+  outline: none;
+  border-color: #eab308;
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.25);
+}
+
+.hr-select {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #0f172a;
+  font-size: 0.875rem;
+  width: 100%;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+.hr-select:focus {
+  outline: none;
+  border-color: #eab308;
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.25);
+}

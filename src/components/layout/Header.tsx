@@ -23,6 +23,7 @@ interface HeaderProps {
 export default function Header({ onOpenGoldenStory }: HeaderProps) {
   const pathname = usePathname();
   const isNoSidebarPage = pathname === '/modules' || pathname === '/forms';
+  const isHr = pathname?.startsWith('/hr');
 
   const {
     currentRole,
@@ -38,14 +39,18 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
   const unpaidInvoices = invoices.filter((i) => i.paymentStatus !== 'paid');
 
   const roleLabels: Record<ErpRole, { label: string; icon: string }> = {
+    super_admin: { label: 'Super Admin (System Governance)', icon: '⚡' },
+    admin: { label: 'Admin (Operations & Compliance)', icon: '🛡️' },
+    hr_manager: { label: 'HR Manager (Workforce Hub)', icon: '👔' },
+    employee: { label: 'Staff Employee (Self-Service)', icon: '👤' },
     general_manager: { label: 'General Manager (Full Access)', icon: '👑' },
+    hr_officer: { label: 'HR & Payroll Officer', icon: '👥' },
     storekeeper: { label: 'Inventory / Storekeeper', icon: '📦' },
     production_supervisor: { label: 'Production Supervisor', icon: '⚙️' },
     accountant_cashier: { label: 'Accountant & Billing Cashier', icon: '🧾' },
     sales_rep: { label: 'Commercial Sales Rep', icon: '💼' },
     procurement_officer: { label: 'Procurement Officer', icon: '🛒' },
     machine_operator: { label: 'Machine Operator', icon: '🔧' },
-    hr_officer: { label: 'HR & Payroll Officer', icon: '👥' },
   };
 
   const handleReset = () => {
@@ -59,10 +64,10 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
     <header
       style={{
         height: '68px',
-        background: 'var(--bg-header)',
+        background: isHr ? '#0a0a0a' : 'var(--bg-header)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid var(--border-subtle)',
+        borderBottom: isHr ? '1px solid #27272a' : '1px solid var(--border-subtle)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
