@@ -156,8 +156,8 @@ function ReportSidebarContent() {
     <aside
       style={{
         width: '275px',
-        background: '#090d1a',
-        borderRight: '1px solid rgba(99, 102, 241, 0.22)',
+        background: '#09090b',
+        borderRight: '1px solid rgba(255, 255, 255, 0.08)',
         display: 'flex',
         flexDirection: 'column',
         height: '100vh',
@@ -172,8 +172,8 @@ function ReportSidebarContent() {
       <div
         style={{
           padding: '20px 18px 16px',
-          borderBottom: '1px solid rgba(99, 102, 241, 0.18)',
-          background: 'linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, transparent 100%)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'linear-gradient(180deg, rgba(250, 204, 21, 0.06) 0%, transparent 100%)',
         }}
       >
         <Link
@@ -187,7 +187,7 @@ function ReportSidebarContent() {
             marginBottom: '10px',
             padding: '4px 8px',
             borderRadius: '6px',
-            background: 'rgba(255, 255, 255, 0.04)',
+            background: 'rgba(255, 255, 255, 0.06)',
             transition: 'all 0.15s ease',
           }}
           onMouseEnter={(e) => (e.currentTarget.style.color = '#ffffff')}
@@ -203,15 +203,15 @@ function ReportSidebarContent() {
               width: '40px',
               height: '40px',
               borderRadius: '10px',
-              background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
+              background: '#facc15',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(99, 102, 241, 0.45)',
-              color: '#ffffff',
+              boxShadow: '0 4px 14px rgba(250, 204, 21, 0.25)',
+              color: '#000000',
             }}
           >
-            <BarChart3 size={22} />
+            <BarChart3 size={22} strokeWidth={2.5} />
           </div>
           <div>
             <div style={{ fontSize: '1.02rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em' }}>
@@ -221,7 +221,7 @@ function ReportSidebarContent() {
               style={{
                 fontSize: '0.65rem',
                 fontWeight: 700,
-                color: '#22d3ee',
+                color: '#facc15',
                 letterSpacing: '0.06em',
                 textTransform: 'uppercase',
               }}
@@ -238,7 +238,7 @@ function ReportSidebarContent() {
           style={{
             fontSize: '0.65rem',
             fontWeight: 700,
-            color: 'var(--text-dim)',
+            color: '#facc15',
             padding: '4px 10px 8px',
             textTransform: 'uppercase',
             letterSpacing: '0.08em',
@@ -264,9 +264,9 @@ function ReportSidebarContent() {
                 borderRadius: '9px',
                 border: 'none',
                 background: isActive
-                  ? 'linear-gradient(90deg, rgba(99, 102, 241, 0.22) 0%, rgba(6, 182, 212, 0.12) 100%)'
+                  ? 'rgba(250, 204, 21, 0.12)'
                   : 'transparent',
-                color: isActive ? '#ffffff' : 'var(--text-muted)',
+                color: isActive ? '#facc15' : 'var(--text-muted)',
                 cursor: 'pointer',
                 textAlign: 'left',
                 position: 'relative',
@@ -283,7 +283,7 @@ function ReportSidebarContent() {
                 <Icon
                   size={17}
                   style={{
-                    color: isActive ? '#22d3ee' : 'var(--text-dim)',
+                    color: isActive ? '#facc15' : 'var(--text-dim)',
                     flexShrink: 0,
                   }}
                 />
@@ -292,7 +292,7 @@ function ReportSidebarContent() {
                     style={{
                       fontSize: '0.8rem',
                       fontWeight: isActive ? 700 : 500,
-                      color: isActive ? '#ffffff' : 'var(--text-main)',
+                      color: isActive ? '#facc15' : '#ffffff',
                       lineHeight: 1.2,
                     }}
                   >
@@ -311,9 +311,9 @@ function ReportSidebarContent() {
                     fontWeight: 700,
                     padding: '2px 6px',
                     borderRadius: '8px',
-                    background: `${item.badgeColor}18`,
-                    color: item.badgeColor,
-                    border: `1px solid ${item.badgeColor}35`,
+                    background: isActive ? 'rgba(250, 204, 21, 0.25)' : 'rgba(255, 255, 255, 0.08)',
+                    color: isActive ? '#fef08a' : 'var(--text-dim)',
+                    border: isActive ? '1px solid rgba(250, 204, 21, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
                     whiteSpace: 'nowrap',
                   }}
                 >
@@ -330,8 +330,8 @@ function ReportSidebarContent() {
                     bottom: '20%',
                     width: '3px',
                     borderRadius: '0 3px 3px 0',
-                    background: '#22d3ee',
-                    boxShadow: '0 0 8px #22d3ee',
+                    background: '#facc15',
+                    boxShadow: '0 0 8px #facc15',
                   }}
                 />
               )}
@@ -358,7 +358,7 @@ function ReportSidebarContent() {
             {currentDept !== 'all' && (
               <span
                 onClick={() => setDept('all')}
-                style={{ color: '#22d3ee', cursor: 'pointer', textTransform: 'none', fontSize: '0.62rem' }}
+                style={{ color: '#facc15', cursor: 'pointer', textTransform: 'none', fontSize: '0.62rem' }}
               >
                 Clear
               </span>
@@ -382,8 +382,8 @@ function ReportSidebarContent() {
                   padding: '5px 10px',
                   borderRadius: '6px',
                   border: 'none',
-                  background: currentDept === d.id ? 'rgba(6, 182, 212, 0.15)' : 'transparent',
-                  color: currentDept === d.id ? '#22d3ee' : 'var(--text-dim)',
+                  background: currentDept === d.id ? 'rgba(250, 204, 21, 0.15)' : 'transparent',
+                  color: currentDept === d.id ? '#facc15' : 'var(--text-dim)',
                   fontSize: '0.72rem',
                   fontWeight: currentDept === d.id ? 700 : 400,
                   cursor: 'pointer',
@@ -397,7 +397,7 @@ function ReportSidebarContent() {
                     width: '5px',
                     height: '5px',
                     borderRadius: '50%',
-                    background: currentDept === d.id ? '#22d3ee' : 'rgba(255, 255, 255, 0.2)',
+                    background: currentDept === d.id ? '#facc15' : 'rgba(255, 255, 255, 0.2)',
                   }}
                 />
                 <span>{d.label}</span>
@@ -410,8 +410,8 @@ function ReportSidebarContent() {
         <div
           style={{
             margin: '10px 4px',
-            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(13, 27, 42, 0.9) 100%)',
-            border: '1px solid rgba(99, 102, 241, 0.25)',
+            background: 'rgba(255, 255, 255, 0.04)',
+            border: '1px solid rgba(250, 204, 21, 0.25)',
             borderRadius: '12px',
             padding: '12px',
           }}
@@ -422,10 +422,11 @@ function ReportSidebarContent() {
               style={{
                 fontSize: '0.6rem',
                 fontWeight: 700,
-                color: '#10b981',
-                background: 'rgba(16, 185, 129, 0.15)',
+                color: '#facc15',
+                background: 'rgba(250, 204, 21, 0.15)',
                 padding: '1px 5px',
                 borderRadius: '6px',
+                border: '1px solid rgba(250, 204, 21, 0.3)',
               }}
             >
               Optimal
@@ -436,37 +437,37 @@ function ReportSidebarContent() {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', marginBottom: '3px' }}>
                 <span style={{ color: 'var(--text-dim)' }}>Gross Margin</span>
-                <span style={{ color: '#10b981', fontWeight: 700 }}>{grossMarginPct.toFixed(1)}%</span>
+                <span style={{ color: '#facc15', fontWeight: 700 }}>{grossMarginPct.toFixed(1)}%</span>
               </div>
               <div style={{ height: '4px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '2px', overflow: 'hidden' }}>
-                <div style={{ width: `${Math.min(grossMarginPct * 1.5, 100)}%`, height: '100%', background: '#10b981' }} />
+                <div style={{ width: `${Math.min(grossMarginPct * 1.5, 100)}%`, height: '100%', background: '#facc15' }} />
               </div>
             </div>
 
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', marginBottom: '3px' }}>
                 <span style={{ color: 'var(--text-dim)' }}>Shopfloor Scrap</span>
-                <span style={{ color: '#38bdf8', fontWeight: 700 }}>2.1% (Tgt &lt; 3.5%)</span>
+                <span style={{ color: '#ffffff', fontWeight: 700 }}>2.1% (Tgt &lt; 3.5%)</span>
               </div>
               <div style={{ height: '4px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '2px', overflow: 'hidden' }}>
-                <div style={{ width: '42%', height: '100%', background: '#06b6d4' }} />
+                <div style={{ width: '42%', height: '100%', background: '#ca8a04' }} />
               </div>
             </div>
 
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', marginBottom: '3px' }}>
                 <span style={{ color: 'var(--text-dim)' }}>Machine Load</span>
-                <span style={{ color: '#818cf8', fontWeight: 700 }}>88.4%</span>
+                <span style={{ color: '#facc15', fontWeight: 700 }}>88.4%</span>
               </div>
               <div style={{ height: '4px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '2px', overflow: 'hidden' }}>
-                <div style={{ width: '88%', height: '100%', background: '#818cf8' }} />
+                <div style={{ width: '88%', height: '100%', background: '#facc15' }} />
               </div>
             </div>
           </div>
         </div>
 
         {/* Quick Cross-Navigation Links */}
-        <div style={{ marginTop: 'auto', paddingTop: '10px', borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+        <div style={{ marginTop: 'auto', paddingTop: '10px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
           <div
             style={{
               fontSize: '0.62rem',
@@ -508,7 +509,7 @@ function ReportSidebarContent() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Icon size={14} style={{ color: m.color }} />
+                    <Icon size={14} style={{ color: 'var(--text-dim)' }} />
                     <span>{m.label}</span>
                   </div>
                   <ChevronRight size={12} color="var(--text-dim)" />
@@ -526,7 +527,7 @@ export default function ReportSidebar() {
   return (
     <Suspense
       fallback={
-        <aside style={{ width: '275px', background: '#090d1a', height: '100vh', flexShrink: 0 }} />
+        <aside style={{ width: '275px', background: '#09090b', height: '100vh', flexShrink: 0 }} />
       }
     >
       <ReportSidebarContent />

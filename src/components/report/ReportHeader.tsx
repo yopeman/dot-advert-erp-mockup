@@ -154,10 +154,10 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
     <header
       style={{
         height: '70px',
-        background: 'rgba(11, 15, 30, 0.94)',
+        background: 'rgba(255, 255, 255, 0.96)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(99, 102, 241, 0.22)',
+        borderBottom: '1px solid var(--border-light)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -175,30 +175,31 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
               width: '36px',
               height: '36px',
               borderRadius: '10px',
-              background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
+              background: '#09090b',
+              border: '1px solid #facc15',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 0 16px rgba(99, 102, 241, 0.45)',
-              color: '#ffffff',
+              boxShadow: '0 0 12px rgba(250, 204, 21, 0.25)',
+              color: '#facc15',
             }}
           >
             <BarChart3 size={20} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '0.98rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.01em' }}>
+              <span style={{ fontSize: '0.98rem', fontWeight: 800, color: '#09090b', letterSpacing: '-0.01em' }}>
                 Reports & Business Intelligence
               </span>
               <span
                 style={{
                   fontSize: '0.65rem',
                   fontWeight: 700,
-                  color: '#818cf8',
-                  background: 'rgba(99, 102, 241, 0.15)',
+                  color: '#854d0e',
+                  background: '#fef9c3',
                   padding: '2px 7px',
                   borderRadius: '10px',
-                  border: '1px solid rgba(99, 102, 241, 0.3)',
+                  border: '1px solid #fde047',
                   letterSpacing: '0.04em',
                 }}
               >
@@ -208,146 +209,68 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
                 style={{
                   fontSize: '0.65rem',
                   fontWeight: 700,
-                  color: '#22d3ee',
-                  background: 'rgba(6, 182, 212, 0.12)',
+                  color: '#09090b',
+                  background: '#f4f4f5',
                   padding: '2px 7px',
                   borderRadius: '10px',
-                  border: '1px solid rgba(6, 182, 212, 0.25)',
+                  border: '1px solid var(--border-light)',
                 }}
               >
                 Live Telemetry
               </span>
             </div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
               Interactive Charts • Manufacturing Telemetry • Multi-Period Date Filters • Export Engine
             </div>
           </div>
         </div>
       </div>
 
-      {/* Middle: Day / Period Selection Bar (The user's core requirement) */}
+      {/* Middle: Day / Period Selection Bar */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: '4px',
-          background: 'rgba(15, 23, 42, 0.8)',
+          background: '#f8fafc',
           padding: '4px 6px',
           borderRadius: '12px',
-          border: '1px solid rgba(99, 102, 241, 0.25)',
+          border: '1px solid var(--border-light)',
         }}
       >
-        <button
-          onClick={() => setPeriod('daily')}
-          style={{
-            background: currentPeriod === 'daily' ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : 'transparent',
-            color: currentPeriod === 'daily' ? '#ffffff' : 'var(--text-muted)',
-            border: 'none',
-            padding: '5px 10px',
-            borderRadius: '8px',
-            fontSize: '0.75rem',
-            fontWeight: currentPeriod === 'daily' ? 700 : 500,
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          Daily
-        </button>
+        {(['daily', 'weekly', 'monthly', 'quarterly', 'half-yearly', 'yearly'] as ReportPeriod[]).map((p) => {
+          const isActive = currentPeriod === p;
+          const label = p.charAt(0).toUpperCase() + p.slice(1);
+          return (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              style={{
+                background: isActive ? '#09090b' : 'transparent',
+                color: isActive ? '#facc15' : 'var(--text-muted)',
+                border: 'none',
+                padding: '5px 11px',
+                borderRadius: '8px',
+                fontSize: '0.75rem',
+                fontWeight: isActive ? 700 : 500,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
 
-        <button
-          onClick={() => setPeriod('weekly')}
-          style={{
-            background: currentPeriod === 'weekly' ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : 'transparent',
-            color: currentPeriod === 'weekly' ? '#ffffff' : 'var(--text-muted)',
-            border: 'none',
-            padding: '5px 10px',
-            borderRadius: '8px',
-            fontSize: '0.75rem',
-            fontWeight: currentPeriod === 'weekly' ? 700 : 500,
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          Weekly
-        </button>
-
-        <button
-          onClick={() => setPeriod('monthly')}
-          style={{
-            background: currentPeriod === 'monthly' ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : 'transparent',
-            color: currentPeriod === 'monthly' ? '#ffffff' : 'var(--text-muted)',
-            border: 'none',
-            padding: '5px 10px',
-            borderRadius: '8px',
-            fontSize: '0.75rem',
-            fontWeight: currentPeriod === 'monthly' ? 700 : 500,
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          Monthly
-        </button>
-
-        <button
-          onClick={() => setPeriod('quarterly')}
-          style={{
-            background: currentPeriod === 'quarterly' ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : 'transparent',
-            color: currentPeriod === 'quarterly' ? '#ffffff' : 'var(--text-muted)',
-            border: 'none',
-            padding: '5px 10px',
-            borderRadius: '8px',
-            fontSize: '0.75rem',
-            fontWeight: currentPeriod === 'quarterly' ? 700 : 500,
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          Quarterly
-        </button>
-
-        <button
-          onClick={() => setPeriod('half-yearly')}
-          style={{
-            background: currentPeriod === 'half-yearly' ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : 'transparent',
-            color: currentPeriod === 'half-yearly' ? '#ffffff' : 'var(--text-muted)',
-            border: 'none',
-            padding: '5px 10px',
-            borderRadius: '8px',
-            fontSize: '0.75rem',
-            fontWeight: currentPeriod === 'half-yearly' ? 700 : 500,
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          Half-Yearly
-        </button>
-
-        <button
-          onClick={() => setPeriod('yearly')}
-          style={{
-            background: currentPeriod === 'yearly' ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : 'transparent',
-            color: currentPeriod === 'yearly' ? '#ffffff' : 'var(--text-muted)',
-            border: 'none',
-            padding: '5px 10px',
-            borderRadius: '8px',
-            fontSize: '0.75rem',
-            fontWeight: currentPeriod === 'yearly' ? 700 : 500,
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          Yearly
-        </button>
-
-        <div style={{ width: '1px', height: '18px', background: 'rgba(255, 255, 255, 0.15)', margin: '0 4px' }} />
+        <div style={{ width: '1px', height: '18px', background: 'var(--border-light)', margin: '0 4px' }} />
 
         {/* Custom Range Picker trigger */}
         <button
           onClick={() => setShowDatePickerModal(!showDatePickerModal)}
           style={{
-            background: currentPeriod === 'custom' ? 'linear-gradient(135deg, #06b6d4, #0891b2)' : 'rgba(255, 255, 255, 0.05)',
-            color: currentPeriod === 'custom' ? '#ffffff' : '#38bdf8',
-            border: '1px solid rgba(6, 182, 212, 0.3)',
+            background: currentPeriod === 'custom' ? '#fef9c3' : '#ffffff',
+            color: currentPeriod === 'custom' ? '#854d0e' : '#09090b',
+            border: currentPeriod === 'custom' ? '1px solid #ca8a04' : '1px solid var(--border-light)',
             padding: '5px 12px',
             borderRadius: '8px',
             fontSize: '0.75rem',
@@ -359,7 +282,7 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
             transition: 'all 0.15s ease',
           }}
         >
-          <Calendar size={13} />
+          <Calendar size={13} color={currentPeriod === 'custom' ? '#854d0e' : '#ca8a04'} />
           <span>{currentPeriod === 'custom' ? `${fromDate} → ${toDate}` : 'Custom Range'}</span>
           <ChevronDown size={12} />
         </button>
@@ -373,24 +296,24 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
             display: 'flex',
             alignItems: 'center',
             gap: '16px',
-            background: 'rgba(0, 0, 0, 0.3)',
+            background: '#f8fafc',
             padding: '6px 16px',
             borderRadius: '10px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            border: '1px solid var(--border-light)',
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '0.62rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Filtered Revenue</span>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#38bdf8', fontFamily: 'monospace' }}>
+            <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Filtered Revenue</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#09090b', fontFamily: 'monospace' }}>
               {formatETB(netRevenue)}
             </span>
           </div>
 
-          <div style={{ width: '1px', height: '18px', background: 'rgba(255, 255, 255, 0.1)' }} />
+          <div style={{ width: '1px', height: '18px', background: 'var(--border-light)' }} />
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '0.62rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Margin</span>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#10b981', fontFamily: 'monospace' }}>
+            <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Margin</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#16a34a', fontFamily: 'monospace' }}>
               {grossMarginPct.toFixed(1)}%
             </span>
           </div>
@@ -406,13 +329,13 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
               gap: '8px',
               padding: '8px 16px',
               borderRadius: '9px',
-              background: 'linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)',
-              color: '#ffffff',
-              border: 'none',
+              background: '#09090b',
+              color: '#facc15',
+              border: '1px solid #facc15',
               fontSize: '0.82rem',
               fontWeight: 700,
               cursor: 'pointer',
-              boxShadow: '0 2px 10px rgba(99, 102, 241, 0.35)',
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.15)',
               transition: 'all 0.15s ease',
             }}
           >
@@ -428,11 +351,11 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
                 top: 'calc(100% + 8px)',
                 right: 0,
                 width: '240px',
-                background: '#0f172a',
-                border: '1px solid rgba(99, 102, 241, 0.3)',
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
                 borderRadius: '12px',
                 padding: '8px',
-                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.6)',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.12)',
                 zIndex: 100,
               }}
             >
@@ -440,7 +363,7 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
                 style={{
                   fontSize: '0.68rem',
                   fontWeight: 700,
-                  color: 'var(--text-dim)',
+                  color: 'var(--text-muted)',
                   padding: '6px 10px',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
@@ -459,20 +382,20 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
                   padding: '9px 12px',
                   borderRadius: '8px',
                   background: 'transparent',
-                  color: '#ffffff',
+                  color: '#09090b',
                   border: 'none',
                   fontSize: '0.8rem',
                   fontWeight: 500,
                   cursor: 'pointer',
                   textAlign: 'left',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)')}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#fef9c3')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
-                <Download size={15} color="#22d3ee" />
+                <Download size={15} color="#ca8a04" />
                 <div>
                   <div style={{ fontWeight: 600 }}>Download CSV / Excel</div>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>Orders, margins, scrap & P&L</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Orders, margins, scrap & P&L</div>
                 </div>
               </button>
 
@@ -486,20 +409,20 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
                   padding: '9px 12px',
                   borderRadius: '8px',
                   background: 'transparent',
-                  color: '#ffffff',
+                  color: '#09090b',
                   border: 'none',
                   fontSize: '0.8rem',
                   fontWeight: 500,
                   cursor: 'pointer',
                   textAlign: 'left',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)')}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#fef9c3')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
-                <Printer size={15} color="#818cf8" />
+                <Printer size={15} color="#09090b" />
                 <div>
                   <div style={{ fontWeight: 600 }}>Print / Save as PDF</div>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>Executive dossier layout</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Executive dossier layout</div>
                 </div>
               </button>
 
@@ -513,20 +436,20 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
                   padding: '9px 12px',
                   borderRadius: '8px',
                   background: 'transparent',
-                  color: '#ffffff',
+                  color: '#09090b',
                   border: 'none',
                   fontSize: '0.8rem',
                   fontWeight: 500,
                   cursor: 'pointer',
                   textAlign: 'left',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)')}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#fef9c3')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
-                {copiedSummary ? <Check size={15} color="#10b981" /> : <Copy size={15} color="#a855f7" />}
+                {copiedSummary ? <Check size={15} color="#16a34a" /> : <Copy size={15} color="#ca8a04" />}
                 <div>
                   <div style={{ fontWeight: 600 }}>{copiedSummary ? 'Copied to Clipboard!' : 'Copy Summary'}</div>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>Formatted for email & Telegram</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Formatted for email & Telegram</div>
                 </div>
               </button>
             </div>
@@ -542,18 +465,18 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
             top: '74px',
             right: '240px',
             width: '360px',
-            background: '#0d1324',
-            border: '1px solid rgba(99, 102, 241, 0.35)',
+            background: '#ffffff',
+            border: '1px solid var(--border-light)',
             borderRadius: '16px',
             padding: '20px',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.8)',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
             zIndex: 120,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Calendar size={18} color="#22d3ee" />
-              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffffff' }}>Custom Date Range</span>
+              <Calendar size={18} color="#ca8a04" />
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#09090b' }}>Custom Date Range</span>
             </div>
             <button
               onClick={() => setShowDatePickerModal(false)}
@@ -571,7 +494,7 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '18px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-dim)', marginBottom: '5px' }}>
+              <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '5px' }}>
                 From Date (Start)
               </label>
               <input
@@ -582,9 +505,9 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
                   width: '100%',
                   padding: '9px 12px',
                   borderRadius: '8px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  color: '#ffffff',
+                  background: '#f8fafc',
+                  border: '1px solid var(--border-light)',
+                  color: '#09090b',
                   fontSize: '0.85rem',
                   outline: 'none',
                 }}
@@ -592,7 +515,7 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-dim)', marginBottom: '5px' }}>
+              <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '5px' }}>
                 To Date (End)
               </label>
               <input
@@ -603,9 +526,9 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
                   width: '100%',
                   padding: '9px 12px',
                   borderRadius: '8px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  color: '#ffffff',
+                  background: '#f8fafc',
+                  border: '1px solid var(--border-light)',
+                  color: '#09090b',
                   fontSize: '0.85rem',
                   outline: 'none',
                 }}
@@ -623,9 +546,9 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
                   fontSize: '0.7rem',
                   padding: '4px 8px',
                   borderRadius: '6px',
-                  background: 'rgba(255, 255, 255, 0.07)',
-                  color: 'var(--text-muted)',
-                  border: 'none',
+                  background: '#f4f4f5',
+                  color: '#09090b',
+                  border: '1px solid var(--border-light)',
                   cursor: 'pointer',
                 }}
               >
@@ -640,9 +563,9 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
                   fontSize: '0.7rem',
                   padding: '4px 8px',
                   borderRadius: '6px',
-                  background: 'rgba(255, 255, 255, 0.07)',
-                  color: 'var(--text-muted)',
-                  border: 'none',
+                  background: '#f4f4f5',
+                  color: '#09090b',
+                  border: '1px solid var(--border-light)',
                   cursor: 'pointer',
                 }}
               >
@@ -657,9 +580,9 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
                   fontSize: '0.7rem',
                   padding: '4px 8px',
                   borderRadius: '6px',
-                  background: 'rgba(255, 255, 255, 0.07)',
-                  color: 'var(--text-muted)',
-                  border: 'none',
+                  background: '#f4f4f5',
+                  color: '#09090b',
+                  border: '1px solid var(--border-light)',
                   cursor: 'pointer',
                 }}
               >
@@ -674,9 +597,9 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
                   fontSize: '0.7rem',
                   padding: '4px 8px',
                   borderRadius: '6px',
-                  background: 'rgba(255, 255, 255, 0.07)',
-                  color: 'var(--text-muted)',
-                  border: 'none',
+                  background: '#f4f4f5',
+                  color: '#09090b',
+                  border: '1px solid var(--border-light)',
                   cursor: 'pointer',
                 }}
               >
@@ -692,7 +615,7 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
                 padding: '8px 14px',
                 borderRadius: '8px',
                 background: 'transparent',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
+                border: '1px solid var(--border-light)',
                 color: 'var(--text-muted)',
                 fontSize: '0.8rem',
                 cursor: 'pointer',
@@ -705,13 +628,13 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
               style={{
                 padding: '8px 18px',
                 borderRadius: '8px',
-                background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
-                border: 'none',
-                color: '#ffffff',
+                background: '#09090b',
+                border: '1px solid #facc15',
+                color: '#facc15',
                 fontWeight: 700,
                 fontSize: '0.8rem',
                 cursor: 'pointer',
-                boxShadow: '0 2px 10px rgba(6, 182, 212, 0.35)',
+                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.15)',
               }}
             >
               Apply Filter

@@ -297,16 +297,29 @@ function ReportPageContent() {
 
   return (
     <div style={{ maxWidth: '1600px', margin: '0 auto', color: 'var(--text-main)' }}>
+      {/* Hero Banner */}
+      <div className="hero-banner" style={{ marginBottom: '24px' }}>
+        <div className="hero-pill">
+          <Sparkles size={14} color="#facc15" />
+          <span>MODULE 7 • BUSINESS INTELLIGENCE</span>
+        </div>
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#ffffff', margin: '10px 0 6px 0', letterSpacing: '-0.02em' }}>
+          Executive Reports & Plant Telemetry
+        </h1>
+        <p style={{ fontSize: '0.88rem', color: '#a1a1aa', maxWidth: '780px', margin: 0, lineHeight: 1.5 }}>
+          Multi-period profit curves, machine utilization telemetry, Job Costing waterfall, and Ethiopian MoR VAT audit reconciliation.
+        </p>
+      </div>
+
       {/* 1. Global Filter & Period Bar */}
       <div
         style={{
-          background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(20, 30, 55, 0.9) 100%)',
-          border: '1px solid rgba(99, 102, 241, 0.25)',
+          background: '#ffffff',
+          border: '1px solid var(--border-light)',
           borderRadius: '16px',
           padding: '16px 20px',
-          marginBottom: '16px',
-          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.45)',
-          backdropFilter: 'blur(12px)',
+          marginBottom: '20px',
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
@@ -314,21 +327,23 @@ function ReportPageContent() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div
               style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                background: 'rgba(99, 102, 241, 0.2)',
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                background: '#09090b',
+                border: '1px solid #facc15',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#818cf8',
+                color: '#facc15',
+                boxShadow: '0 0 10px rgba(250, 204, 21, 0.2)',
               }}
             >
-              <Calendar size={17} />
+              <Calendar size={18} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '0.92rem', fontWeight: 800, color: '#ffffff' }}>
+                <span style={{ fontSize: '0.92rem', fontWeight: 800, color: '#09090b' }}>
                   {period === 'custom'
                     ? `Custom Window (${fromDate} → ${toDate})`
                     : period === 'daily'
@@ -349,16 +364,16 @@ function ReportPageContent() {
                     fontWeight: 700,
                     padding: '2px 8px',
                     borderRadius: '10px',
-                    background: 'rgba(6, 182, 212, 0.15)',
-                    color: '#22d3ee',
-                    border: '1px solid rgba(6, 182, 212, 0.3)',
+                    background: '#fef9c3',
+                    color: '#854d0e',
+                    border: '1px solid #fde047',
                     textTransform: 'uppercase',
                   }}
                 >
                   {period} Mode
                 </span>
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                 Reporting Currency: Ethiopian Birr (ETB) • GAAP & MoR Audited Basis
               </div>
             </div>
@@ -368,19 +383,20 @@ function ReportPageContent() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             {/* Customer Tier Filter */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>Client:</span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>Client:</span>
               <select
                 value={customerSegmentFilter}
                 onChange={(e) => setCustomerSegmentFilter(e.target.value as any)}
                 style={{
-                  background: 'rgba(0, 0, 0, 0.4)',
-                  border: '1px solid rgba(255, 255, 255, 0.14)',
-                  color: '#ffffff',
+                  background: '#f8fafc',
+                  border: '1px solid var(--border-light)',
+                  color: '#09090b',
                   fontSize: '0.75rem',
                   padding: '6px 10px',
                   borderRadius: '8px',
                   cursor: 'pointer',
                   outline: 'none',
+                  fontWeight: 500,
                 }}
               >
                 <option value="all">All Enterprise Clients</option>
@@ -392,19 +408,20 @@ function ReportPageContent() {
 
             {/* Margin Health Filter */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>Margin:</span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>Margin:</span>
               <select
                 value={marginHealthFilter}
                 onChange={(e) => setMarginHealthFilter(e.target.value as any)}
                 style={{
-                  background: 'rgba(0, 0, 0, 0.4)',
-                  border: '1px solid rgba(255, 255, 255, 0.14)',
-                  color: '#ffffff',
+                  background: '#f8fafc',
+                  border: '1px solid var(--border-light)',
+                  color: '#09090b',
                   fontSize: '0.75rem',
                   padding: '6px 10px',
                   borderRadius: '8px',
                   cursor: 'pointer',
                   outline: 'none',
+                  fontWeight: 500,
                 }}
               >
                 <option value="all">All Margin Tiers</option>
@@ -420,13 +437,13 @@ function ReportPageContent() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                background: 'rgba(0, 0, 0, 0.35)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
+                background: '#f8fafc',
+                border: '1px solid var(--border-light)',
                 borderRadius: '8px',
                 padding: '5px 10px',
               }}
             >
-              <Search size={14} color="var(--text-dim)" />
+              <Search size={14} color="var(--text-muted)" />
               <input
                 type="text"
                 placeholder="Search orders, clients..."
@@ -435,7 +452,7 @@ function ReportPageContent() {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#ffffff',
+                  color: '#09090b',
                   fontSize: '0.75rem',
                   outline: 'none',
                   width: '140px',
@@ -444,7 +461,7 @@ function ReportPageContent() {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  style={{ background: 'transparent', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
                 >
                   <X size={12} />
                 </button>
@@ -458,14 +475,15 @@ function ReportPageContent() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '6px 12px',
+                padding: '6px 14px',
                 borderRadius: '8px',
-                background: 'rgba(99, 102, 241, 0.15)',
-                color: '#818cf8',
-                border: '1px solid rgba(99, 102, 241, 0.3)',
+                background: '#09090b',
+                color: '#facc15',
+                border: '1px solid #facc15',
                 fontSize: '0.75rem',
-                fontWeight: 600,
+                fontWeight: 700,
                 cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)',
               }}
             >
               <Eye size={13} />
@@ -494,36 +512,30 @@ function ReportPageContent() {
             <button
               key={tab.id}
               onClick={() => setTab(tab.id)}
+              className={`tab-btn ${isActive ? 'active' : ''}`}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                padding: '8px 16px',
-                borderRadius: '10px',
-                border: isActive ? '1px solid rgba(99, 102, 241, 0.5)' : '1px solid rgba(255, 255, 255, 0.08)',
-                background: isActive
-                  ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(6, 182, 212, 0.15) 100%)'
-                  : 'rgba(15, 23, 42, 0.6)',
-                color: isActive ? '#ffffff' : 'var(--text-muted)',
+                padding: '9px 16px',
                 fontSize: '0.8rem',
                 fontWeight: isActive ? 700 : 500,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
-                transition: 'all 0.15s ease',
-                boxShadow: isActive ? '0 4px 14px rgba(99, 102, 241, 0.25)' : 'none',
               }}
             >
-              <Icon size={15} style={{ color: isActive ? '#22d3ee' : 'var(--text-dim)' }} />
+              <Icon size={15} style={{ color: isActive ? '#854d0e' : 'var(--text-muted)' }} />
               <span>{tab.label}</span>
               {tab.badge && (
                 <span
                   style={{
                     fontSize: '0.62rem',
                     fontWeight: 700,
-                    padding: '1px 6px',
+                    padding: '2px 6px',
                     borderRadius: '6px',
-                    background: isActive ? 'rgba(34, 211, 238, 0.2)' : 'rgba(255, 255, 255, 0.06)',
-                    color: isActive ? '#22d3ee' : 'var(--text-dim)',
+                    background: isActive ? '#fef08a' : '#f4f4f5',
+                    color: isActive ? '#854d0e' : 'var(--text-muted)',
+                    border: isActive ? '1px solid #fde047' : '1px solid var(--border-light)',
                   }}
                 >
                   {tab.badge}
@@ -549,156 +561,160 @@ function ReportPageContent() {
             {/* Net Revenue */}
             <div
               style={{
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(20, 30, 55, 0.85) 100%)',
-                border: '1px solid rgba(99, 102, 241, 0.25)',
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
                 borderRadius: '14px',
                 padding: '18px 20px',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Audited Net Revenue
                 </span>
                 <div
                   style={{
-                    width: '32px',
-                    height: '32px',
+                    width: '34px',
+                    height: '34px',
                     borderRadius: '8px',
-                    background: 'rgba(99, 102, 241, 0.15)',
+                    background: '#09090b',
+                    border: '1px solid #facc15',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#818cf8',
+                    color: '#facc15',
                   }}
                 >
                   <Building2 size={16} />
                 </div>
               </div>
-              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#ffffff', fontFamily: 'monospace', letterSpacing: '-0.02em' }}>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#09090b', fontFamily: 'monospace', letterSpacing: '-0.02em' }}>
                 {formatETB(filteredRevenue > 0 ? filteredRevenue : totalNetRevenue)}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '0.72rem' }}>
-                <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '2px', fontWeight: 700 }}>
+                <span style={{ color: '#16a34a', display: 'flex', alignItems: 'center', gap: '2px', fontWeight: 700 }}>
                   <ArrowUpRight size={13} /> +18.4%
                 </span>
-                <span style={{ color: 'var(--text-dim)' }}>vs prior period target</span>
+                <span style={{ color: 'var(--text-muted)' }}>vs prior period target</span>
               </div>
             </div>
 
             {/* Gross Profit & Margin */}
             <div
               style={{
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(20, 30, 55, 0.85) 100%)',
-                border: '1px solid rgba(6, 182, 212, 0.25)',
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
                 borderRadius: '14px',
                 padding: '18px 20px',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Gross Profit & Margin
                 </span>
                 <div
                   style={{
-                    width: '32px',
-                    height: '32px',
+                    width: '34px',
+                    height: '34px',
                     borderRadius: '8px',
-                    background: 'rgba(6, 182, 212, 0.15)',
+                    background: '#09090b',
+                    border: '1px solid #facc15',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#22d3ee',
+                    color: '#facc15',
                   }}
                 >
                   <PieChart size={16} />
                 </div>
               </div>
-              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#22d3ee', fontFamily: 'monospace', letterSpacing: '-0.02em' }}>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#09090b', fontFamily: 'monospace', letterSpacing: '-0.02em' }}>
                 {formatETB(filteredGrossProfit > 0 ? filteredGrossProfit : totalGrossProfit)}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '0.72rem' }}>
-                <span style={{ color: '#10b981', fontWeight: 700 }}>
+                <span style={{ color: '#854d0e', fontWeight: 700, background: '#fef9c3', padding: '1px 6px', borderRadius: '4px', border: '1px solid #fde047' }}>
                   {(filteredRevenue > 0 ? filteredMarginPct : overallGrossMarginPct).toFixed(1)}% Realized
                 </span>
-                <span style={{ color: 'var(--text-dim)' }}>• Target 40.0%</span>
+                <span style={{ color: 'var(--text-muted)' }}>• Target 40.0%</span>
               </div>
             </div>
 
             {/* Operating Profit EBITDA */}
             <div
               style={{
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(20, 30, 55, 0.85) 100%)',
-                border: '1px solid rgba(16, 185, 129, 0.25)',
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
                 borderRadius: '14px',
                 padding: '18px 20px',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   EBITDA Operating Profit
                 </span>
                 <div
                   style={{
-                    width: '32px',
-                    height: '32px',
+                    width: '34px',
+                    height: '34px',
                     borderRadius: '8px',
-                    background: 'rgba(16, 185, 129, 0.15)',
+                    background: '#09090b',
+                    border: '1px solid #16a34a',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#10b981',
+                    color: '#16a34a',
                   }}
                 >
                   <TrendingUp size={16} />
                 </div>
               </div>
-              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#10b981', fontFamily: 'monospace', letterSpacing: '-0.02em' }}>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#16a34a', fontFamily: 'monospace', letterSpacing: '-0.02em' }}>
                 {formatETB(totalEbitda)}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '0.72rem' }}>
-                <span style={{ color: '#10b981', fontWeight: 700 }}>{ebitdaMarginPct.toFixed(1)}% of Revenue</span>
-                <span style={{ color: 'var(--text-dim)' }}>after factory rent & crane rentals</span>
+                <span style={{ color: '#16a34a', fontWeight: 700 }}>{ebitdaMarginPct.toFixed(1)}% of Revenue</span>
+                <span style={{ color: 'var(--text-muted)' }}>after rent & crane rentals</span>
               </div>
             </div>
 
             {/* Shopfloor Scrap Loss */}
             <div
               style={{
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(20, 30, 55, 0.85) 100%)',
-                border: '1px solid rgba(244, 63, 94, 0.25)',
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
                 borderRadius: '14px',
                 padding: '18px 20px',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Shopfloor Scrap Loss
                 </span>
                 <div
                   style={{
-                    width: '32px',
-                    height: '32px',
+                    width: '34px',
+                    height: '34px',
                     borderRadius: '8px',
-                    background: 'rgba(244, 63, 94, 0.15)',
+                    background: '#09090b',
+                    border: '1px solid #dc2626',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#f43f5e',
+                    color: '#dc2626',
                   }}
                 >
                   <Scissors size={16} />
                 </div>
               </div>
-              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#f43f5e', fontFamily: 'monospace', letterSpacing: '-0.02em' }}>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#dc2626', fontFamily: 'monospace', letterSpacing: '-0.02em' }}>
                 {formatETB(totalScrapCost)}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '0.72rem' }}>
-                <span style={{ color: '#10b981', fontWeight: 700 }}>2.1% of Raw Materials</span>
-                <span style={{ color: 'var(--text-dim)' }}>• Target &lt; 3.5% (Controlled)</span>
+                <span style={{ color: '#16a34a', fontWeight: 700 }}>2.1% of Raw Materials</span>
+                <span style={{ color: 'var(--text-muted)' }}>• Target &lt; 3.5% (Controlled)</span>
               </div>
             </div>
           </div>
@@ -715,35 +731,35 @@ function ReportPageContent() {
             {/* SVG Trend Curve */}
             <div
               style={{
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(13, 20, 38, 0.9) 100%)',
-                border: '1px solid rgba(99, 102, 241, 0.25)',
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
                 borderRadius: '16px',
                 padding: '20px',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
                 position: 'relative',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <TrendingUp size={18} color="#818cf8" />
-                    <span style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>
+                    <TrendingUp size={18} color="#ca8a04" />
+                    <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>
                       Multi-Period Financial Trajectory & Margin Curve
                     </span>
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                     Area curve for Net Revenue vs Gross Profit in ETB ({period} view)
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '0.72rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <div style={{ width: '12px', height: '4px', background: '#6366f1', borderRadius: '2px' }} />
-                    <span style={{ color: 'var(--text-muted)' }}>Net Revenue</span>
+                    <div style={{ width: '12px', height: '4px', background: '#09090b', borderRadius: '2px' }} />
+                    <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Net Revenue</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <div style={{ width: '12px', height: '4px', background: '#06b6d4', borderRadius: '2px' }} />
-                    <span style={{ color: 'var(--text-muted)' }}>Gross Profit</span>
+                    <div style={{ width: '12px', height: '4px', background: '#ca8a04', borderRadius: '2px' }} />
+                    <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Gross Profit</span>
                   </div>
                 </div>
               </div>
@@ -751,9 +767,9 @@ function ReportPageContent() {
               <div style={{ width: '100%', height: '260px', position: 'relative' }}>
                 <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} style={{ width: '100%', height: '100%', overflow: 'visible' }}>
                   <defs>
-                    <linearGradient id="indigoGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#6366f1" stopOpacity="0.45" />
-                      <stop offset="100%" stopColor="#6366f1" stopOpacity="0.0" />
+                    <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#facc15" stopOpacity="0.4" />
+                      <stop offset="100%" stopColor="#facc15" stopOpacity="0.0" />
                     </linearGradient>
                   </defs>
 
@@ -762,17 +778,17 @@ function ReportPageContent() {
                     const val = maxRevenue * pct;
                     return (
                       <g key={i}>
-                        <line x1={padding.left} y1={y} x2={padding.left + innerWidth} y2={y} stroke="rgba(255, 255, 255, 0.08)" strokeDasharray="4 4" />
-                        <text x={padding.left - 10} y={y + 3} fill="var(--text-dim)" fontSize="9" textAnchor="end" fontFamily="monospace">
+                        <line x1={padding.left} y1={y} x2={padding.left + innerWidth} y2={y} stroke="var(--border-light)" strokeDasharray="4 4" />
+                        <text x={padding.left - 10} y={y + 3} fill="var(--text-muted)" fontSize="9" textAnchor="end" fontFamily="monospace">
                           {(val / 1000).toFixed(0)}k
                         </text>
                       </g>
                     );
                   })}
 
-                  <path d={areaPath} fill="url(#indigoGradient)" />
-                  <path d={linePath} fill="none" stroke="#6366f1" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d={profitLinePath} fill="none" stroke="#06b6d4" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d={areaPath} fill="url(#goldGradient)" />
+                  <path d={linePath} fill="none" stroke="#09090b" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d={profitLinePath} fill="none" stroke="#ca8a04" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
 
                   {trendData.map((pt, idx) => {
                     const cx = getX(idx);
@@ -788,8 +804,8 @@ function ReportPageContent() {
                           cx={cx}
                           cy={cyRevenue}
                           r="5"
-                          fill="#6366f1"
-                          stroke="#ffffff"
+                          fill="#09090b"
+                          stroke="#facc15"
                           strokeWidth="2"
                           style={{ cursor: 'pointer' }}
                           onMouseEnter={() => setHoveredPoint({ x: cx, y: cyRevenue, label: pt.label, revenue: pt.revenue, profit: pt.profit, margin: pt.margin })}
@@ -799,8 +815,8 @@ function ReportPageContent() {
                           cx={cx}
                           cy={cyProfit}
                           r="4.5"
-                          fill="#06b6d4"
-                          stroke="#ffffff"
+                          fill="#facc15"
+                          stroke="#854d0e"
                           strokeWidth="1.8"
                           style={{ cursor: 'pointer' }}
                           onMouseEnter={() => setHoveredPoint({ x: cx, y: cyProfit, label: pt.label, revenue: pt.revenue, profit: pt.profit, margin: pt.margin })}
@@ -817,24 +833,24 @@ function ReportPageContent() {
                       position: 'absolute',
                       top: `${hoveredPoint.y - 85}px`,
                       left: `${hoveredPoint.x - 70}px`,
-                      background: '#0d1326',
-                      border: '1px solid rgba(99, 102, 241, 0.45)',
+                      background: '#09090b',
+                      border: '1px solid #facc15',
                       borderRadius: '10px',
                       padding: '8px 12px',
-                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.75)',
+                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
                       pointerEvents: 'none',
                       zIndex: 20,
                       minWidth: '150px',
                     }}
                   >
-                    <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#facc15', marginBottom: '4px' }}>
                       {hoveredPoint.label}
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: '#818cf8' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: '#ffffff' }}>
                       <span>Revenue:</span>
                       <span style={{ fontWeight: 700, fontFamily: 'monospace' }}>{formatETB(hoveredPoint.revenue)}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: '#22d3ee' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: '#fde047' }}>
                       <span>Gross Profit:</span>
                       <span style={{ fontWeight: 700, fontFamily: 'monospace' }}>{formatETB(hoveredPoint.profit)}</span>
                     </div>
@@ -846,21 +862,21 @@ function ReportPageContent() {
             {/* Donut Chart */}
             <div
               style={{
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(13, 20, 38, 0.9) 100%)',
-                border: '1px solid rgba(6, 182, 212, 0.25)',
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
                 borderRadius: '16px',
                 padding: '20px',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
                 display: 'flex',
                 flexDirection: 'column',
               }}
             >
               <div style={{ marginBottom: '14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <PieChart size={18} color="#22d3ee" />
-                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>Product Line Revenue Share</span>
+                  <PieChart size={18} color="#ca8a04" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>Product Line Revenue Share</span>
                 </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                   Signage, Billboards, Digital Large Print & Vehicle Fleets
                 </div>
               </div>
@@ -902,10 +918,10 @@ function ReportPageContent() {
                     );
                   })}
 
-                  <text x="95" y="88" fill="var(--text-dim)" fontSize="10" textAnchor="middle" fontWeight="600">
+                  <text x="95" y="88" fill="var(--text-muted)" fontSize="10" textAnchor="middle" fontWeight="600">
                     {selectedDonutIndex !== null ? productDistribution[selectedDonutIndex].name.split(' ')[0] : 'Total Net'}
                   </text>
-                  <text x="95" y="108" fill="#ffffff" fontSize="14" fontWeight="800" textAnchor="middle" fontFamily="monospace">
+                  <text x="95" y="108" fill="#09090b" fontSize="14" fontWeight="800" textAnchor="middle" fontFamily="monospace">
                     {selectedDonutIndex !== null ? `${productDistribution[selectedDonutIndex].share}%` : 'ETB 8.21M'}
                   </text>
                 </svg>
@@ -921,19 +937,20 @@ function ReportPageContent() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '4px 8px',
+                      padding: '5px 8px',
                       borderRadius: '6px',
-                      background: selectedDonutIndex === idx ? 'rgba(255, 255, 255, 0.06)' : 'transparent',
+                      background: selectedDonutIndex === idx ? '#fef9c3' : 'transparent',
                       cursor: 'pointer',
+                      transition: 'background 0.15s ease',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: p.color }} />
-                      <span style={{ fontSize: '0.72rem', color: selectedDonutIndex === idx ? '#ffffff' : 'var(--text-muted)' }}>
+                      <span style={{ fontSize: '0.72rem', color: selectedDonutIndex === idx ? '#854d0e' : 'var(--text-main)', fontWeight: selectedDonutIndex === idx ? 700 : 500 }}>
                         {p.name}
                       </span>
                     </div>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#ffffff', fontFamily: 'monospace' }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#09090b', fontFamily: 'monospace' }}>
                       {formatETB(p.amount)}
                     </span>
                   </div>
@@ -954,24 +971,24 @@ function ReportPageContent() {
             {/* Machine Station Progress Meters */}
             <div
               style={{
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(13, 20, 38, 0.9) 100%)',
-                border: '1px solid rgba(129, 140, 248, 0.22)',
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
                 borderRadius: '16px',
                 padding: '20px',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Factory size={18} color="#818cf8" />
-                    <span style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>Factory Machine Station Utilization</span>
+                    <Factory size={18} color="#ca8a04" />
+                    <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>Factory Machine Station Utilization</span>
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                     Active operating hours vs 208-hour rated shopfloor capacity
                   </div>
                 </div>
-                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#818cf8', background: 'rgba(99, 102, 241, 0.15)', padding: '2px 8px', borderRadius: '8px' }}>
+                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#854d0e', background: '#fef9c3', padding: '2px 8px', borderRadius: '8px', border: '1px solid #fde047' }}>
                   Plant OEE: 91.4%
                 </span>
               </div>
@@ -980,13 +997,13 @@ function ReportPageContent() {
                 {machineTelemetry.map((m, idx) => (
                   <div key={idx}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#ffffff' }}>{m.name}</span>
-                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: m.utilization > 90 ? '#f59e0b' : '#10b981' }}>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#09090b' }}>{m.name}</span>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: m.utilization > 90 ? '#ca8a04' : '#16a34a' }}>
                         {m.utilization}% ({m.activeHours}h)
                       </span>
                     </div>
-                    <div style={{ height: '8px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${m.utilization}%`, background: 'linear-gradient(90deg, #6366f1, #06b6d4)', borderRadius: '4px' }} />
+                    <div style={{ height: '8px', background: '#f4f4f5', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${m.utilization}%`, background: m.utilization > 90 ? '#ca8a04' : '#09090b', borderRadius: '4px' }} />
                     </div>
                   </div>
                 ))}
@@ -996,38 +1013,38 @@ function ReportPageContent() {
             {/* Scrap Loss Pareto */}
             <div
               style={{
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(13, 20, 38, 0.9) 100%)',
-                border: '1px solid rgba(244, 63, 94, 0.22)',
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
                 borderRadius: '16px',
                 padding: '20px',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Scissors size={18} color="#f43f5e" />
-                    <span style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>Material Scrap & Drop-Cut Losses</span>
+                    <Scissors size={18} color="#dc2626" />
+                    <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>Material Scrap & Drop-Cut Losses</span>
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                     Monetary impact in ETB & waste ratio by fabrication raw material
                   </div>
                 </div>
-                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#f43f5e', background: 'rgba(244, 63, 94, 0.15)', padding: '2px 8px', borderRadius: '8px' }}>
+                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#991b1b', background: '#fee2e2', padding: '2px 8px', borderRadius: '8px', border: '1px solid #fecaca' }}>
                   Total: {formatETB(totalScrapCost)}
                 </span>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {scrapByMaterial.map((s, idx) => (
-                  <div key={idx} style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '10px 12px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                  <div key={idx} style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border-light)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#ffffff' }}>{s.material}</span>
-                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#f43f5e', fontFamily: 'monospace' }}>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#09090b' }}>{s.material}</span>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#dc2626', fontFamily: 'monospace' }}>
                         {formatETB(s.scrapCost)} ({s.wastePct}%)
                       </span>
                     </div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>Root Cause: {s.reason}</div>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Root Cause: {s.reason}</div>
                   </div>
                 ))}
               </div>
@@ -1037,23 +1054,23 @@ function ReportPageContent() {
           {/* Top 10 Clients Table */}
           <div
             style={{
-              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(13, 20, 38, 0.9) 100%)',
-              border: '1px solid rgba(99, 102, 241, 0.22)',
+              background: '#ffffff',
+              border: '1px solid var(--border-light)',
               borderRadius: '16px',
               padding: '20px',
               marginBottom: '24px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Building2 size={18} color="#22d3ee" />
-                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>
+                  <Building2 size={18} color="#ca8a04" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>
                     Top 10 High-Value Enterprise Clients (Lifetime & Active Revenue)
                   </span>
                 </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                   Ranked by billings in Ethiopian Birr, order volume & project margin profitability
                 </div>
               </div>
@@ -1062,7 +1079,7 @@ function ReportPageContent() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: 'var(--text-dim)', textAlign: 'left' }}>
+                  <tr style={{ borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textAlign: 'left' }}>
                     <th style={{ padding: '8px 10px', width: '40px' }}>#</th>
                     <th style={{ padding: '8px 10px' }}>Client Organization</th>
                     <th style={{ padding: '8px 10px' }}>Tier Rating</th>
@@ -1078,24 +1095,24 @@ function ReportPageContent() {
                     const barWidthPct = (client.revenue / maxClientRev) * 100;
 
                     return (
-                      <tr key={idx} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                        <td style={{ padding: '10px', fontWeight: 700, color: 'var(--text-dim)' }}>{idx + 1}</td>
-                        <td style={{ padding: '10px', fontWeight: 700, color: '#ffffff' }}>{client.name}</td>
+                      <tr key={idx} style={{ borderBottom: '1px solid var(--border-light)' }}>
+                        <td style={{ padding: '10px', fontWeight: 700, color: 'var(--text-muted)' }}>{idx + 1}</td>
+                        <td style={{ padding: '10px', fontWeight: 700, color: '#09090b' }}>{client.name}</td>
                         <td style={{ padding: '10px' }}>
-                          <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '2px 7px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}>
+                          <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '2px 7px', borderRadius: '6px', background: '#dcfce7', color: '#16a34a' }}>
                             {client.status}
                           </span>
                         </td>
                         <td style={{ padding: '10px', textAlign: 'center', color: 'var(--text-muted)' }}>{client.orders} orders</td>
-                        <td style={{ padding: '10px', textAlign: 'right', fontWeight: 700, fontFamily: 'monospace', color: '#ffffff' }}>
+                        <td style={{ padding: '10px', textAlign: 'right', fontWeight: 700, fontFamily: 'monospace', color: '#09090b' }}>
                           {formatETB(client.revenue)}
                         </td>
-                        <td style={{ padding: '10px', textAlign: 'right', fontWeight: 700, color: '#10b981' }}>
+                        <td style={{ padding: '10px', textAlign: 'right', fontWeight: 700, color: '#16a34a' }}>
                           {client.margin.toFixed(1)}%
                         </td>
                         <td style={{ padding: '10px' }}>
-                          <div style={{ height: '6px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '3px', overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${barWidthPct}%`, background: 'linear-gradient(90deg, #6366f1, #06b6d4)', borderRadius: '3px' }} />
+                          <div style={{ height: '6px', background: '#f4f4f5', borderRadius: '3px', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${barWidthPct}%`, background: '#09090b', borderRadius: '3px' }} />
                           </div>
                         </td>
                       </tr>
@@ -1123,48 +1140,48 @@ function ReportPageContent() {
             {/* Commercial Sales Funnel */}
             <div
               style={{
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(13, 20, 38, 0.9) 100%)',
-                border: '1px solid rgba(99, 102, 241, 0.25)',
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
                 borderRadius: '16px',
                 padding: '20px',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <TrendingUp size={18} color="#818cf8" />
-                    <span style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>Commercial Sales Conversion Funnel</span>
+                    <TrendingUp size={18} color="#ca8a04" />
+                    <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>Commercial Sales Conversion Funnel</span>
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                     Stage conversion velocity from inquiry to customer payment
                   </div>
                 </div>
-                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#10b981', background: 'rgba(16, 185, 129, 0.15)', padding: '2px 8px', borderRadius: '8px' }}>
+                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#16a34a', background: '#dcfce7', padding: '2px 8px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
                   Win Rate: 68.4%
                 </span>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {[
-                  { stage: '1. Inquiries & Tender Leads', count: 28, value: 14800000, conversion: '100%', color: '#6366f1', widthPct: 100 },
-                  { stage: '2. Site Surveys Completed', count: 22, value: 11200000, conversion: '78.5%', color: '#06b6d4', widthPct: 82 },
-                  { stage: '3. Technical Quotations Sent', count: 17, value: 8900000, conversion: '77.2%', color: '#38bdf8', widthPct: 68 },
-                  { stage: '4. Confirmed Work Orders', count: 14, value: 7800000, conversion: '82.3%', color: '#10b981', widthPct: 56 },
-                  { stage: '5. Invoiced & Fully Paid', count: 12, value: 6900000, conversion: '85.7%', color: '#a855f7', widthPct: 46 },
+                  { stage: '1. Inquiries & Tender Leads', count: 28, value: 14800000, conversion: '100%', color: '#09090b', widthPct: 100 },
+                  { stage: '2. Site Surveys Completed', count: 22, value: 11200000, conversion: '78.5%', color: '#ca8a04', widthPct: 82 },
+                  { stage: '3. Technical Quotations Sent', count: 17, value: 8900000, conversion: '77.2%', color: '#eab308', widthPct: 68 },
+                  { stage: '4. Confirmed Work Orders', count: 14, value: 7800000, conversion: '82.3%', color: '#16a34a', widthPct: 56 },
+                  { stage: '5. Invoiced & Fully Paid', count: 12, value: 6900000, conversion: '85.7%', color: '#854d0e', widthPct: 46 },
                 ].map((s, i) => (
-                  <div key={i} style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '10px 14px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                  <div key={i} style={{ background: '#f8fafc', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border-light)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff' }}>{s.stage}</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#09090b' }}>{s.stage}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{s.count} deals</span>
-                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: s.color, fontFamily: 'monospace' }}>{formatETB(s.value)}</span>
-                        <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#ffffff', background: `${s.color}25`, padding: '1px 6px', borderRadius: '4px' }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.count} deals</span>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#09090b', fontFamily: 'monospace' }}>{formatETB(s.value)}</span>
+                        <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#854d0e', background: '#fef9c3', padding: '1px 6px', borderRadius: '4px', border: '1px solid #fde047' }}>
                           {s.conversion}
                         </span>
                       </div>
                     </div>
-                    <div style={{ height: '7px', background: 'rgba(255, 255, 255, 0.06)', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ height: '7px', background: '#f4f4f5', borderRadius: '4px', overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: `${s.widthPct}%`, background: s.color, borderRadius: '4px', transition: 'width 0.4s' }} />
                     </div>
                   </div>
@@ -1175,20 +1192,20 @@ function ReportPageContent() {
             {/* Sales Representative Leaderboard */}
             <div
               style={{
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(13, 20, 38, 0.9) 100%)',
-                border: '1px solid rgba(6, 182, 212, 0.25)',
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
                 borderRadius: '16px',
                 padding: '20px',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Award size={18} color="#22d3ee" />
-                    <span style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>Account Executives Quota Leaderboard</span>
+                    <Award size={18} color="#ca8a04" />
+                    <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>Account Executives Quota Leaderboard</span>
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                     Monthly quota targets vs actual billings in Ethiopian Birr
                   </div>
                 </div>
@@ -1201,21 +1218,21 @@ function ReportPageContent() {
                   { name: 'Biniyam Assefa', title: 'Retail & Fleet Branding', target: 1800000, actual: 1960000, margin: 42.5, commission: 29400, quotaPct: 109 },
                   { name: 'Ermias Kebede', title: 'Commercial Signage', target: 1500000, actual: 1480000, margin: 45.1, commission: 22200, quotaPct: 98 },
                 ].map((rep, idx) => (
-                  <div key={idx} style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '12px 14px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                  <div key={idx} style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--border-light)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                       <div>
-                        <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#ffffff' }}>{rep.name}</div>
-                        <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>{rep.title}</div>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#09090b' }}>{rep.name}</div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{rep.title}</div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#22d3ee', fontFamily: 'monospace' }}>{formatETB(rep.actual)}</div>
-                        <div style={{ fontSize: '0.68rem', color: '#10b981', fontWeight: 700 }}>{rep.quotaPct}% Quota Achieved</div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#09090b', fontFamily: 'monospace' }}>{formatETB(rep.actual)}</div>
+                        <div style={{ fontSize: '0.68rem', color: '#16a34a', fontWeight: 700 }}>{rep.quotaPct}% Quota Achieved</div>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: 'var(--text-dim)', marginTop: '6px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '6px' }}>
                       <span>Target: {formatETB(rep.target)}</span>
                       <span>Avg Margin: {rep.margin}%</span>
-                      <span>Earned Commission: {formatETB(rep.commission)}</span>
+                      <span>Commission: {formatETB(rep.commission)}</span>
                     </div>
                   </div>
                 ))}
@@ -1240,19 +1257,19 @@ function ReportPageContent() {
             {/* Machine Station Breakdown */}
             <div
               style={{
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(13, 20, 38, 0.9) 100%)',
-                border: '1px solid rgba(99, 102, 241, 0.25)',
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
                 borderRadius: '16px',
                 padding: '20px',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Factory size={18} color="#818cf8" />
-                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>Work Center Equipment Load</span>
+                  <Factory size={18} color="#ca8a04" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>Work Center Equipment Load</span>
                 </div>
-                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#818cf8', background: 'rgba(99, 102, 241, 0.15)', padding: '2px 8px', borderRadius: '8px' }}>
+                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#854d0e', background: '#fef9c3', padding: '2px 8px', borderRadius: '8px', border: '1px solid #fde047' }}>
                   Rated Capacity: 208 hrs/mo
                 </span>
               </div>
@@ -1261,11 +1278,11 @@ function ReportPageContent() {
                 {machineTelemetry.map((m, idx) => (
                   <div key={idx}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#ffffff' }}>{m.name}</span>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#38bdf8' }}>{m.utilization}% Utilization</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#09090b' }}>{m.name}</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: m.utilization > 90 ? '#ca8a04' : '#16a34a' }}>{m.utilization}% Utilization</span>
                     </div>
-                    <div style={{ height: '7px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${m.utilization}%`, background: 'linear-gradient(90deg, #6366f1, #06b6d4)', borderRadius: '4px' }} />
+                    <div style={{ height: '7px', background: '#f4f4f5', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${m.utilization}%`, background: m.utilization > 90 ? '#ca8a04' : '#09090b', borderRadius: '4px' }} />
                     </div>
                   </div>
                 ))}
@@ -1275,46 +1292,46 @@ function ReportPageContent() {
             {/* Quality Pass & First-Yield Telemetry */}
             <div
               style={{
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(13, 20, 38, 0.9) 100%)',
-                border: '1px solid rgba(16, 185, 129, 0.25)',
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
                 borderRadius: '16px',
                 padding: '20px',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CheckCircle2 size={18} color="#10b981" />
-                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>Quality & First-Pass Yield (FPY)</span>
+                  <CheckCircle2 size={18} color="#16a34a" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>Quality & First-Pass Yield (FPY)</span>
                 </div>
-                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#10b981', background: 'rgba(16, 185, 129, 0.15)', padding: '2px 8px', borderRadius: '8px' }}>
+                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#16a34a', background: '#dcfce7', padding: '2px 8px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
                   FPY: 94.6%
                 </span>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '12px', borderRadius: '10px' }}>
+                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-light)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '0.78rem', color: '#10b981', fontWeight: 700 }}>First-Pass Inspection Pass</span>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#ffffff' }}>94.6%</span>
+                    <span style={{ fontSize: '0.78rem', color: '#16a34a', fontWeight: 700 }}>First-Pass Inspection Pass</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#09090b' }}>94.6%</span>
                   </div>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>Zero defect production requiring no adjustments</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Zero defect production requiring no adjustments</div>
                 </div>
 
-                <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '12px', borderRadius: '10px' }}>
+                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-light)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 700 }}>Minor Re-work / Edge Buffing</span>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#ffffff' }}>3.3%</span>
+                    <span style={{ fontSize: '0.78rem', color: '#ca8a04', fontWeight: 700 }}>Minor Re-work / Edge Buffing</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#09090b' }}>3.3%</span>
                   </div>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>Corrected within shift (thermal deburring & vinyl touch-up)</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Corrected within shift (thermal deburring & vinyl touch-up)</div>
                 </div>
 
-                <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '12px', borderRadius: '10px' }}>
+                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-light)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '0.78rem', color: '#f43f5e', fontWeight: 700 }}>Scrap Rejection / Cracked Sheet</span>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#ffffff' }}>2.1%</span>
+                    <span style={{ fontSize: '0.78rem', color: '#dc2626', fontWeight: 700 }}>Scrap Rejection / Cracked Sheet</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#dc2626' }}>2.1%</span>
                   </div>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>Logged to scrap inventory and recycled into test pieces</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Logged to scrap inventory and recycled into test pieces</div>
                 </div>
               </div>
             </div>
@@ -1328,44 +1345,44 @@ function ReportPageContent() {
           {/* 5-Part Cost Tree Distribution */}
           <div
             style={{
-              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(13, 20, 38, 0.9) 100%)',
-              border: '1px solid rgba(99, 102, 241, 0.25)',
+              background: '#ffffff',
+              border: '1px solid var(--border-light)',
               borderRadius: '16px',
               padding: '20px',
               marginBottom: '24px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <PieChart size={18} color="#818cf8" />
-                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>Constituent Manufacturing Cost Breakdown</span>
+                  <PieChart size={18} color="#ca8a04" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>Constituent Manufacturing Cost Breakdown</span>
                 </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                   5-part cost tree normalized across all executed production orders
                 </div>
               </div>
-              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#10b981' }}>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#16a34a' }}>
                 Realized Gross Profit: {formatETB(totalGrossProfit)}
               </span>
             </div>
 
             {/* Horizontal Cost Stack Bar */}
             <div style={{ height: '28px', borderRadius: '8px', overflow: 'hidden', display: 'flex', marginBottom: '16px' }}>
-              <div style={{ width: '42%', background: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#ffffff' }}>
+              <div style={{ width: '42%', background: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#ffffff' }}>
                 Materials 42%
               </div>
-              <div style={{ width: '18%', background: '#06b6d4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#ffffff' }}>
+              <div style={{ width: '18%', background: '#ca8a04', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#ffffff' }}>
                 Labor 18%
               </div>
-              <div style={{ width: '12%', background: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#ffffff' }}>
+              <div style={{ width: '12%', background: '#eab308', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#09090b' }}>
                 Mach. 12%
               </div>
-              <div style={{ width: '17%', background: '#a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#ffffff' }}>
+              <div style={{ width: '17%', background: '#71717a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#ffffff' }}>
                 Overheads 17%
               </div>
-              <div style={{ width: '6%', background: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#ffffff' }}>
+              <div style={{ width: '6%', background: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#ffffff' }}>
                 Scrap 6%
               </div>
               <div style={{ width: '5%', background: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: '#ffffff' }}>
@@ -1376,16 +1393,16 @@ function ReportPageContent() {
             {/* Cost Cards Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
               {[
-                { label: 'Direct Materials', amount: 1910000, pct: 42, color: '#6366f1' },
-                { label: 'Shopfloor Labor', amount: 820000, pct: 18, color: '#06b6d4' },
-                { label: 'Machine Runtime', amount: 550000, pct: 12, color: '#38bdf8' },
-                { label: 'Factory Overheads', amount: 770000, pct: 17, color: '#a855f7' },
-                { label: 'Scrap & Wastage', amount: 270000, pct: 6, color: '#f43f5e' },
+                { label: 'Direct Materials', amount: 1910000, pct: 42, color: '#09090b' },
+                { label: 'Shopfloor Labor', amount: 820000, pct: 18, color: '#ca8a04' },
+                { label: 'Machine Runtime', amount: 550000, pct: 12, color: '#eab308' },
+                { label: 'Factory Overheads', amount: 770000, pct: 17, color: '#71717a' },
+                { label: 'Scrap & Wastage', amount: 270000, pct: 6, color: '#dc2626' },
                 { label: 'Site Crane Rentals', amount: 230000, pct: 5, color: '#f59e0b' },
               ].map((c, idx) => (
-                <div key={idx} style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '10px 14px', borderRadius: '10px', borderLeft: `4px solid ${c.color}` }}>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>{c.label} ({c.pct}%)</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff', fontFamily: 'monospace', marginTop: '2px' }}>
+                <div key={idx} style={{ background: '#f8fafc', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--border-light)', borderLeft: `4px solid ${c.color}` }}>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{c.label} ({c.pct}%)</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#09090b', fontFamily: 'monospace', marginTop: '2px' }}>
                     {formatETB(c.amount)}
                   </div>
                 </div>
@@ -1400,25 +1417,25 @@ function ReportPageContent() {
         <div>
           <div
             style={{
-              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(13, 20, 38, 0.9) 100%)',
-              border: '1px solid rgba(244, 63, 94, 0.25)',
+              background: '#ffffff',
+              border: '1px solid var(--border-light)',
               borderRadius: '16px',
               padding: '20px',
               marginBottom: '24px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Scissors size={18} color="#f43f5e" />
-                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>Chronological Scrap & Wastage Audit Ledger</span>
+                  <Scissors size={18} color="#dc2626" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>Chronological Scrap & Wastage Audit Ledger</span>
                 </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                   Recorded shopfloor material defects, off-cut drop trims, and responsible technicians
                 </div>
               </div>
-              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#f43f5e' }}>
+              <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#991b1b', background: '#fee2e2', padding: '2px 8px', borderRadius: '8px', border: '1px solid #fecaca' }}>
                 Cumulative Defect Loss: {formatETB(totalScrapCost)}
               </span>
             </div>
@@ -1426,7 +1443,7 @@ function ReportPageContent() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: 'var(--text-dim)', textAlign: 'left' }}>
+                  <tr style={{ borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textAlign: 'left' }}>
                     <th style={{ padding: '8px 10px' }}>Date</th>
                     <th style={{ padding: '8px 10px' }}>Material Item</th>
                     <th style={{ padding: '8px 10px', textAlign: 'center' }}>Scrapped Qty</th>
@@ -1438,20 +1455,20 @@ function ReportPageContent() {
                 </thead>
                 <tbody>
                   {wastages.map((w) => (
-                    <tr key={w.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <tr key={w.id} style={{ borderBottom: '1px solid var(--border-light)' }}>
                       <td style={{ padding: '10px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{w.date}</td>
-                      <td style={{ padding: '10px', fontWeight: 700, color: '#ffffff' }}>{w.itemName}</td>
-                      <td style={{ padding: '10px', textAlign: 'center', color: '#f59e0b', fontWeight: 600 }}>
+                      <td style={{ padding: '10px', fontWeight: 700, color: '#09090b' }}>{w.itemName}</td>
+                      <td style={{ padding: '10px', textAlign: 'center', color: '#854d0e', fontWeight: 700 }}>
                         {w.quantity} {w.unit}
                       </td>
-                      <td style={{ padding: '10px', textAlign: 'right', color: 'var(--text-dim)', fontFamily: 'monospace' }}>
+                      <td style={{ padding: '10px', textAlign: 'right', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
                         {formatETB(w.unitCost)}
                       </td>
-                      <td style={{ padding: '10px', textAlign: 'right', fontWeight: 700, color: '#f43f5e', fontFamily: 'monospace' }}>
+                      <td style={{ padding: '10px', textAlign: 'right', fontWeight: 700, color: '#dc2626', fontFamily: 'monospace' }}>
                         {formatETB(w.totalCost)}
                       </td>
                       <td style={{ padding: '10px', color: 'var(--text-muted)' }}>{w.reason}</td>
-                      <td style={{ padding: '10px', color: '#818cf8' }}>{w.reportedBy}</td>
+                      <td style={{ padding: '10px', color: '#09090b', fontWeight: 600 }}>{w.reportedBy}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1466,63 +1483,63 @@ function ReportPageContent() {
         <div>
           <div
             style={{
-              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(13, 20, 38, 0.9) 100%)',
-              border: '1px solid rgba(168, 85, 247, 0.25)',
+              background: '#ffffff',
+              border: '1px solid var(--border-light)',
               borderRadius: '16px',
               padding: '20px',
               marginBottom: '24px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <ShieldCheck size={18} color="#c084fc" />
-                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>
+                  <ShieldCheck size={18} color="#ca8a04" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>
                     Ethiopian Ministry of Revenues (MoR) Statutory Tax Filing Balance
                   </span>
                 </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                   15% Output VAT, verified deductible Input VAT, and 2% client withholding certificates
                 </div>
               </div>
-              <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#10b981', background: 'rgba(16, 185, 129, 0.15)', padding: '2px 8px', borderRadius: '8px' }}>
+              <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#16a34a', background: '#dcfce7', padding: '2px 8px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
                 MoR Audit Certified
               </span>
             </div>
 
             {/* VAT Waterfall Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '14px', marginBottom: '20px' }}>
-              <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid #6366f1' }}>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>15% Output VAT Invoiced</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff', fontFamily: 'monospace', marginTop: '2px' }}>
+              <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid var(--border-light)', borderLeft: '4px solid #09090b' }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>15% Output VAT Invoiced</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#09090b', fontFamily: 'monospace', marginTop: '2px' }}>
                   ETB 1,231,500
                 </div>
-                <div style={{ fontSize: '0.65rem', color: '#818cf8', marginTop: '4px' }}>Collected on client billings</div>
+                <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '4px' }}>Collected on client billings</div>
               </div>
 
-              <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid #10b981' }}>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>15% Input VAT Claimed</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#10b981', fontFamily: 'monospace', marginTop: '2px' }}>
+              <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid var(--border-light)', borderLeft: '4px solid #16a34a' }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>15% Input VAT Claimed</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#16a34a', fontFamily: 'monospace', marginTop: '2px' }}>
                   (ETB 486,200)
                 </div>
-                <div style={{ fontSize: '0.65rem', color: '#10b981', marginTop: '4px' }}>Deductible raw material POs</div>
+                <div style={{ fontSize: '0.65rem', color: '#16a34a', marginTop: '4px' }}>Deductible raw material POs</div>
               </div>
 
-              <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid #f59e0b' }}>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>2% Client Withholding Tax</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#f59e0b', fontFamily: 'monospace', marginTop: '2px' }}>
+              <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid var(--border-light)', borderLeft: '4px solid #ca8a04' }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>2% Client Withholding Tax</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#854d0e', fontFamily: 'monospace', marginTop: '2px' }}>
                   (ETB 164,200)
                 </div>
-                <div style={{ fontSize: '0.65rem', color: '#f59e0b', marginTop: '4px' }}>Deducted at source by banks</div>
+                <div style={{ fontSize: '0.65rem', color: '#854d0e', marginTop: '4px' }}>Deducted at source by banks</div>
               </div>
 
-              <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '14px', borderRadius: '12px', borderLeft: '4px solid #c084fc' }}>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>Net Payable to Ministry</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#c084fc', fontFamily: 'monospace', marginTop: '2px' }}>
+              <div style={{ background: '#fef9c3', padding: '14px', borderRadius: '12px', border: '1px solid #fde047', borderLeft: '4px solid #ca8a04' }}>
+                <div style={{ fontSize: '0.7rem', color: '#854d0e', fontWeight: 600 }}>Net Payable to Ministry</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#854d0e', fontFamily: 'monospace', marginTop: '2px' }}>
                   ETB 581,100
                 </div>
-                <div style={{ fontSize: '0.65rem', color: '#c084fc', marginTop: '4px' }}>Due 30th of month</div>
+                <div style={{ fontSize: '0.65rem', color: '#854d0e', marginTop: '4px' }}>Due 30th of month</div>
               </div>
             </div>
           </div>
@@ -1534,37 +1551,37 @@ function ReportPageContent() {
         <div>
           <div
             style={{
-              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(13, 20, 38, 0.9) 100%)',
-              border: '1px solid rgba(245, 158, 11, 0.25)',
+              background: '#ffffff',
+              border: '1px solid var(--border-light)',
               borderRadius: '16px',
               padding: '20px',
               marginBottom: '24px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <ScrollText size={18} color="#f59e0b" />
-                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>Chronological Enterprise Audit Trail</span>
+                  <ScrollText size={18} color="#ca8a04" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>Chronological Enterprise Audit Trail</span>
                 </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                   Cryptographic transaction audit log of user actions and financial movements
                 </div>
               </div>
-              <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#f59e0b', background: 'rgba(245, 158, 11, 0.15)', padding: '2px 8px', borderRadius: '8px' }}>
+              <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#854d0e', background: '#fef9c3', padding: '2px 8px', borderRadius: '8px', border: '1px solid #fde047' }}>
                 Integrity Verified
               </span>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {[
-                { time: '2026-10-20 16:45:12', user: 'General Manager', action: 'Approved Work Order WO-2026-081 for Commercial Bank of Ethiopia', category: 'Production', color: '#10b981' },
-                { time: '2026-10-20 15:30:00', user: 'Cost Accountant', action: 'Audited Job Cost Sheet for Safaricom Retail Shop Fascia Signage', category: 'Costing', color: '#38bdf8' },
-                { time: '2026-10-20 14:15:22', user: 'Storekeeper', action: 'Issued 12 sheets of Cast Acrylic 3mm Opal to CNC Router station', category: 'Inventory', color: '#818cf8' },
-                { time: '2026-10-20 12:00:45', user: 'Sales Rep (Almaz T.)', action: 'Created Proforma Invoice PRO-2026-084 for BGI Ethiopia Brewery', category: 'Sales', color: '#a855f7' },
-                { time: '2026-10-20 10:20:10', user: 'Production Supv.', action: 'Logged 4.5 sqm acrylic off-cut drop trim to scrap inventory', category: 'Wastage', color: '#f43f5e' },
-                { time: '2026-10-20 09:00:00', user: 'System Telemetry', action: 'Performed automated daily working capital and MoR VAT balance sync', category: 'System', color: '#f59e0b' },
+                { time: '2026-10-20 16:45:12', user: 'General Manager', action: 'Approved Work Order WO-2026-081 for Commercial Bank of Ethiopia', category: 'Production', color: '#16a34a' },
+                { time: '2026-10-20 15:30:00', user: 'Cost Accountant', action: 'Audited Job Cost Sheet for Safaricom Retail Shop Fascia Signage', category: 'Costing', color: '#ca8a04' },
+                { time: '2026-10-20 14:15:22', user: 'Storekeeper', action: 'Issued 12 sheets of Cast Acrylic 3mm Opal to CNC Router station', category: 'Inventory', color: '#09090b' },
+                { time: '2026-10-20 12:00:45', user: 'Sales Rep (Almaz T.)', action: 'Created Proforma Invoice PRO-2026-084 for BGI Ethiopia Brewery', category: 'Sales', color: '#854d0e' },
+                { time: '2026-10-20 10:20:10', user: 'Production Supv.', action: 'Logged 4.5 sqm acrylic off-cut drop trim to scrap inventory', category: 'Wastage', color: '#dc2626' },
+                { time: '2026-10-20 09:00:00', user: 'System Telemetry', action: 'Performed automated daily working capital and MoR VAT balance sync', category: 'System', color: '#ca8a04' },
               ].map((log, idx) => (
                 <div
                   key={idx}
@@ -1574,18 +1591,18 @@ function ReportPageContent() {
                     justifyContent: 'space-between',
                     padding: '10px 14px',
                     borderRadius: '8px',
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                    background: '#f8fafc',
+                    border: '1px solid var(--border-light)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)', fontFamily: 'monospace' }}>{log.time}</div>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', background: `${log.color}15`, color: log.color }}>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{log.time}</div>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', background: '#f4f4f5', color: log.color, border: '1px solid var(--border-light)' }}>
                       {log.category}
                     </span>
-                    <span style={{ fontSize: '0.78rem', color: '#ffffff' }}>{log.action}</span>
+                    <span style={{ fontSize: '0.78rem', color: '#09090b', fontWeight: 500 }}>{log.action}</span>
                   </div>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>{log.user}</span>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{log.user}</span>
                 </div>
               ))}
             </div>
@@ -1599,7 +1616,7 @@ function ReportPageContent() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0, 0, 0, 0.85)',
+            background: 'rgba(0, 0, 0, 0.6)',
             backdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'center',
@@ -1613,26 +1630,26 @@ function ReportPageContent() {
             style={{
               width: '100%',
               maxWidth: '680px',
-              background: '#0d1326',
-              border: '1px solid rgba(99, 102, 241, 0.35)',
+              background: '#ffffff',
+              border: '1px solid var(--border-light)',
               borderRadius: '20px',
               padding: '28px',
-              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85)',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.25)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#ffffff' }}>
+                  <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#09090b' }}>
                     {activeOrderModal.orderNumber} Cost Structure
                   </span>
                   <span
                     style={{
                       fontSize: '0.72rem',
                       fontWeight: 700,
-                      color: '#10b981',
-                      background: 'rgba(16, 185, 129, 0.15)',
+                      color: '#16a34a',
+                      background: '#dcfce7',
                       padding: '2px 8px',
                       borderRadius: '8px',
                     }}
@@ -1640,7 +1657,7 @@ function ReportPageContent() {
                     {activeOrderModal.profitMarginPct.toFixed(1)}% Realized Margin
                   </span>
                 </div>
-                <div style={{ fontSize: '0.82rem', color: 'var(--text-dim)', marginTop: '3px' }}>
+                <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '3px' }}>
                   {activeOrderModal.customerName} • {activeOrderModal.orderTitle}
                 </div>
               </div>
@@ -1667,12 +1684,12 @@ function ReportPageContent() {
                   justifyContent: 'space-between',
                   padding: '10px 14px',
                   borderRadius: '10px',
-                  background: 'rgba(99, 102, 241, 0.15)',
-                  border: '1px solid rgba(99, 102, 241, 0.3)',
+                  background: '#09090b',
+                  border: '1px solid #facc15',
                 }}
               >
                 <span style={{ fontWeight: 700, color: '#ffffff' }}>Contracted Revenue</span>
-                <span style={{ fontWeight: 800, color: '#818cf8', fontFamily: 'monospace' }}>
+                <span style={{ fontWeight: 800, color: '#facc15', fontFamily: 'monospace' }}>
                   {formatETB(activeOrderModal.orderRevenue)}
                 </span>
               </div>
@@ -1680,31 +1697,31 @@ function ReportPageContent() {
               <div style={{ padding: '0 10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                   <span style={{ color: 'var(--text-muted)' }}>1. Direct Materials & Consumables</span>
-                  <span style={{ fontFamily: 'monospace', color: '#ffffff' }}>
+                  <span style={{ fontFamily: 'monospace', color: '#09090b', fontWeight: 600 }}>
                     {formatETB(activeOrderModal.directMaterialCost)}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                   <span style={{ color: 'var(--text-muted)' }}>2. Shopfloor Technician Labor</span>
-                  <span style={{ fontFamily: 'monospace', color: '#ffffff' }}>
+                  <span style={{ fontFamily: 'monospace', color: '#09090b', fontWeight: 600 }}>
                     {formatETB(activeOrderModal.directLaborCost)}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                   <span style={{ color: 'var(--text-muted)' }}>3. CNC Router & Laser Runtime Cost</span>
-                  <span style={{ fontFamily: 'monospace', color: '#ffffff' }}>
+                  <span style={{ fontFamily: 'monospace', color: '#09090b', fontWeight: 600 }}>
                     {formatETB(activeOrderModal.machineCost)}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                   <span style={{ color: 'var(--text-muted)' }}>4. Scrap & Edge Drop Wastage</span>
-                  <span style={{ fontFamily: 'monospace', color: '#f43f5e' }}>
+                  <span style={{ fontFamily: 'monospace', color: '#dc2626', fontWeight: 600 }}>
                     {formatETB(activeOrderModal.wastageCost)}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                   <span style={{ color: 'var(--text-muted)' }}>5. Factory Overheads Allocation</span>
-                  <span style={{ fontFamily: 'monospace', color: '#ffffff' }}>
+                  <span style={{ fontFamily: 'monospace', color: '#09090b', fontWeight: 600 }}>
                     {formatETB(activeOrderModal.allocatedOverheadCost)}
                   </span>
                 </div>
@@ -1716,12 +1733,12 @@ function ReportPageContent() {
                   justifyContent: 'space-between',
                   padding: '12px 14px',
                   borderRadius: '10px',
-                  background: 'rgba(16, 185, 129, 0.15)',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  background: '#dcfce7',
+                  border: '1px solid #bbf7d0',
                 }}
               >
-                <span style={{ fontWeight: 800, color: '#ffffff' }}>Net Order Profitability</span>
-                <span style={{ fontWeight: 800, color: '#10b981', fontFamily: 'monospace', fontSize: '1.05rem' }}>
+                <span style={{ fontWeight: 800, color: '#16a34a' }}>Net Order Profitability</span>
+                <span style={{ fontWeight: 800, color: '#16a34a', fontFamily: 'monospace', fontSize: '1.05rem' }}>
                   {formatETB(activeOrderModal.grossProfit)}
                 </span>
               </div>
@@ -1733,12 +1750,13 @@ function ReportPageContent() {
                 style={{
                   padding: '9px 20px',
                   borderRadius: '10px',
-                  background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
-                  color: '#ffffff',
-                  border: 'none',
+                  background: '#09090b',
+                  color: '#facc15',
+                  border: '1px solid #facc15',
                   fontWeight: 700,
                   fontSize: '0.82rem',
                   cursor: 'pointer',
+                  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.15)',
                 }}
               >
                 Close Audit View
@@ -1754,7 +1772,7 @@ function ReportPageContent() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0, 0, 0, 0.9)',
+            background: 'rgba(0, 0, 0, 0.7)',
             backdropFilter: 'blur(10px)',
             display: 'flex',
             alignItems: 'center',
@@ -1770,20 +1788,20 @@ function ReportPageContent() {
               maxWidth: '840px',
               maxHeight: '90vh',
               overflowY: 'auto',
-              background: '#0f172a',
-              border: '1px solid rgba(99, 102, 241, 0.4)',
+              background: '#ffffff',
+              border: '1px solid var(--border-light)',
               borderRadius: '20px',
               padding: '32px',
-              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.9)',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.25)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff' }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#09090b' }}>
                   Executive Intelligence Dossier
                 </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: '4px' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                   Dot Advert ERP • Reporting Period: {period.toUpperCase()} (Ending October 2026)
                 </div>
               </div>
@@ -1797,12 +1815,13 @@ function ReportPageContent() {
                     gap: '6px',
                     padding: '8px 16px',
                     borderRadius: '8px',
-                    background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
-                    color: '#ffffff',
-                    border: 'none',
+                    background: '#09090b',
+                    color: '#facc15',
+                    border: '1px solid #facc15',
                     fontWeight: 700,
                     fontSize: '0.8rem',
                     cursor: 'pointer',
+                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.15)',
                   }}
                 >
                   <Printer size={15} />
@@ -1830,33 +1849,34 @@ function ReportPageContent() {
                   display: 'grid',
                   gridTemplateColumns: '1fr 1fr 1fr',
                   gap: '12px',
-                  background: 'rgba(255, 255, 255, 0.03)',
+                  background: '#f8fafc',
                   padding: '16px',
                   borderRadius: '12px',
+                  border: '1px solid var(--border-light)',
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>Audited Revenue</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ffffff', fontFamily: 'monospace' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Audited Revenue</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#09090b', fontFamily: 'monospace' }}>
                     {formatETB(totalNetRevenue)}
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>Realized Margin</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#10b981' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Realized Margin</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a' }}>
                     {overallGrossMarginPct.toFixed(1)}%
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>Shopfloor Scrap Ratio</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#22d3ee' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Shopfloor Scrap Ratio</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#09090b' }}>
                     2.1% (Safe)
                   </div>
                 </div>
               </div>
 
               <div>
-                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>
+                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#09090b', marginBottom: '8px' }}>
                   Top Revenue Drivers (Client Distribution)
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -1866,16 +1886,17 @@ function ReportPageContent() {
                       style={{
                         display: 'flex',
                         justifyContent: 'space-between',
-                        padding: '6px 10px',
-                        background: 'rgba(255, 255, 255, 0.02)',
+                        padding: '8px 12px',
+                        background: '#f8fafc',
                         borderRadius: '6px',
+                        border: '1px solid var(--border-light)',
                         fontSize: '0.78rem',
                       }}
                     >
-                      <span style={{ color: '#ffffff' }}>
+                      <span style={{ color: '#09090b', fontWeight: 600 }}>
                         {i + 1}. {c.name}
                       </span>
-                      <span style={{ fontWeight: 700, fontFamily: 'monospace', color: '#22d3ee' }}>
+                      <span style={{ fontWeight: 700, fontFamily: 'monospace', color: '#09090b' }}>
                         {formatETB(c.revenue)} ({c.margin}%)
                       </span>
                     </div>
@@ -1883,7 +1904,7 @@ function ReportPageContent() {
                 </div>
               </div>
 
-              <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '14px', fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+              <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: '14px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                 Certified by Dot Advert ERP Finance & Production Intelligence Engine • Addis Ababa, Ethiopia
               </div>
             </div>
@@ -1898,7 +1919,7 @@ export default function ReportPage() {
   return (
     <Suspense
       fallback={
-        <div style={{ padding: '40px', color: '#ffffff', textAlign: 'center' }}>
+        <div style={{ padding: '40px', color: '#09090b', textAlign: 'center' }}>
           Loading Business Intelligence & Reports Suite...
         </div>
       }

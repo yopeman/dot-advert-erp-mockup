@@ -130,77 +130,64 @@ function FinancePageContent() {
 
   return (
     <div>
-      {/* Top Header & Period Selector */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: '22px',
-          flexWrap: 'wrap',
-          gap: '16px',
-        }}
-      >
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span
-              style={{
-                fontSize: '0.72rem',
-                fontWeight: 700,
-                color: '#10b981',
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-              }}
-            >
-              Corporate Finance & Auditing Desk
-            </span>
-            <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
-              • IFRS & Ethiopian Ministry of Revenues Compliant
-            </span>
-          </div>
-          <h1 style={{ marginTop: '2px', fontSize: '1.65rem' }}>Executive P&L, Job Costing & Financial Statements</h1>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Calendar size={14} color="#10b981" />
-            <select
-              value={fiscalPeriod}
-              onChange={(e) => setFiscalPeriod(e.target.value)}
-              style={{
-                padding: '6px 12px',
-                fontSize: '0.82rem',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(16, 185, 129, 0.3)',
-                borderRadius: 'var(--radius-md)',
-                color: '#ffffff',
-                outline: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="October 2026">Fiscal Period: October 2026</option>
-              <option value="Q3 2026">Quarter: Q3 2026 (Jul - Sep)</option>
-              <option value="Year-to-Date 2026">Year-to-Date 2026</option>
-            </select>
+      {/* Hero Banner Header */}
+      <div className="hero-banner">
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span className="hero-pill">
+                MODULE 6 • CFO & AUDITING DESK
+              </span>
+              <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.65)' }}>
+                • IFRS & Ethiopian Ministry of Revenues Compliant
+              </span>
+            </div>
+            <h1 style={{ marginTop: '2px', fontSize: '1.65rem', color: '#ffffff', fontWeight: 800 }}>
+              Executive P&L, Job Costing & Financial Statements
+            </h1>
           </div>
 
-          <button
-            onClick={() => window.print()}
-            className="btn btn-secondary btn-sm"
-            style={{ fontSize: '0.78rem' }}
-          >
-            <Printer size={14} />
-            <span>Export Statement</span>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Calendar size={14} color="#facc15" />
+              <select
+                value={fiscalPeriod}
+                onChange={(e) => setFiscalPeriod(e.target.value)}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '0.82rem',
+                  background: 'rgba(0, 0, 0, 0.5)',
+                  border: '1px solid rgba(250, 204, 21, 0.4)',
+                  borderRadius: 'var(--radius-md)',
+                  color: '#ffffff',
+                  outline: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <option value="October 2026">Fiscal Period: October 2026</option>
+                <option value="Q3 2026">Quarter: Q3 2026 (Jul - Sep)</option>
+                <option value="Year-to-Date 2026">Year-to-Date 2026</option>
+              </select>
+            </div>
+
+            <button
+              onClick={() => window.print()}
+              className="btn btn-secondary btn-sm"
+              style={{ fontSize: '0.78rem', background: 'rgba(255, 255, 255, 0.12)', color: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.2)' }}
+            >
+              <Printer size={14} />
+              <span>Export Statement</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Primary KPI Stats Strip */}
       <div className="stat-grid" style={{ marginBottom: '24px' }}>
-        <div className="stat-card" style={{ borderTop: '2px solid #818cf8' }}>
+        <div className="stat-card" style={{ borderTop: '3px solid #09090b' }}>
           <div className="stat-card-title">
             <span>Net Operating Revenue (Excl. VAT)</span>
-            <Receipt size={16} color="#818cf8" />
+            <Receipt size={16} color="#71717a" />
           </div>
           <div className="stat-card-value">{formatETB(netRevenue)}</div>
           <div className="stat-card-subtext">
@@ -208,40 +195,40 @@ function FinancePageContent() {
           </div>
         </div>
 
-        <div className="stat-card" style={{ borderTop: '2px solid #38bdf8' }}>
+        <div className="stat-card" style={{ borderTop: '3px solid #ca8a04' }}>
           <div className="stat-card-title">
             <span>Gross Manufacturing Profit</span>
-            <PieChart size={16} color="#38bdf8" />
+            <PieChart size={16} color="#ca8a04" />
           </div>
-          <div className="stat-card-value" style={{ color: '#38bdf8' }}>
+          <div className="stat-card-value" style={{ color: '#ca8a04' }}>
             {formatETB(grossProfit)}
           </div>
           <div className="stat-card-subtext">
-            <span style={{ color: '#10b981', fontWeight: 600 }}>{grossMarginPct.toFixed(1)}% Gross Margin</span>
+            <span style={{ color: '#16a34a', fontWeight: 700 }}>{grossMarginPct.toFixed(1)}% Gross Margin</span>
             <span> • After direct factory costs</span>
           </div>
         </div>
 
-        <div className="stat-card" style={{ borderTop: '2px solid #10b981' }}>
+        <div className="stat-card" style={{ borderTop: '3px solid #16a34a' }}>
           <div className="stat-card-title">
             <span>Operating Profit (EBITDA)</span>
-            <TrendingUp size={16} color="#10b981" />
+            <TrendingUp size={16} color="#16a34a" />
           </div>
-          <div className="stat-card-value" style={{ color: '#10b981' }}>
+          <div className="stat-card-value" style={{ color: '#16a34a' }}>
             {formatETB(operatingIncome)}
           </div>
           <div className="stat-card-subtext">
-            <span style={{ color: '#10b981', fontWeight: 600 }}>{netMarginPct.toFixed(1)}% Operating Margin</span>
+            <span style={{ color: '#16a34a', fontWeight: 700 }}>{netMarginPct.toFixed(1)}% Operating Margin</span>
             <span> • Net company bottomline</span>
           </div>
         </div>
 
-        <div className="stat-card" style={{ borderTop: '2px solid #f59e0b' }}>
+        <div className="stat-card" style={{ borderTop: '3px solid #f59e0b' }}>
           <div className="stat-card-title">
             <span>Net Working Capital Gap</span>
             <Scale size={16} color="#f59e0b" />
           </div>
-          <div className="stat-card-value" style={{ color: accountsReceivable >= accountsPayable ? '#10b981' : '#ef4444' }}>
+          <div className="stat-card-value" style={{ color: accountsReceivable >= accountsPayable ? '#16a34a' : '#ef4444' }}>
             {formatETB(accountsReceivable - accountsPayable)}
           </div>
           <div className="stat-card-subtext">
@@ -258,109 +245,51 @@ function FinancePageContent() {
           gap: '8px',
           borderBottom: '1px solid var(--border-subtle)',
           marginBottom: '20px',
+          overflowX: 'auto',
+          paddingBottom: '2px',
         }}
       >
         <button
           onClick={() => setTab('income_statement')}
-          style={{
-            padding: '10px 18px',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'income_statement' ? '2px solid #10b981' : '2px solid transparent',
-            color: activeTab === 'income_statement' ? '#ffffff' : 'var(--text-muted)',
-            fontWeight: activeTab === 'income_statement' ? 600 : 500,
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
+          className={`tab-btn ${activeTab === 'income_statement' ? 'active' : ''}`}
         >
-          <TrendingUp size={16} color={activeTab === 'income_statement' ? '#10b981' : undefined} />
+          <TrendingUp size={16} />
           <span>Executive P&L Statement</span>
           <span className="badge badge-emerald">{grossMarginPct.toFixed(0)}% Margin</span>
         </button>
 
         <button
           onClick={() => setTab('profitability')}
-          style={{
-            padding: '10px 18px',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'profitability' ? '2px solid #10b981' : '2px solid transparent',
-            color: activeTab === 'profitability' ? '#ffffff' : 'var(--text-muted)',
-            fontWeight: activeTab === 'profitability' ? 600 : 500,
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
+          className={`tab-btn ${activeTab === 'profitability' ? 'active' : ''}`}
         >
-          <PieChart size={16} color={activeTab === 'profitability' ? '#10b981' : undefined} />
+          <PieChart size={16} />
           <span>Job Costing & Order Margins</span>
           <span className="badge badge-blue">{allOrderProfitability.length} Jobs</span>
         </button>
 
         <button
           onClick={() => setTab('cashflow')}
-          style={{
-            padding: '10px 18px',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'cashflow' ? '2px solid #10b981' : '2px solid transparent',
-            color: activeTab === 'cashflow' ? '#ffffff' : 'var(--text-muted)',
-            fontWeight: activeTab === 'cashflow' ? 600 : 500,
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
+          className={`tab-btn ${activeTab === 'cashflow' ? 'active' : ''}`}
         >
-          <Wallet size={16} color={activeTab === 'cashflow' ? '#10b981' : undefined} />
+          <Wallet size={16} />
           <span>Cash Flow & Treasury</span>
           <span className="badge badge-emerald">Inflows & Outflows</span>
         </button>
 
         <button
           onClick={() => setTab('aging')}
-          style={{
-            padding: '10px 18px',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'aging' ? '2px solid #10b981' : '2px solid transparent',
-            color: activeTab === 'aging' ? '#ffffff' : 'var(--text-muted)',
-            fontWeight: activeTab === 'aging' ? 600 : 500,
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
+          className={`tab-btn ${activeTab === 'aging' ? 'active' : ''}`}
         >
-          <Clock size={16} color={activeTab === 'aging' ? '#10b981' : undefined} />
+          <Clock size={16} />
           <span>AR & AP Aging Ledger</span>
           <span className="badge badge-amber">{invoices.filter((i) => i.balanceDue > 0).length} Due</span>
         </button>
 
         <button
           onClick={() => setTab('tax')}
-          style={{
-            padding: '10px 18px',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: activeTab === 'tax' ? '2px solid #10b981' : '2px solid transparent',
-            color: activeTab === 'tax' ? '#ffffff' : 'var(--text-muted)',
-            fontWeight: activeTab === 'tax' ? 600 : 500,
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
+          className={`tab-btn ${activeTab === 'tax' ? 'active' : ''}`}
         >
-          <ShieldCheck size={16} color={activeTab === 'tax' ? '#10b981' : undefined} />
+          <ShieldCheck size={16} />
           <span>MoR Tax & VAT Filing</span>
           <span className="badge badge-purple">15% MoR</span>
         </button>
@@ -374,7 +303,7 @@ function FinancePageContent() {
           <div className="card">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
               <div>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ffffff' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)' }}>
                   Statement of Profit & Loss (Operating P&L)
                 </h3>
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '2px' }}>
@@ -385,11 +314,12 @@ function FinancePageContent() {
                 <span
                   style={{
                     fontSize: '0.72rem',
-                    color: '#10b981',
-                    background: 'rgba(16, 185, 129, 0.12)',
+                    color: '#16a34a',
+                    background: '#f0fdf4',
                     padding: '4px 10px',
                     borderRadius: '12px',
-                    border: '1px solid rgba(16, 185, 129, 0.25)',
+                    border: '1px solid #bbf7d0',
+                    fontWeight: 600,
                   }}
                 >
                   ✓ Direct Job Wastage Factored in COGS
@@ -409,8 +339,8 @@ function FinancePageContent() {
                 </thead>
                 <tbody>
                   {/* Revenue Section */}
-                  <tr style={{ background: 'rgba(255, 255, 255, 0.03)' }}>
-                    <td colSpan={4} style={{ fontWeight: 800, color: '#818cf8', fontSize: '0.85rem' }}>
+                  <tr style={{ background: 'rgba(0, 0, 0, 0.02)' }}>
+                    <td colSpan={4} style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '0.85rem' }}>
                       1. REVENUE (NET TURNOVER)
                     </td>
                   </tr>
@@ -423,27 +353,27 @@ function FinancePageContent() {
                     <td style={{ textAlign: 'right', color: 'var(--text-dim)' }}>—</td>
                   </tr>
                   <tr>
-                    <td style={{ paddingLeft: '24px', color: '#c084fc' }}>
+                    <td style={{ paddingLeft: '24px', color: '#7c3aed' }}>
                       Less: Statutory 15% Output VAT (Held for MoR)
                     </td>
-                    <td style={{ color: '#c084fc' }}>Ministry of Revenues Liability</td>
-                    <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#c084fc' }}>
+                    <td style={{ color: '#7c3aed' }}>Ministry of Revenues Liability</td>
+                    <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#7c3aed' }}>
                       -{formatETB(companyFinancials.totalOutputVat)}
                     </td>
                     <td style={{ textAlign: 'right', color: 'var(--text-dim)' }}>—</td>
                   </tr>
-                  <tr style={{ background: 'rgba(129, 140, 248, 0.08)', fontWeight: 800 }}>
-                    <td style={{ color: '#ffffff' }}>NET OPERATING REVENUE (EXCL. VAT)</td>
+                  <tr style={{ background: 'rgba(0, 0, 0, 0.04)', fontWeight: 800 }}>
+                    <td style={{ color: 'var(--text-main)' }}>NET OPERATING REVENUE (EXCL. VAT)</td>
                     <td>Operational Topline</td>
-                    <td style={{ textAlign: 'right', fontFamily: 'monospace', fontSize: '0.95rem', color: '#818cf8' }}>
+                    <td style={{ textAlign: 'right', fontFamily: 'monospace', fontSize: '0.95rem', color: 'var(--text-main)' }}>
                       {formatETB(netRevenue)}
                     </td>
-                    <td style={{ textAlign: 'right', fontWeight: 800, color: '#818cf8' }}>100.0%</td>
+                    <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--text-main)' }}>100.0%</td>
                   </tr>
 
                   {/* COGS Section */}
-                  <tr style={{ background: 'rgba(255, 255, 255, 0.03)' }}>
-                    <td colSpan={4} style={{ fontWeight: 800, color: '#f59e0b', fontSize: '0.85rem', paddingTop: '16px' }}>
+                  <tr style={{ background: 'rgba(0, 0, 0, 0.02)' }}>
+                    <td colSpan={4} style={{ fontWeight: 800, color: '#ca8a04', fontSize: '0.85rem', paddingTop: '16px' }}>
                       2. COST OF GOODS SOLD (DIRECT MANUFACTURING COGS)
                     </td>
                   </tr>
@@ -472,14 +402,14 @@ function FinancePageContent() {
                     </td>
                   </tr>
                   <tr>
-                    <td style={{ paddingLeft: '24px', color: '#fbbf24' }}>
+                    <td style={{ paddingLeft: '24px', color: '#b45309' }}>
                       Production Scrap & Wastage Loss (Fractured Acrylic / Misprints)
                     </td>
-                    <td style={{ color: '#fbbf24' }}>Wastage Cost Rollup</td>
-                    <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#fbbf24' }}>
+                    <td style={{ color: '#b45309' }}>Wastage Cost Rollup</td>
+                    <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#b45309' }}>
                       {formatETB(totalWastageCost)}
                     </td>
-                    <td style={{ textAlign: 'right', color: '#fbbf24' }}>
+                    <td style={{ textAlign: 'right', color: '#b45309' }}>
                       {netRevenue > 0 ? ((totalWastageCost / netRevenue) * 100).toFixed(1) : 0}%
                     </td>
                   </tr>
@@ -491,32 +421,32 @@ function FinancePageContent() {
                       {netRevenue > 0 ? ((totalDirectTransportCost / netRevenue) * 100).toFixed(1) : 0}%
                     </td>
                   </tr>
-                  <tr style={{ background: 'rgba(245, 158, 11, 0.08)', fontWeight: 800 }}>
-                    <td style={{ color: '#ffffff' }}>TOTAL COST OF GOODS SOLD (COGS)</td>
+                  <tr style={{ background: 'rgba(202, 138, 4, 0.08)', fontWeight: 800 }}>
+                    <td style={{ color: 'var(--text-main)' }}>TOTAL COST OF GOODS SOLD (COGS)</td>
                     <td>Manufacturing Direct Rollup</td>
-                    <td style={{ textAlign: 'right', fontFamily: 'monospace', fontSize: '0.95rem', color: '#f59e0b' }}>
+                    <td style={{ textAlign: 'right', fontFamily: 'monospace', fontSize: '0.95rem', color: '#854d0e' }}>
                       {formatETB(cogs)}
                     </td>
-                    <td style={{ textAlign: 'right', fontWeight: 800, color: '#f59e0b' }}>
+                    <td style={{ textAlign: 'right', fontWeight: 800, color: '#854d0e' }}>
                       {netRevenue > 0 ? ((cogs / netRevenue) * 100).toFixed(1) : 0}%
                     </td>
                   </tr>
 
                   {/* Gross Profit */}
-                  <tr style={{ background: 'rgba(56, 189, 248, 0.12)', fontWeight: 800 }}>
-                    <td style={{ color: '#38bdf8', fontSize: '0.95rem' }}>GROSS MANUFACTURING PROFIT</td>
-                    <td style={{ color: '#38bdf8' }}>Revenue - COGS</td>
-                    <td style={{ textAlign: 'right', fontFamily: 'monospace', fontSize: '1.05rem', color: '#38bdf8' }}>
+                  <tr style={{ background: 'rgba(250, 204, 21, 0.15)', fontWeight: 800 }}>
+                    <td style={{ color: '#854d0e', fontSize: '0.95rem' }}>GROSS MANUFACTURING PROFIT</td>
+                    <td style={{ color: '#854d0e' }}>Revenue - COGS</td>
+                    <td style={{ textAlign: 'right', fontFamily: 'monospace', fontSize: '1.05rem', color: '#854d0e' }}>
                       {formatETB(grossProfit)}
                     </td>
-                    <td style={{ textAlign: 'right', fontWeight: 800, fontSize: '0.95rem', color: '#38bdf8' }}>
+                    <td style={{ textAlign: 'right', fontWeight: 800, fontSize: '0.95rem', color: '#854d0e' }}>
                       {grossMarginPct.toFixed(1)}%
                     </td>
                   </tr>
 
                   {/* Operating Expenses */}
-                  <tr style={{ background: 'rgba(255, 255, 255, 0.03)' }}>
-                    <td colSpan={4} style={{ fontWeight: 800, color: '#f87171', fontSize: '0.85rem', paddingTop: '16px' }}>
+                  <tr style={{ background: 'rgba(0, 0, 0, 0.02)' }}>
+                    <td colSpan={4} style={{ fontWeight: 800, color: '#dc2626', fontSize: '0.85rem', paddingTop: '16px' }}>
                       3. OPERATING EXPENSES (FACTORY & ADMINISTRATIVE OVERHEAD)
                     </td>
                   </tr>
@@ -533,12 +463,12 @@ function FinancePageContent() {
                     </tr>
                   ))}
                   <tr style={{ background: 'rgba(239, 68, 68, 0.08)', fontWeight: 800 }}>
-                    <td style={{ color: '#ffffff' }}>TOTAL OPERATING EXPENSES (OPEX)</td>
+                    <td style={{ color: 'var(--text-main)' }}>TOTAL OPERATING EXPENSES (OPEX)</td>
                     <td>General Overhead</td>
-                    <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#f87171' }}>
+                    <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#dc2626' }}>
                       {formatETB(opex)}
                     </td>
-                    <td style={{ textAlign: 'right', fontWeight: 800, color: '#f87171' }}>
+                    <td style={{ textAlign: 'right', fontWeight: 800, color: '#dc2626' }}>
                       {netRevenue > 0 ? ((opex / netRevenue) * 100).toFixed(1) : 0}%
                     </td>
                   </tr>
@@ -677,7 +607,7 @@ function FinancePageContent() {
                               style={{
                                 background: 'none',
                                 border: 'none',
-                                color: '#10b981',
+                                color: '#ca8a04',
                                 fontWeight: 700,
                                 fontFamily: 'monospace',
                                 cursor: 'pointer',
@@ -692,15 +622,15 @@ function FinancePageContent() {
                             </button>
                           </td>
                           <td>
-                            <div style={{ fontWeight: 600, color: '#ffffff' }}>{prof.customerName}</div>
+                            <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{prof.customerName}</div>
                             <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {prof.orderTitle}
                             </div>
                           </td>
-                          <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: '#ffffff' }}>
+                          <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: 'var(--text-main)' }}>
                             {formatETB(prof.orderRevenue)}
                           </td>
-                          <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#93c5fd' }}>
+                          <td style={{ textAlign: 'right', fontFamily: 'monospace', color: 'var(--text-main)' }}>
                             {formatETB(prof.directMaterialCost)}
                           </td>
                           <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>
@@ -804,7 +734,7 @@ function FinancePageContent() {
 
           {/* Cash Flow Statement Ledger */}
           <div className="card">
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '16px' }}>
               Monthly Cash Inflow & Outflow Activity
             </h3>
 
@@ -824,9 +754,9 @@ function FinancePageContent() {
                 <tbody>
                   {collections.map((col) => (
                     <tr key={col.id}>
-                      <td style={{ fontSize: '0.8rem', color: '#ffffff' }}>{col.date}</td>
+                      <td style={{ fontSize: '0.8rem', color: 'var(--text-main)' }}>{col.date}</td>
                       <td>
-                        <div style={{ fontWeight: 600, color: '#ffffff' }}>{col.customerName}</div>
+                        <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{col.customerName}</div>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
                           Settlement for {col.invoiceNumber}
                         </div>
@@ -835,12 +765,12 @@ function FinancePageContent() {
                         <span className="badge badge-emerald">Customer Inflow</span>
                       </td>
                       <td>
-                        <div style={{ textTransform: 'capitalize', color: '#6ee7b7', fontSize: '0.8rem' }}>
+                        <div style={{ textTransform: 'capitalize', color: '#16a34a', fontSize: '0.8rem', fontWeight: 600 }}>
                           {col.paymentMethod.replace('_', ' ')}
                         </div>
                         <code style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{col.bankReference}</code>
                       </td>
-                      <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: '#10b981' }}>
+                      <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: '#16a34a' }}>
                         +{formatETB(col.amountReceived)}
                       </td>
                       <td style={{ textAlign: 'right', color: 'var(--text-dim)' }}>—</td>
@@ -851,9 +781,9 @@ function FinancePageContent() {
                   ))}
                   {expenses.map((exp) => (
                     <tr key={exp.id}>
-                      <td style={{ fontSize: '0.8rem', color: '#ffffff' }}>{exp.date}</td>
+                      <td style={{ fontSize: '0.8rem', color: 'var(--text-main)' }}>{exp.date}</td>
                       <td>
-                        <div style={{ fontWeight: 600, color: '#ffffff' }}>
+                        <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>
                           {exp.categoryLabel} ({exp.supplierOrPayee})
                         </div>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>{exp.expenseNumber}</div>
@@ -868,7 +798,7 @@ function FinancePageContent() {
                         <code style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{exp.receiptRef || 'DIRECT'}</code>
                       </td>
                       <td style={{ textAlign: 'right', color: 'var(--text-dim)' }}>—</td>
-                      <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: '#f87171' }}>
+                      <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: '#dc2626' }}>
                         -{formatETB(exp.totalAmount)}
                       </td>
                       <td style={{ textAlign: 'center' }}>
@@ -894,7 +824,7 @@ function FinancePageContent() {
               <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
                 Current (&lt; 30 Days)
               </div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#10b981', fontFamily: 'monospace', marginTop: '4px' }}>
+              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#16a34a', fontFamily: 'monospace', marginTop: '4px' }}>
                 {formatETB(accountsReceivable * 0.65)}
               </div>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>Within agreed payment credit term</div>
@@ -904,7 +834,7 @@ function FinancePageContent() {
               <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
                 31 - 60 Days Aging
               </div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#38bdf8', fontFamily: 'monospace', marginTop: '4px' }}>
+              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ca8a04', fontFamily: 'monospace', marginTop: '4px' }}>
                 {formatETB(accountsReceivable * 0.25)}
               </div>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>First follow-up call window</div>
@@ -914,7 +844,7 @@ function FinancePageContent() {
               <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
                 61 - 90 Days Aging
               </div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#fbbf24', fontFamily: 'monospace', marginTop: '4px' }}>
+              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#d97706', fontFamily: 'monospace', marginTop: '4px' }}>
                 {formatETB(accountsReceivable * 0.1)}
               </div>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>Credit hold pending payment</div>
@@ -924,10 +854,10 @@ function FinancePageContent() {
               <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
                 90+ Days Overdue
               </div>
-              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ef4444', fontFamily: 'monospace', marginTop: '4px' }}>
+              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#dc2626', fontFamily: 'monospace', marginTop: '4px' }}>
                 ETB 0
               </div>
-              <div style={{ fontSize: '0.7rem', color: '#10b981' }}>Zero bad debt write-offs</div>
+              <div style={{ fontSize: '0.7rem', color: '#16a34a' }}>Zero bad debt write-offs</div>
             </div>
           </div>
 
@@ -935,7 +865,7 @@ function FinancePageContent() {
           <div className="card">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff' }}>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)' }}>
                   Accounts Receivable (AR) by Customer Account
                 </h3>
                 <p style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
@@ -964,20 +894,20 @@ function FinancePageContent() {
                 {customers.map((c) => (
                   <tr key={c.id}>
                     <td>
-                      <div style={{ fontWeight: 600, color: '#ffffff' }}>{c.name}</div>
+                      <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{c.name}</div>
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>{c.address}</div>
                     </td>
                     <td>
-                      <code style={{ color: '#c084fc' }}>{c.tin}</code>
+                      <code style={{ color: '#7c3aed' }}>{c.tin}</code>
                     </td>
                     <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>{formatETB(c.creditLimit)}</td>
-                    <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#10b981' }}>
+                    <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#16a34a' }}>
                       {formatETB(c.outstandingBalance * 0.7)}
                     </td>
-                    <td style={{ textAlign: 'right', fontFamily: 'monospace', color: c.outstandingBalance > 0 ? '#fbbf24' : 'var(--text-dim)' }}>
+                    <td style={{ textAlign: 'right', fontFamily: 'monospace', color: c.outstandingBalance > 0 ? '#ca8a04' : 'var(--text-dim)' }}>
                       {formatETB(c.outstandingBalance * 0.3)}
                     </td>
-                    <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: c.outstandingBalance > 0 ? '#fbbf24' : '#10b981' }}>
+                    <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: c.outstandingBalance > 0 ? '#ca8a04' : '#16a34a' }}>
                       {formatETB(c.outstandingBalance)}
                     </td>
                     <td style={{ textAlign: 'center' }}>
@@ -1001,8 +931,9 @@ function FinancePageContent() {
             style={{
               padding: '18px 24px',
               borderRadius: 'var(--radius-lg)',
-              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(9, 19, 26, 0.8) 100%)',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
+              background: '#ffffff',
+              border: '1px solid var(--border-light)',
+              boxShadow: 'var(--shadow-sm)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -1016,20 +947,20 @@ function FinancePageContent() {
                   width: '44px',
                   height: '44px',
                   borderRadius: 'var(--radius-md)',
-                  background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                  background: '#09090b',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#ffffff',
+                  color: '#facc15',
                 }}
               >
                 <Landmark size={22} />
               </div>
               <div>
-                <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ffffff' }}>
+                <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)' }}>
                   Ministry of Revenues (MoR) Statutory Tax Filing Schedule
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                   Electronic Value Added Tax (VAT 15%) Declaration & Withholding Tax (WHT 2%) Audit Ledger
                 </div>
               </div>
@@ -1040,13 +971,13 @@ function FinancePageContent() {
                 style={{
                   padding: '6px 14px',
                   borderRadius: 'var(--radius-md)',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: '#f8fafc',
+                  border: '1px solid var(--border-light)',
                   textAlign: 'right',
                 }}
               >
-                <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)' }}>Registered Taxpayer TIN</div>
-                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#10b981', fontFamily: 'monospace' }}>
+                <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Registered Taxpayer TIN</div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)', fontFamily: 'monospace' }}>
                   TIN: 0048291048
                 </div>
               </div>
@@ -1059,47 +990,47 @@ function FinancePageContent() {
 
           {/* 3-Box Tax Formula Strip */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-            <div className="card" style={{ borderLeft: '4px solid #c084fc' }}>
+            <div className="card" style={{ borderLeft: '4px solid #ca8a04' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#c084fc', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#854d0e', textTransform: 'uppercase' }}>
                   Box A • Output VAT Collected
                 </span>
-                <BadgePercent size={16} color="#c084fc" />
+                <BadgePercent size={16} color="#ca8a04" />
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ffffff', fontFamily: 'monospace' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', fontFamily: 'monospace' }}>
                 {formatETB(companyFinancials.totalOutputVat)}
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '4px' }}>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                 15% VAT charged to commercial clients on sales invoices
               </div>
             </div>
 
-            <div className="card" style={{ borderLeft: '4px solid #38bdf8' }}>
+            <div className="card" style={{ borderLeft: '4px solid #09090b' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-main)', textTransform: 'uppercase' }}>
                   Box B • Input VAT Deductible
                 </span>
-                <ShieldCheck size={16} color="#38bdf8" />
+                <ShieldCheck size={16} color="#71717a" />
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ffffff', fontFamily: 'monospace' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', fontFamily: 'monospace' }}>
                 {formatETB(companyFinancials.totalInputVat || companyFinancials.totalOutputVat * 0.42)}
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '4px' }}>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                 15% VAT paid on raw materials (acrylic, vinyl, aluminum profiles)
               </div>
             </div>
 
-            <div className="card" style={{ borderLeft: '4px solid #10b981' }}>
+            <div className="card" style={{ borderLeft: '4px solid #16a34a' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#10b981', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#16a34a', textTransform: 'uppercase' }}>
                   Box C • Net VAT Payable to MoR
                 </span>
-                <Landmark size={16} color="#10b981" />
+                <Landmark size={16} color="#16a34a" />
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#10b981', fontFamily: 'monospace' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#16a34a', fontFamily: 'monospace' }}>
                 {formatETB(companyFinancials.netVatPayable || companyFinancials.totalOutputVat * 0.58)}
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '4px' }}>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                 Remittance due to Ministry of Revenues by the 30th of each month
               </div>
             </div>
@@ -1115,7 +1046,7 @@ function FinancePageContent() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0, 0, 0, 0.78)',
+            background: 'rgba(0, 0, 0, 0.6)',
             backdropFilter: 'blur(6px)',
             display: 'flex',
             alignItems: 'center',
@@ -1126,21 +1057,21 @@ function FinancePageContent() {
         >
           <div
             style={{
-              background: '#09131a',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
+              background: '#ffffff',
+              border: '1px solid var(--border-light)',
               borderRadius: 'var(--radius-lg)',
               maxWidth: '640px',
               width: '100%',
               maxHeight: '90vh',
               overflowY: 'auto',
-              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.6)',
+              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.2)',
             }}
           >
             {/* Modal Header */}
             <div
               style={{
                 padding: '20px 24px',
-                borderBottom: '1px solid rgba(16, 185, 129, 0.2)',
+                borderBottom: '1px solid var(--border-light)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -1149,30 +1080,30 @@ function FinancePageContent() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div
                   style={{
-                    width: '34px',
-                    height: '34px',
+                    width: '36px',
+                    height: '36px',
                     borderRadius: 'var(--radius-sm)',
-                    background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                    background: '#09090b',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#ffffff',
+                    color: '#facc15',
                   }}
                 >
                   <PieChart size={18} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ffffff' }}>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)' }}>
                     Job Cost Tree & Margin Analysis
                   </h3>
-                  <p style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+                  <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                     {selectedProfitabilityOrder.orderNumber} • {selectedProfitabilityOrder.customerName}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedProfitabilityOrder(null)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 <X size={18} />
               </button>
@@ -1182,49 +1113,49 @@ function FinancePageContent() {
             <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
               {/* Highlight Cards */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-                <div style={{ padding: '12px', background: 'rgba(255, 255, 255, 0.04)', borderRadius: 'var(--radius-md)' }}>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>Agreed Net Revenue</div>
-                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ffffff', fontFamily: 'monospace' }}>
+                <div style={{ padding: '12px', background: '#f8fafc', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Agreed Net Revenue</div>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)', fontFamily: 'monospace' }}>
                     {formatETB(selectedProfitabilityOrder.orderRevenue)}
                   </div>
                 </div>
 
-                <div style={{ padding: '12px', background: 'rgba(255, 255, 255, 0.04)', borderRadius: 'var(--radius-md)' }}>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>Total Rollup Cost</div>
-                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#f87171', fontFamily: 'monospace' }}>
+                <div style={{ padding: '12px', background: '#f8fafc', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Total Rollup Cost</div>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#dc2626', fontFamily: 'monospace' }}>
                     {formatETB(selectedProfitabilityOrder.totalOrderCost)}
                   </div>
                 </div>
 
-                <div style={{ padding: '12px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: 'var(--radius-md)' }}>
-                  <div style={{ fontSize: '0.68rem', color: '#6ee7b7' }}>Net Order Profit ({selectedProfitabilityOrder.profitMarginPct.toFixed(1)}%)</div>
-                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#10b981', fontFamily: 'monospace' }}>
+                <div style={{ padding: '12px', background: '#f0fdf4', borderRadius: 'var(--radius-md)', border: '1px solid #bbf7d0' }}>
+                  <div style={{ fontSize: '0.68rem', color: '#16a34a' }}>Net Order Profit ({selectedProfitabilityOrder.profitMarginPct.toFixed(1)}%)</div>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#16a34a', fontFamily: 'monospace' }}>
                     {formatETB(selectedProfitabilityOrder.orderProfit)}
                   </div>
                 </div>
               </div>
 
               {/* Itemized Cost Tree */}
-              <div style={{ background: 'rgba(0, 0, 0, 0.25)', borderRadius: 'var(--radius-md)', padding: '16px', border: '1px solid var(--border-subtle)' }}>
-                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#ffffff', marginBottom: '12px' }}>
+              <div style={{ background: '#f8fafc', borderRadius: 'var(--radius-md)', padding: '16px', border: '1px solid var(--border-light)' }}>
+                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '12px' }}>
                   Direct Manufacturing Cost Breakdown:
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.82rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-muted)' }}>1. Bill of Materials (Raw Materials):</span>
-                    <strong style={{ fontFamily: 'monospace', color: '#93c5fd' }}>
+                    <strong style={{ fontFamily: 'monospace', color: 'var(--text-main)' }}>
                       {formatETB(selectedProfitabilityOrder.directMaterialCost)}
                     </strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-muted)' }}>2. Direct Labor (Assembly & Fabrication):</span>
-                    <strong style={{ fontFamily: 'monospace', color: '#ffffff' }}>
+                    <strong style={{ fontFamily: 'monospace', color: 'var(--text-main)' }}>
                       {formatETB(selectedProfitabilityOrder.directLaborCost)}
                     </strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-muted)' }}>3. Machine Runtime (Laser & CNC Hours):</span>
-                    <strong style={{ fontFamily: 'monospace', color: '#ffffff' }}>
+                    <strong style={{ fontFamily: 'monospace', color: 'var(--text-main)' }}>
                       {formatETB(selectedProfitabilityOrder.machineCost)}
                     </strong>
                   </div>
@@ -1236,7 +1167,7 @@ function FinancePageContent() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-muted)' }}>5. Transport & Scaffolding Direct Expenses:</span>
-                    <strong style={{ fontFamily: 'monospace', color: '#ffffff' }}>
+                    <strong style={{ fontFamily: 'monospace', color: 'var(--text-main)' }}>
                       {formatETB(
                         (selectedProfitabilityOrder.orderTransportCost || 0) +
                           (selectedProfitabilityOrder.orderDirectExpensesCost || 0)
@@ -1247,14 +1178,14 @@ function FinancePageContent() {
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
-                      borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderTop: '1px solid var(--border-light)',
                       paddingTop: '8px',
                       marginTop: '4px',
                       fontWeight: 800,
                     }}
                   >
                     <span>Total Direct Rollup Cost:</span>
-                    <span style={{ fontFamily: 'monospace', color: '#f87171' }}>
+                    <span style={{ fontFamily: 'monospace', color: '#dc2626' }}>
                       {formatETB(selectedProfitabilityOrder.totalOrderCost)}
                     </span>
                   </div>
@@ -1263,7 +1194,7 @@ function FinancePageContent() {
             </div>
 
             {/* Modal Footer */}
-            <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(16, 185, 129, 0.15)', display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end' }}>
               <button
                 className="btn btn-secondary btn-sm"
                 onClick={() => setSelectedProfitabilityOrder(null)}

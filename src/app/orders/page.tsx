@@ -524,59 +524,51 @@ function OrdersPageContent() {
 
   return (
     <div>
-      {/* Top Header Controls */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: '20px',
-          flexWrap: 'wrap',
-          gap: '16px',
-        }}
-      >
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: '#38bdf8',
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-              }}
-            >
-              Order & Production Desk
-            </span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-              • Advertising Design Proofing & Factory BOM Engine
-            </span>
+      {/* Top Hero Banner */}
+      <div className="hero-banner" style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', position: 'relative', zIndex: 1 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <span className="hero-pill">
+                MODULE 2 • FACTORY OPERATIONS
+              </span>
+              <span style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>
+                Advertising Design Proofing & Workshop BOM Engine
+              </span>
+            </div>
+            <h1 style={{ fontSize: '1.65rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', margin: 0 }}>
+              Customer Jobs, CMYK Proofs & Workshop BOMs
+            </h1>
+            <p style={{ fontSize: '0.825rem', color: '#a1a1aa', margin: '6px 0 0', maxWidth: '640px' }}>
+              Track live job profitability, manage client artwork sign-offs, and monitor real-time CNC & Roland eco-solvent printing queues.
+            </p>
           </div>
-          <h1 style={{ marginTop: '2px' }}>Customer Jobs, CMYK Proofs & Workshop BOMs</h1>
-        </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => setShowNewDesignModal(true)}
-          >
-            <Palette size={14} color="#c084fc" />
-            <span>+ New Artwork Proof</span>
-          </button>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => setShowNewWoModal(true)}
-          >
-            <Cog size={14} color="#38bdf8" />
-            <span>Schedule Work Order</span>
-          </button>
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={() => setShowNewOrderModal(true)}
-          >
-            <PlusCircle size={14} />
-            <span>New Customer Order</span>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <button
+              className="btn btn-secondary btn-sm"
+              style={{ background: '#18181b', color: '#ffffff', borderColor: '#27272a' }}
+              onClick={() => setShowNewDesignModal(true)}
+            >
+              <Palette size={14} color="#facc15" />
+              <span>+ New Artwork Proof</span>
+            </button>
+            <button
+              className="btn btn-secondary btn-sm"
+              style={{ background: '#18181b', color: '#ffffff', borderColor: '#27272a' }}
+              onClick={() => setShowNewWoModal(true)}
+            >
+              <Cog size={14} color="#facc15" />
+              <span>Schedule Work Order</span>
+            </button>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => setShowNewOrderModal(true)}
+            >
+              <PlusCircle size={14} />
+              <span>New Customer Order</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -584,7 +576,7 @@ function OrdersPageContent() {
       {notification && (
         <div
           style={{
-            background: 'rgba(16, 185, 129, 0.15)',
+            background: '#ecfdf5',
             border: '1px solid #10b981',
             borderRadius: 'var(--radius-md)',
             padding: '12px 18px',
@@ -595,7 +587,7 @@ function OrdersPageContent() {
           }}
         >
           <CheckCircle2 size={18} color="#10b981" />
-          <span style={{ fontSize: '0.85rem', color: '#a7f3d0', fontWeight: 600 }}>
+          <span style={{ fontSize: '0.85rem', color: '#065f46', fontWeight: 600 }}>
             {notification}
           </span>
         </div>
@@ -606,7 +598,7 @@ function OrdersPageContent() {
         <div className="stat-card">
           <div className="stat-card-title">
             <span>Orders Pipeline Revenue</span>
-            <TrendingUp size={16} color="#818cf8" />
+            <TrendingUp size={16} color="#ca8a04" />
           </div>
           <div className="stat-card-value">{formatETB(totalPipelineRevenue)}</div>
           <div className="stat-card-subtext">
@@ -617,13 +609,13 @@ function OrdersPageContent() {
         <div className="stat-card">
           <div className="stat-card-title">
             <span>Artwork Proofs Status</span>
-            <Palette size={16} color="#a855f7" />
+            <Palette size={16} color="#854d0e" />
           </div>
-          <div className="stat-card-value" style={{ color: '#c084fc' }}>
+          <div className="stat-card-value" style={{ color: '#09090b' }}>
             {approvedDesignsCount} / {designProofs.length} Approved
           </div>
           <div className="stat-card-subtext">
-            <span style={{ color: pendingProofCount > 0 ? '#fbbf24' : 'var(--text-dim)' }}>
+            <span style={{ color: pendingProofCount > 0 ? '#b45309' : 'var(--text-muted)' }}>
               {pendingProofCount} currently awaiting client sign-off
             </span>
           </div>
@@ -632,9 +624,9 @@ function OrdersPageContent() {
         <div className="stat-card">
           <div className="stat-card-title">
             <span>Active Production WOs</span>
-            <Cog size={16} color="#38bdf8" />
+            <Cog size={16} color="#09090b" />
           </div>
-          <div className="stat-card-value" style={{ color: '#38bdf8' }}>
+          <div className="stat-card-value" style={{ color: '#09090b' }}>
             {activeWOCount} In Production
           </div>
           <div className="stat-card-subtext">
@@ -645,9 +637,9 @@ function OrdersPageContent() {
         <div className="stat-card">
           <div className="stat-card-title">
             <span>Factory Scrap / Wastage</span>
-            <Trash2 size={16} color="#fb7185" />
+            <Trash2 size={16} color="#ef4444" />
           </div>
-          <div className="stat-card-value" style={{ color: '#fb7185' }}>
+          <div className="stat-card-value" style={{ color: '#ef4444' }}>
             {formatETB(totalScrapCost)}
           </div>
           <div className="stat-card-subtext">
@@ -662,7 +654,7 @@ function OrdersPageContent() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderBottom: '1px solid var(--border-subtle)',
+          borderBottom: '1px solid var(--border-light)',
           marginBottom: '20px',
           flexWrap: 'wrap',
           gap: '12px',
@@ -671,47 +663,23 @@ function OrdersPageContent() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
             onClick={() => handleTabChange('orders')}
-            style={{
-              padding: '10px 18px',
-              background: 'transparent',
-              border: 'none',
-              borderBottom: activeTab === 'orders' ? '2px solid #38bdf8' : '2px solid transparent',
-              color: activeTab === 'orders' ? '#ffffff' : 'var(--text-muted)',
-              fontWeight: activeTab === 'orders' ? 700 : 500,
-              fontSize: '0.875rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
+            className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
           >
-            <Boxes size={15} color={activeTab === 'orders' ? '#38bdf8' : 'var(--text-dim)'} />
+            <Boxes size={15} color={activeTab === 'orders' ? '#854d0e' : '#71717a'} />
             <span>Customer Orders & Profitability ({orders.length})</span>
           </button>
 
           <button
             onClick={() => handleTabChange('designs')}
-            style={{
-              padding: '10px 18px',
-              background: 'transparent',
-              border: 'none',
-              borderBottom: activeTab === 'designs' ? '2px solid #a855f7' : '2px solid transparent',
-              color: activeTab === 'designs' ? '#c084fc' : 'var(--text-muted)',
-              fontWeight: activeTab === 'designs' ? 700 : 500,
-              fontSize: '0.875rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
+            className={`tab-btn ${activeTab === 'designs' ? 'active' : ''}`}
           >
-            <Palette size={15} color={activeTab === 'designs' ? '#c084fc' : 'var(--text-dim)'} />
+            <Palette size={15} color={activeTab === 'designs' ? '#854d0e' : '#71717a'} />
             <span>Graphic Design Proofing Hub ({designProofs.length})</span>
             {pendingProofCount > 0 && (
               <span
                 style={{
-                  background: '#f59e0b',
-                  color: '#000000',
+                  background: '#facc15',
+                  color: '#09090b',
                   fontSize: '0.65rem',
                   fontWeight: 800,
                   padding: '1px 6px',
@@ -725,21 +693,9 @@ function OrdersPageContent() {
 
           <button
             onClick={() => handleTabChange('work_orders')}
-            style={{
-              padding: '10px 18px',
-              background: 'transparent',
-              border: 'none',
-              borderBottom: activeTab === 'work_orders' ? '2px solid #38bdf8' : '2px solid transparent',
-              color: activeTab === 'work_orders' ? '#38bdf8' : 'var(--text-muted)',
-              fontWeight: activeTab === 'work_orders' ? 700 : 500,
-              fontSize: '0.875rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
+            className={`tab-btn ${activeTab === 'work_orders' ? 'active' : ''}`}
           >
-            <Cog size={15} color={activeTab === 'work_orders' ? '#38bdf8' : 'var(--text-dim)'} />
+            <Cog size={15} color={activeTab === 'work_orders' ? '#854d0e' : '#71717a'} />
             <span>Shopfloor Production & BOM ({workOrders.length})</span>
           </button>
         </div>
@@ -806,13 +762,14 @@ function OrdersPageContent() {
                   key={ord.id}
                   onClick={() => setSelectedOrderId(ord.id)}
                   style={{
-                    background: isSelected ? 'rgba(56, 189, 248, 0.12)' : 'var(--bg-card)',
+                    background: isSelected ? '#fef9c3' : 'var(--bg-card)',
                     border: isSelected
-                      ? '1px solid #38bdf8'
-                      : '1px solid var(--border-subtle)',
+                      ? '1px solid #ca8a04'
+                      : '1px solid var(--border-light)',
                     borderRadius: 'var(--radius-lg)',
                     padding: '16px 18px',
                     cursor: 'pointer',
+                    boxShadow: isSelected ? '0 4px 12px rgba(202, 138, 4, 0.12)' : 'none',
                     transition: 'all 0.15s ease',
                   }}
                 >
@@ -825,7 +782,7 @@ function OrdersPageContent() {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.9rem' }}>
+                      <span style={{ fontWeight: 700, color: isSelected ? '#854d0e' : 'var(--text-main)', fontSize: '0.9rem' }}>
                         {ord.orderNumber}
                       </span>
                       <span
@@ -915,7 +872,7 @@ function OrdersPageContent() {
                     </div>
 
                     <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>
                         {formatETB(ord.totalAgreedPrice)}
                       </span>
                       <span style={{ fontSize: '0.75rem', fontWeight: 700, color: marginColor, marginLeft: '8px' }}>
@@ -938,18 +895,18 @@ function OrdersPageContent() {
                   alignItems: 'flex-start',
                   justifyContent: 'space-between',
                   marginBottom: '16px',
-                  borderBottom: '1px solid var(--border-subtle)',
+                  borderBottom: '1px solid var(--border-light)',
                   paddingBottom: '16px',
                 }}
               >
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '0.8rem', fontFamily: 'monospace', color: '#38bdf8', fontWeight: 700 }}>
+                    <span style={{ fontSize: '0.8rem', fontFamily: 'monospace', color: '#09090b', fontWeight: 800 }}>
                       {selectedOrder.orderNumber}
                     </span>
                     <span className="badge badge-primary">{selectedOrder.status.replace('_', ' ')}</span>
                   </div>
-                  <h2 style={{ fontSize: '1.25rem', marginTop: '6px', color: '#ffffff' }}>
+                  <h2 style={{ fontSize: '1.25rem', marginTop: '6px', color: 'var(--text-main)' }}>
                     {selectedOrder.title}
                   </h2>
                   <div style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -1024,7 +981,7 @@ function OrdersPageContent() {
                         1. Client & Surveys
                       </span>
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: '#ffffff', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-main)', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {selectedOrderSurveys.length > 0
                         ? `${selectedOrderSurveys.length} Signs (${totalSelectedSurveysArea.toFixed(1)}m²)`
                         : selectedOrder.customerName}
@@ -1037,22 +994,22 @@ function OrdersPageContent() {
                   {/* Step 2: Contracted Order */}
                   <div
                     style={{
-                      background: 'rgba(56, 189, 248, 0.1)',
-                      border: '1px solid rgba(56, 189, 248, 0.3)',
+                      background: '#fef9c3',
+                      border: '1px solid #fde047',
                       borderRadius: 'var(--radius-md)',
                       padding: '10px',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                      <CheckCircle2 size={14} color="#38bdf8" />
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#38bdf8' }}>
+                      <CheckCircle2 size={14} color="#854d0e" />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#854d0e' }}>
                         2. Order Placed
                       </span>
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: '#ffffff', fontWeight: 600 }}>
+                    <div style={{ fontSize: '0.72rem', color: '#09090b', fontWeight: 700 }}>
                       {selectedOrder.orderNumber}
                     </div>
-                    <div style={{ fontSize: '0.675rem', color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: '0.675rem', color: '#71717a' }}>
                       {formatETB(selectedOrder.totalAgreedPrice)} Contract
                     </div>
                   </div>
@@ -1087,16 +1044,16 @@ function OrdersPageContent() {
                           fontSize: '0.75rem',
                           fontWeight: 700,
                           color: allOrderDesignsApproved
-                            ? '#34d399'
+                            ? '#059669'
                             : orderRevisionDesignsCount > 0
-                            ? '#fb7185'
-                            : '#fbbf24',
+                            ? '#e11d48'
+                            : '#d97706',
                         }}
                       >
                         3. Design Proofs
                       </span>
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: '#ffffff', fontWeight: 600 }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-main)', fontWeight: 700 }}>
                       {orderApprovedDesignsCount} / {orderDesigns.length} Approved
                     </div>
                     <div style={{ fontSize: '0.675rem', color: 'var(--text-muted)' }}>
@@ -1108,11 +1065,11 @@ function OrdersPageContent() {
                   <div
                     style={{
                       background:
-                        selectedWOs.length > 0 ? 'rgba(129, 140, 248, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                        selectedWOs.length > 0 ? '#f4f4f5' : 'var(--bg-app)',
                       border:
                         selectedWOs.length > 0
-                          ? '1px solid rgba(129, 140, 248, 0.35)'
-                          : '1px solid var(--border-subtle)',
+                          ? '1px solid #d4d4d8'
+                          : '1px solid var(--border-light)',
                       borderRadius: 'var(--radius-md)',
                       padding: '10px',
                     }}
@@ -1120,20 +1077,20 @@ function OrdersPageContent() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                       <Cog
                         size={14}
-                        color={selectedWOs.length > 0 ? '#818cf8' : 'var(--text-dim)'}
+                        color={selectedWOs.length > 0 ? '#09090b' : 'var(--text-muted)'}
                         className={selectedWOs.some((w) => w.status === 'in_progress') ? 'spin' : ''}
                       />
                       <span
                         style={{
                           fontSize: '0.75rem',
                           fontWeight: 700,
-                          color: selectedWOs.length > 0 ? '#a5b4fc' : 'var(--text-dim)',
+                          color: selectedWOs.length > 0 ? '#09090b' : 'var(--text-muted)',
                         }}
                       >
                         4. Production
                       </span>
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: '#ffffff', fontWeight: 600 }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-main)', fontWeight: 700 }}>
                       {selectedWOs.length} Work Orders
                     </div>
                     <div style={{ fontSize: '0.675rem', color: 'var(--text-muted)' }}>
@@ -1149,8 +1106,8 @@ function OrdersPageContent() {
               {/* ========================================================= */}
               <div
                 style={{
-                  background: 'rgba(56, 189, 248, 0.03)',
-                  border: '1px solid rgba(56, 189, 248, 0.25)',
+                  background: '#fafafa',
+                  border: '1px solid var(--border-light)',
                   borderRadius: 'var(--radius-lg)',
                   padding: '18px 20px',
                   marginBottom: '20px',
@@ -1172,18 +1129,18 @@ function OrdersPageContent() {
                         width: '32px',
                         height: '32px',
                         borderRadius: '8px',
-                        background: 'rgba(56, 189, 248, 0.15)',
+                        background: '#09090b',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#38bdf8',
+                        color: '#facc15',
                       }}
                     >
-                      <Ruler size={18} />
+                      <Ruler size={17} />
                     </div>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <h3 style={{ fontSize: '1rem', margin: 0, color: '#ffffff' }}>
+                        <h3 style={{ fontSize: '1rem', margin: 0, color: 'var(--text-main)', fontWeight: 800 }}>
                           Linked Site Surveys & Dimensions ({selectedOrderSurveys.length})
                         </h3>
                         {selectedOrderSurveys.length > 0 && (
@@ -1269,10 +1226,10 @@ function OrdersPageContent() {
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
-                              <div style={{ fontSize: '0.675rem', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase' }}>
+                              <div style={{ fontSize: '0.675rem', fontWeight: 700, color: '#ca8a04', textTransform: 'uppercase' }}>
                                 Signboard #{srvIdx + 1} • {survey.indoorOutdoor.toUpperCase()}
                               </div>
-                              <h4 style={{ fontSize: '0.9rem', color: '#ffffff', margin: '2px 0 0', fontWeight: 700 }}>
+                              <h4 style={{ fontSize: '0.9rem', color: 'var(--text-main)', margin: '2px 0 0', fontWeight: 700 }}>
                                 {survey.title}
                               </h4>
                             </div>
@@ -1385,17 +1342,17 @@ function OrdersPageContent() {
                         width: '32px',
                         height: '32px',
                         borderRadius: '8px',
-                        background: 'rgba(168, 85, 247, 0.15)',
+                        background: '#09090b',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#c084fc',
+                        color: '#facc15',
                       }}
                     >
                       <Palette size={18} />
                     </div>
                     <div>
-                      <h3 style={{ fontSize: '1rem', margin: 0, color: '#ffffff' }}>
+                      <h3 style={{ fontSize: '1rem', margin: 0, color: 'var(--text-main)', fontWeight: 800 }}>
                         Order Designs & Customer Approval Gate ({orderDesigns.length})
                       </h3>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -1564,7 +1521,7 @@ function OrdersPageContent() {
                                   {badge.label}
                                 </span>
                               </div>
-                              <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#ffffff', marginTop: '2px' }}>
+                              <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', marginTop: '2px' }}>
                                 {proof.title}
                               </div>
                               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -1756,7 +1713,7 @@ function OrdersPageContent() {
                     <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
                       Invoiced Revenue (Excl. 15% VAT):
                     </span>
-                    <strong style={{ color: '#ffffff' }}>
+                    <strong style={{ color: 'var(--text-main)' }}>
                       + {formatETB(selectedProfitability.orderRevenue)}
                     </strong>
                   </div>
@@ -1938,7 +1895,7 @@ function OrdersPageContent() {
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <Receipt size={16} color="#fb7185" />
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>
                         Logged Direct Expenses for {selectedOrder.orderNumber} ({orderExpenses.length})
                       </span>
                     </div>
@@ -1974,7 +1931,7 @@ function OrdersPageContent() {
                                   {exp.categoryLabel || exp.category.replace('_', ' ')}
                                 </span>
                               </td>
-                              <td style={{ color: '#ffffff', fontWeight: 600 }}>{exp.supplierOrPayee}</td>
+                              <td style={{ color: 'var(--text-main)', fontWeight: 600 }}>{exp.supplierOrPayee}</td>
                               <td>{exp.paymentMethod.replace('_', ' ')}</td>
                               <td style={{ fontFamily: 'monospace', color: 'var(--text-dim)' }}>
                                 {exp.receiptRef || exp.expenseNumber}
@@ -2013,7 +1970,7 @@ function OrdersPageContent() {
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <Trash2 size={16} color="#ef4444" />
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>
                         Logged Scrap & Material Wastage for {selectedOrder.orderNumber} ({orderWastages.length})
                       </span>
                     </div>
@@ -2044,7 +2001,7 @@ function OrdersPageContent() {
                           {orderWastages.map((wst) => (
                             <tr key={wst.id}>
                               <td>{wst.date}</td>
-                              <td style={{ color: '#ffffff', fontWeight: 600 }}>{wst.itemName}</td>
+                              <td style={{ color: 'var(--text-main)', fontWeight: 600 }}>{wst.itemName}</td>
                               <td>
                                 {wst.quantity} {wst.unit}
                               </td>
@@ -2586,7 +2543,7 @@ function OrdersPageContent() {
                             />
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontSize: '12px', fontWeight: 700, color: '#ffffff' }}>
+                                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)' }}>
                                   {srv.title}
                                 </span>
                                 <span className="badge badge-cyan" style={{ fontSize: '10px' }}>
@@ -3040,9 +2997,9 @@ function OrdersPageContent() {
           <div className="modal-content" style={{ maxWidth: '640px' }}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Ruler size={20} color="#38bdf8" />
+                <Ruler size={20} color="#ca8a04" />
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#ffffff' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-main)', fontWeight: 800 }}>
                     Manage Site Surveys for {selectedOrder.orderNumber}
                   </h3>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -3070,11 +3027,11 @@ function OrdersPageContent() {
                     textAlign: 'center',
                     background: 'var(--bg-app)',
                     borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--border-subtle)',
+                    border: '1px solid var(--border-light)',
                   }}
                 >
                   <AlertCircle size={28} color="#f59e0b" style={{ margin: '0 auto 8px' }} />
-                  <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#ffffff' }}>
+                  <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)' }}>
                     No Site Surveys Found for {selectedOrder.customerName}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
@@ -3101,8 +3058,8 @@ function OrdersPageContent() {
                           alignItems: 'flex-start',
                           gap: '12px',
                           padding: '12px 14px',
-                          background: isChecked ? 'rgba(56, 189, 248, 0.12)' : 'var(--bg-app)',
-                          border: isChecked ? '1px solid #38bdf8' : '1px solid var(--border-subtle)',
+                          background: isChecked ? '#fef9c3' : 'var(--bg-app)',
+                          border: isChecked ? '1px solid #ca8a04' : '1px solid var(--border-light)',
                           borderRadius: 'var(--radius-md)',
                           cursor: 'pointer',
                           transition: 'all 0.15s ease',
@@ -3121,7 +3078,7 @@ function OrdersPageContent() {
                         />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#ffffff' }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)' }}>
                               {survey.title}
                             </span>
                             <span className="badge badge-cyan" style={{ fontSize: '10px' }}>

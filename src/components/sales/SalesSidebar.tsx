@@ -115,8 +115,8 @@ function SalesSidebarContent() {
     <aside
       style={{
         width: '275px',
-        background: '#0e111d',
-        borderRight: '1px solid rgba(168, 85, 247, 0.2)',
+        background: '#09090b',
+        borderRight: '1px solid #18181b',
         display: 'flex',
         flexDirection: 'column',
         height: '100vh',
@@ -131,8 +131,8 @@ function SalesSidebarContent() {
       <div
         style={{
           padding: '20px 18px 16px',
-          borderBottom: '1px solid rgba(168, 85, 247, 0.15)',
-          background: 'linear-gradient(180deg, rgba(168, 85, 247, 0.08) 0%, transparent 100%)',
+          borderBottom: '1px solid #18181b',
+          background: '#09090b',
         }}
       >
         <Link
@@ -142,7 +142,7 @@ function SalesSidebarContent() {
             alignItems: 'center',
             gap: '6px',
             fontSize: '0.72rem',
-            color: 'var(--text-dim)',
+            color: '#a1a1aa',
             marginBottom: '10px',
             textDecoration: 'none',
             padding: '3px 8px',
@@ -161,12 +161,13 @@ function SalesSidebarContent() {
               width: '38px',
               height: '38px',
               borderRadius: 'var(--radius-md)',
-              background: 'linear-gradient(135deg, #9333ea 0%, #c084fc 100%)',
+              background: '#000000',
+              border: '1px solid #27272a',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(168, 85, 247, 0.35)',
-              color: '#ffffff',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
+              color: '#facc15',
             }}
           >
             <Receipt size={20} />
@@ -180,17 +181,17 @@ function SalesSidebarContent() {
                 style={{
                   fontSize: '0.62rem',
                   fontWeight: 700,
-                  color: '#c084fc',
-                  background: 'rgba(192, 132, 252, 0.18)',
+                  color: '#854d0e',
+                  background: '#fef9c3',
                   padding: '2px 6px',
                   borderRadius: '6px',
-                  border: '1px solid rgba(192, 132, 252, 0.3)',
+                  border: '1px solid #fde047',
                 }}
               >
                 ERP v2
               </span>
             </div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '1px' }}>
+            <div style={{ fontSize: '0.72rem', color: '#a1a1aa', marginTop: '1px' }}>
               Tax Invoicing & Billing
             </div>
           </div>
@@ -202,10 +203,10 @@ function SalesSidebarContent() {
         <div
           style={{
             fontSize: '0.65rem',
-            fontWeight: 700,
+            fontWeight: 800,
             textTransform: 'uppercase',
             letterSpacing: '0.08em',
-            color: '#a855f7',
+            color: '#71717a',
             padding: '0 8px',
             marginBottom: '8px',
             display: 'flex',
@@ -214,7 +215,7 @@ function SalesSidebarContent() {
           }}
         >
           <span>Sales & Invoicing Workflows</span>
-          <span style={{ fontSize: '0.62rem', color: 'var(--text-dim)' }}>{salesNavItems.length} Tabs</span>
+          <span style={{ fontSize: '0.62rem', color: '#71717a' }}>{salesNavItems.length} Tabs</span>
         </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
@@ -233,19 +234,19 @@ function SalesSidebarContent() {
                   borderRadius: 'var(--radius-md)',
                   textDecoration: 'none',
                   fontSize: '0.82rem',
-                  fontWeight: isActive ? 600 : 500,
-                  color: isActive ? '#ffffff' : 'var(--text-muted)',
-                  background: isActive ? 'linear-gradient(90deg, rgba(168, 85, 247, 0.22) 0%, rgba(168, 85, 247, 0.08) 100%)' : 'transparent',
-                  borderLeft: isActive ? '3px solid #c084fc' : '3px solid transparent',
-                  borderTop: isActive ? '1px solid rgba(192, 132, 252, 0.25)' : '1px solid transparent',
-                  borderBottom: isActive ? '1px solid rgba(192, 132, 252, 0.15)' : '1px solid transparent',
+                  fontWeight: isActive ? 700 : 500,
+                  color: isActive ? '#facc15' : '#a1a1aa',
+                  background: isActive ? 'rgba(250, 204, 21, 0.12)' : 'transparent',
+                  borderLeft: isActive ? '3px solid #facc15' : '3px solid transparent',
+                  borderTop: isActive ? '1px solid rgba(250, 204, 21, 0.25)' : '1px solid transparent',
+                  borderBottom: isActive ? '1px solid rgba(250, 204, 21, 0.15)' : '1px solid transparent',
                   transition: 'all 0.15s ease',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <Icon
                     size={16}
-                    color={isActive ? '#c084fc' : 'var(--text-dim)'}
+                    color={isActive ? '#facc15' : '#71717a'}
                     style={{ flexShrink: 0 }}
                   />
                   <span>{item.label}</span>
@@ -400,20 +401,21 @@ function SalesSidebarContent() {
       <div
         style={{
           padding: '12px 14px',
-          borderTop: '1px solid rgba(168, 85, 247, 0.15)',
-          background: 'rgba(0, 0, 0, 0.25)',
+          borderTop: '1px solid #18181b',
+          background: '#09090b',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>Active ERP Persona</span>
+          <span style={{ fontSize: '0.68rem', color: '#a1a1aa' }}>Active ERP Persona</span>
           <span
             style={{
               fontSize: '0.65rem',
               fontWeight: 700,
-              color: '#c084fc',
-              background: 'rgba(192, 132, 252, 0.15)',
+              color: '#854d0e',
+              background: '#fef9c3',
               padding: '1px 6px',
               borderRadius: '4px',
+              border: '1px solid #fde047',
               textTransform: 'uppercase',
             }}
           >
@@ -427,8 +429,8 @@ function SalesSidebarContent() {
             width: '100%',
             padding: '6px 10px',
             fontSize: '0.75rem',
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(168, 85, 247, 0.25)',
+            background: '#18181b',
+            border: '1px solid #27272a',
             borderRadius: 'var(--radius-sm)',
             color: '#ffffff',
             outline: 'none',
@@ -451,8 +453,8 @@ export default function SalesSidebar() {
         <aside
           style={{
             width: '275px',
-            background: '#0e111d',
-            borderRight: '1px solid rgba(168, 85, 247, 0.2)',
+            background: '#09090b',
+            borderRight: '1px solid #18181b',
             height: '100vh',
           }}
         />

@@ -42,10 +42,10 @@ export default function SalesHeader() {
     <header
       style={{
         height: '68px',
-        background: 'rgba(14, 17, 29, 0.92)',
+        background: 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(168, 85, 247, 0.2)',
+        borderBottom: '1px solid var(--border-light)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -63,30 +63,31 @@ export default function SalesHeader() {
               width: '34px',
               height: '34px',
               borderRadius: 'var(--radius-sm)',
-              background: 'linear-gradient(135deg, #9333ea 0%, #c084fc 100%)',
+              background: '#09090b',
+              border: '1px solid #27272a',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#ffffff',
-              boxShadow: '0 2px 10px rgba(168, 85, 247, 0.3)',
+              color: '#facc15',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.06)',
             }}
           >
             <Receipt size={18} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff' }}>
+              <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.01em' }}>
                 Sales & Tax Invoicing Desk
               </span>
               <span
                 style={{
                   fontSize: '0.65rem',
                   fontWeight: 700,
-                  color: '#c084fc',
-                  background: 'rgba(192, 132, 252, 0.15)',
-                  padding: '2px 7px',
-                  borderRadius: '10px',
-                  border: '1px solid rgba(192, 132, 252, 0.3)',
+                  color: '#854d0e',
+                  background: '#fef9c3',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  border: '1px solid #fde047',
                   letterSpacing: '0.04em',
                 }}
               >
@@ -96,17 +97,17 @@ export default function SalesHeader() {
                 style={{
                   fontSize: '0.65rem',
                   fontWeight: 700,
-                  color: '#10b981',
-                  background: 'rgba(16, 185, 129, 0.12)',
-                  padding: '2px 7px',
-                  borderRadius: '10px',
-                  border: '1px solid rgba(16, 185, 129, 0.25)',
+                  color: '#065f46',
+                  background: '#ecfdf5',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  border: '1px solid #a7f3d0',
                 }}
               >
                 15% VAT / Non-VAT MoR
               </span>
             </div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
               Dot Advert ERP • Proformas, Tax Invoices, AR Aging & Ministry of Revenues Register
             </div>
           </div>
@@ -119,41 +120,41 @@ export default function SalesHeader() {
           display: 'flex',
           alignItems: 'center',
           gap: '24px',
-          background: 'rgba(0, 0, 0, 0.25)',
+          background: '#f8fafc',
           padding: '6px 18px',
           borderRadius: '24px',
-          border: '1px solid rgba(255, 255, 255, 0.06)',
+          border: '1px solid var(--border-light)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Building2 size={14} color="#818cf8" />
+          <Building2 size={14} color="#71717a" />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)', lineHeight: 1 }}>Net Revenue</span>
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#ffffff', fontFamily: 'monospace' }}>
+            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', lineHeight: 1 }}>Net Revenue</span>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#09090b', fontFamily: 'monospace' }}>
               {formatETB(companyFinancials.totalRevenueNet)}
             </span>
           </div>
         </div>
 
-        <div style={{ width: '1px', height: '20px', background: 'rgba(255, 255, 255, 0.1)' }} />
+        <div style={{ width: '1px', height: '20px', background: 'var(--border-light)' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ShieldCheck size={14} color="#c084fc" />
+          <ShieldCheck size={14} color="#ca8a04" />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)', lineHeight: 1 }}>Output VAT (15%)</span>
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#c084fc', fontFamily: 'monospace' }}>
+            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', lineHeight: 1 }}>Output VAT (15%)</span>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#854d0e', fontFamily: 'monospace' }}>
               {formatETB(companyFinancials.totalOutputVat)}
             </span>
           </div>
         </div>
 
-        <div style={{ width: '1px', height: '20px', background: 'rgba(255, 255, 255, 0.1)' }} />
+        <div style={{ width: '1px', height: '20px', background: 'var(--border-light)' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <AlertTriangle size={14} color="#fbbf24" />
+          <AlertTriangle size={14} color="#b45309" />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)', lineHeight: 1 }}>Outstanding AR</span>
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fbbf24', fontFamily: 'monospace' }}>
+            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', lineHeight: 1 }}>Outstanding AR</span>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#b45309', fontFamily: 'monospace' }}>
               {formatETB(totalOutstandingBalance)}
             </span>
           </div>
@@ -165,9 +166,9 @@ export default function SalesHeader() {
         <Link
           href="/sales?tab=collections"
           className="btn btn-secondary btn-sm"
-          style={{ fontSize: '0.78rem', padding: '6px 12px', borderColor: 'rgba(16, 185, 129, 0.4)', color: '#6ee7b7' }}
+          style={{ fontSize: '0.78rem', padding: '6px 12px' }}
         >
-          <CreditCard size={14} />
+          <CreditCard size={14} color="#ca8a04" />
           <span>Collections & Receipts</span>
         </Link>
 
