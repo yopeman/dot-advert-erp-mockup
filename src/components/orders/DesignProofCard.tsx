@@ -29,34 +29,34 @@ export const getStatusBadge = (status: DesignStatus) => {
       return {
         label: 'Approved for Production',
         className: 'badge badge-emerald',
-        icon: <CheckCircle2 size={12} color="#10b981" />,
+        icon: <CheckCircle2 size={12} color="#059669" />,
         borderColor: 'rgba(16, 185, 129, 0.4)',
-        bgGradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(20, 30, 51, 0.95) 100%)',
+        bgGradient: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)',
       };
     case 'client_proofing':
       return {
         label: 'Awaiting Client Sign-Off',
         className: 'badge badge-amber',
-        icon: <Clock size={12} color="#f59e0b" />,
+        icon: <Clock size={12} color="#d97706" />,
         borderColor: 'rgba(245, 158, 11, 0.4)',
-        bgGradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(20, 30, 51, 0.95) 100%)',
+        bgGradient: 'linear-gradient(135deg, #fffbeb 0%, #ffffff 100%)',
       };
     case 'revision_requested':
       return {
         label: 'Revision Requested',
         className: 'badge badge-rose',
-        icon: <AlertTriangle size={12} color="#f43f5e" />,
+        icon: <AlertTriangle size={12} color="#dc2626" />,
         borderColor: 'rgba(244, 63, 94, 0.4)',
-        bgGradient: 'linear-gradient(135deg, rgba(244, 63, 94, 0.08) 0%, rgba(20, 30, 51, 0.95) 100%)',
+        bgGradient: 'linear-gradient(135deg, #fff1f2 0%, #ffffff 100%)',
       };
     case 'drafting':
     default:
       return {
         label: 'Drafting / CAD In Progress',
         className: 'badge badge-primary',
-        icon: <Palette size={12} color="#818cf8" />,
+        icon: <Palette size={12} color="#4338ca" />,
         borderColor: 'rgba(99, 102, 241, 0.4)',
-        bgGradient: 'linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(20, 30, 51, 0.95) 100%)',
+        bgGradient: 'linear-gradient(135deg, #eef2ff 0%, #ffffff 100%)',
       };
   }
 };
@@ -102,8 +102,8 @@ export default function DesignProofCard({
                 fontFamily: 'monospace',
                 fontSize: '0.85rem',
                 fontWeight: 700,
-                color: '#818cf8',
-                background: 'rgba(99, 102, 241, 0.15)',
+                color: '#4338ca',
+                background: '#eef2ff',
                 padding: '3px 8px',
                 borderRadius: 'var(--radius-sm)',
               }}
@@ -125,7 +125,7 @@ export default function DesignProofCard({
                 fontSize: '0.68rem',
                 fontWeight: 700,
                 color: 'var(--text-dim)',
-                background: 'rgba(255, 255, 255, 0.05)',
+                background: '#f4f4f5',
                 padding: '2px 6px',
                 borderRadius: '4px',
               }}
@@ -140,7 +140,7 @@ export default function DesignProofCard({
           style={{
             fontSize: '1.05rem',
             fontWeight: 700,
-            color: '#ffffff',
+            color: 'var(--text-main)',
             lineHeight: 1.35,
             marginBottom: '4px',
           }}
@@ -229,7 +229,7 @@ export default function DesignProofCard({
         {/* Technical Specs & Material */}
         <div
           style={{
-            background: 'rgba(255, 255, 255, 0.02)',
+            background: '#f8fafc',
             border: '1px solid var(--border-subtle)',
             borderRadius: 'var(--radius-md)',
             padding: '10px 12px',
@@ -251,7 +251,7 @@ export default function DesignProofCard({
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <User size={13} color="var(--text-dim)" />
             <span style={{ color: 'var(--text-dim)' }}>Designer: </span>
-            <span style={{ color: '#a5b4fc', fontWeight: 600 }}>{proof.designerName}</span>
+            <span style={{ color: '#4338ca', fontWeight: 600 }}>{proof.designerName}</span>
           </div>
 
           {proof.clientFeedback && (
@@ -260,7 +260,7 @@ export default function DesignProofCard({
                 marginTop: '4px',
                 paddingTop: '6px',
                 borderTop: '1px solid var(--border-subtle)',
-                color: proof.status === 'revision_requested' ? '#fca5a5' : '#a7f3d0',
+                color: proof.status === 'revision_requested' ? '#b91c1c' : '#166534',
                 fontSize: '0.75rem',
                 lineHeight: 1.4,
               }}
@@ -299,8 +299,8 @@ export default function DesignProofCard({
               style={{
                 fontSize: '0.75rem',
                 padding: '6px 10px',
-                color: '#fda4af',
-                borderColor: 'rgba(244, 63, 94, 0.3)',
+                color: '#be123c',
+                borderColor: 'rgba(220, 38, 38, 0.25)',
               }}
               onClick={() => onRequestRevision(proof)}
             >
@@ -312,8 +312,8 @@ export default function DesignProofCard({
               style={{
                 fontSize: '0.75rem',
                 padding: '6px 12px',
-                background: '#10b981',
-                borderColor: '#10b981',
+                background: '#047857',
+                borderColor: '#047857',
                 color: '#ffffff',
                 fontWeight: 600,
               }}
@@ -329,7 +329,7 @@ export default function DesignProofCard({
           <div
             style={{
               fontSize: '0.72rem',
-              color: '#34d399',
+              color: '#047857',
               display: 'flex',
               alignItems: 'center',
               gap: '4px',

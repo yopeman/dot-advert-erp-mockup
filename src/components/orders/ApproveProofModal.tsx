@@ -34,8 +34,8 @@ export default function ApproveProofModal({
       <div className="modal-content" style={{ maxWidth: '520px', width: '95%' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <CheckCircle2 size={20} color="#10b981" />
-            <h3 style={{ color: '#ffffff' }}>Client Sign-Off & Production Unlock</h3>
+            <CheckCircle2 size={20} color="#059669" />
+            <h3 style={{ color: 'var(--text-main)' }}>Client Sign-Off & Production Unlock</h3>
           </div>
           <button
             onClick={onClose}
@@ -60,13 +60,13 @@ export default function ApproveProofModal({
                 borderRadius: 'var(--radius-md)',
                 padding: '12px 14px',
                 fontSize: '0.825rem',
-                color: '#a7f3d0',
+                color: '#166534',
                 display: 'flex',
                 gap: '10px',
                 alignItems: 'flex-start',
               }}
             >
-              <ShieldCheck size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <ShieldCheck size={20} color="#059669" style={{ flexShrink: 0, marginTop: '2px' }} />
               <div>
                 Approving this artwork signs off on <strong>{proof.widthMeters}m × {proof.heightMeters}m</strong> dimensions and authorizes the workshop to issue raw materials and queue large-format printing & fabrication.
               </div>
@@ -75,7 +75,7 @@ export default function ApproveProofModal({
             {/* Target Deal Details */}
             <div
               style={{
-                background: 'rgba(255, 255, 255, 0.03)',
+                background: '#f8fafc',
                 border: '1px solid var(--border-subtle)',
                 borderRadius: 'var(--radius-md)',
                 padding: '12px',
@@ -122,7 +122,7 @@ export default function ApproveProofModal({
             <button
               type="submit"
               className="btn btn-primary btn-sm"
-              style={{ background: '#10b981', borderColor: '#10b981', color: '#ffffff' }}
+              style={{ background: '#047857', borderColor: '#047857', color: '#ffffff' }}
             >
               <CheckCircle2 size={14} />
               <span>Confirm Artwork Approval</span>

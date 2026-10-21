@@ -57,10 +57,10 @@ export default function StoreHeader() {
           />
           <div>
             <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.01em' }}>
-              Dot Advert Inventory Control Tower
+              Dot Advert Store & Purchasing Inventory Control Tower
             </div>
             <div style={{ fontSize: '0.675rem', color: '#a1a1aa' }}>
-              Stores • Stock Ledger • Warehouse Governance
+              Stores & Purchasing • Stock Ledger • Procurement Governance
             </div>
           </div>
         </div>

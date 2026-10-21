@@ -1666,92 +1666,53 @@ function SalesPageContent() {
       {/* MODAL 1: ISSUE NEW TAX INVOICE                           */}
       {/* ======================================================== */}
       {showNewInvoiceModal && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(6px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '20px',
-          }}
-        >
-          <div
-            style={{
-              background: '#0e111d',
-              border: '1px solid rgba(168, 85, 247, 0.3)',
-              borderRadius: 'var(--radius-lg)',
-              maxWidth: '620px',
-              width: '100%',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.6)',
-            }}
-          >
-            <div
-              style={{
-                padding: '20px 24px',
-                borderBottom: '1px solid rgba(168, 85, 247, 0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '620px', width: '95%' }}>
+            <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div
                   style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'linear-gradient(135deg, #9333ea, #c084fc)',
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '8px',
+                    background: '#f3e8ff',
+                    border: '1px solid #e9d5ff',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#ffffff',
+                    color: '#7e22ce',
+                    flexShrink: 0,
                   }}
                 >
                   <Receipt size={17} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)' }}>
                     Issue Official Tax Invoice
                   </h3>
-                  <p style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                     Ethiopian MoR Compliant Invoice with Dual VAT / Exemption
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowNewInvoiceModal(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleCreateInvoice} style={{ padding: '24px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleCreateInvoice}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {/* Select Order */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '6px' }}>
-                    Select Finished / Delivered Order:
-                  </label>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Select Finished / Delivered Order *</label>
                   <select
+                    className="form-select"
                     value={selectedOrderId}
                     onChange={(e) => setSelectedOrderId(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      background: 'var(--bg-input)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: 'var(--radius-md)',
-                      color: 'var(--text-bright)',
-                      fontSize: '0.85rem',
-                      outline: 'none',
-                    }}
+                    required
                   >
                     {orders.map((o) => (
                       <option key={o.id} value={o.id}>
@@ -1763,9 +1724,7 @@ function SalesPageContent() {
 
                 {/* Tax Regime Selector */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '8px' }}>
-                    Tax Regime:
-                  </label>
+                  <label className="form-label">Tax Regime *</label>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                     <button
                       type="button"
@@ -1773,14 +1732,14 @@ function SalesPageContent() {
                       style={{
                         padding: '12px',
                         borderRadius: 'var(--radius-md)',
-                        border: invoiceType === 'vat_15' ? '2px solid #a855f7' : '1px solid var(--border-subtle)',
-                        background: invoiceType === 'vat_15' ? 'rgba(168, 85, 247, 0.15)' : 'rgba(255, 255, 255, 0.02)',
+                        border: invoiceType === 'vat_15' ? '2px solid #7e22ce' : '1px solid var(--border-subtle)',
+                        background: invoiceType === 'vat_15' ? '#faf5ff' : '#ffffff',
                         textAlign: 'left',
                         cursor: 'pointer',
                       }}
                     >
-                      <div style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.85rem' }}>Standard 15% VAT</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                      <div style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.85rem' }}>Standard 15% VAT</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                         MoR commercial invoice with 15% output VAT collected
                       </div>
                     </button>
@@ -1791,14 +1750,14 @@ function SalesPageContent() {
                       style={{
                         padding: '12px',
                         borderRadius: 'var(--radius-md)',
-                        border: invoiceType === 'non_vat_exempt' ? '2px solid #fbbf24' : '1px solid var(--border-subtle)',
-                        background: invoiceType === 'non_vat_exempt' ? 'rgba(251, 191, 36, 0.15)' : 'rgba(255, 255, 255, 0.02)',
+                        border: invoiceType === 'non_vat_exempt' ? '2px solid #b45309' : '1px solid var(--border-subtle)',
+                        background: invoiceType === 'non_vat_exempt' ? '#fffbeb' : '#ffffff',
                         textAlign: 'left',
                         cursor: 'pointer',
                       }}
                     >
-                      <div style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.85rem' }}>Non-VAT Exempt Sale</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                      <div style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.85rem' }}>Non-VAT Exempt Sale</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                         Government directive or NGO aid exemption
                       </div>
                     </button>
@@ -1807,71 +1766,40 @@ function SalesPageContent() {
 
                 {/* Exemption Reason if Exempt */}
                 {invoiceType === 'non_vat_exempt' && (
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.78rem', color: '#fbbf24', marginBottom: '6px' }}>
-                      Exemption Legal Citation / Directive Reference:
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" style={{ color: '#b45309' }}>
+                      Exemption Legal Citation / Directive Reference
                     </label>
                     <input
                       type="text"
+                      className="form-input"
                       value={exemptReason}
                       onChange={(e) => setExemptReason(e.target.value)}
                       placeholder="e.g. Directive No. 24/2025 MoR Public Enterprise Exemption"
-                      style={{
-                        width: '100%',
-                        padding: '9px 12px',
-                        background: 'var(--bg-input)',
-                        border: '1px solid #fbbf24',
-                        borderRadius: 'var(--radius-md)',
-                        color: 'var(--text-bright)',
-                        fontSize: '0.82rem',
-                        outline: 'none',
-                      }}
+                      style={{ borderColor: '#b45309' }}
                     />
                   </div>
                 )}
 
                 {/* Due Date */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '6px' }}>
-                    Payment Due Date:
-                  </label>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Payment Due Date</label>
                   <input
                     type="date"
+                    className="form-input"
                     value={invoiceDueDate}
                     onChange={(e) => setInvoiceDueDate(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '9px 12px',
-                      background: 'var(--bg-input)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: 'var(--radius-md)',
-                      color: 'var(--text-bright)',
-                      fontSize: '0.85rem',
-                      outline: 'none',
-                    }}
                   />
                 </div>
 
                 {/* Invoice Notes */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '6px' }}>
-                    Payment Instructions / Bank Ref:
-                  </label>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Payment Instructions / Bank Ref</label>
                   <textarea
                     rows={2}
+                    className="form-textarea"
                     value={invoiceNotes}
                     onChange={(e) => setInvoiceNotes(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '9px 12px',
-                      background: 'var(--bg-input)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: 'var(--radius-md)',
-                      color: 'var(--text-bright)',
-                      fontSize: '0.82rem',
-                      outline: 'none',
-                      resize: 'none',
-                    }}
                   />
                 </div>
 
@@ -1879,7 +1807,7 @@ function SalesPageContent() {
                 <div
                   style={{
                     padding: '14px',
-                    background: 'rgba(255, 255, 255, 0.03)',
+                    background: '#f8fafc',
                     borderRadius: 'var(--radius-md)',
                     border: '1px solid var(--border-subtle)',
                     display: 'flex',
@@ -1888,14 +1816,14 @@ function SalesPageContent() {
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
-                    <span style={{ color: 'var(--text-dim)' }}>Order Amount Net:</span>
-                    <span style={{ fontFamily: 'monospace', color: '#ffffff' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Order Amount Net:</span>
+                    <span style={{ fontFamily: 'monospace', color: 'var(--text-main)', fontWeight: 600 }}>
                       {formatETB(orders.find((o) => o.id === selectedOrderId)?.totalAgreedPrice || 0)}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
-                    <span style={{ color: 'var(--text-dim)' }}>15% VAT:</span>
-                    <span style={{ fontFamily: 'monospace', color: invoiceType === 'vat_15' ? '#c084fc' : 'var(--text-dim)' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>15% VAT:</span>
+                    <span style={{ fontFamily: 'monospace', color: invoiceType === 'vat_15' ? '#7e22ce' : 'var(--text-muted)', fontWeight: 600 }}>
                       {invoiceType === 'vat_15'
                         ? formatETB((orders.find((o) => o.id === selectedOrderId)?.totalAgreedPrice || 0) * 0.15)
                         : 'ETB 0 (Exempt)'}
@@ -1907,13 +1835,14 @@ function SalesPageContent() {
                       justifyContent: 'space-between',
                       fontSize: '0.95rem',
                       fontWeight: 700,
-                      borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderTop: '1px solid var(--border-subtle)',
                       paddingTop: '6px',
                       marginTop: '4px',
+                      color: 'var(--text-main)',
                     }}
                   >
                     <span>Total Invoiced Gross:</span>
-                    <span style={{ fontFamily: 'monospace', color: '#10b981' }}>
+                    <span style={{ fontFamily: 'monospace', color: '#047857' }}>
                       {formatETB(
                         (orders.find((o) => o.id === selectedOrderId)?.totalAgreedPrice || 0) *
                           (invoiceType === 'vat_15' ? 1.15 : 1)
@@ -1923,7 +1852,7 @@ function SalesPageContent() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '24px' }}>
+              <div className="modal-footer">
                 <button
                   type="button"
                   className="btn btn-secondary btn-sm"
@@ -1931,14 +1860,7 @@ function SalesPageContent() {
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary btn-sm"
-                  style={{
-                    background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
-                    padding: '8px 20px',
-                  }}
-                >
+                <button type="submit" className="btn btn-primary btn-sm">
                   <CheckCircle2 size={15} />
                   <span>Generate & Save Invoice</span>
                 </button>
@@ -1952,92 +1874,53 @@ function SalesPageContent() {
       {/* MODAL 2: ISSUE NEW PROFORMA QUOTATION                     */}
       {/* ======================================================== */}
       {showNewProformaModal && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(6px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '20px',
-          }}
-        >
-          <div
-            style={{
-              background: '#0e111d',
-              border: '1px solid rgba(56, 189, 248, 0.3)',
-              borderRadius: 'var(--radius-lg)',
-              maxWidth: '600px',
-              width: '100%',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.6)',
-            }}
-          >
-            <div
-              style={{
-                padding: '20px 24px',
-                borderBottom: '1px solid rgba(56, 189, 248, 0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '600px', width: '95%' }}>
+            <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div
                   style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'linear-gradient(135deg, #0284c7, #38bdf8)',
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '8px',
+                    background: '#ecfeff',
+                    border: '1px solid #a5f3fc',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#ffffff',
+                    color: '#0e7490',
+                    flexShrink: 0,
                   }}
                 >
                   <FileSpreadsheet size={17} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)' }}>
                     Issue Proforma Quotation
                   </h3>
-                  <p style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                     Commercial quotation for client budgeting & PO issuance
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowNewProformaModal(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleCreateProforma} style={{ padding: '24px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleCreateProforma}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {/* Select Customer */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '6px' }}>
-                    Client Organization:
-                  </label>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Client Organization *</label>
                   <select
+                    className="form-select"
                     value={proformaCustomerId}
                     onChange={(e) => setProformaCustomerId(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      background: 'var(--bg-input)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: 'var(--radius-md)',
-                      color: 'var(--text-bright)',
-                      fontSize: '0.85rem',
-                      outline: 'none',
-                    }}
+                    required
                   >
                     {customers.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -2048,23 +1931,12 @@ function SalesPageContent() {
                 </div>
 
                 {/* Validity Period */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '6px' }}>
-                    Validity Period:
-                  </label>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Validity Period</label>
                   <select
+                    className="form-select"
                     value={proformaValidDays}
                     onChange={(e) => setProformaValidDays(Number(e.target.value))}
-                    style={{
-                      width: '100%',
-                      padding: '9px 12px',
-                      background: 'var(--bg-input)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: 'var(--radius-md)',
-                      color: 'var(--text-bright)',
-                      fontSize: '0.85rem',
-                      outline: 'none',
-                    }}
                   >
                     <option value={7}>7 Calendar Days</option>
                     <option value={15}>15 Calendar Days (Standard)</option>
@@ -2073,69 +1945,36 @@ function SalesPageContent() {
                 </div>
 
                 {/* Item Description */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '6px' }}>
-                    Scope / Line Item Description:
-                  </label>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Scope / Line Item Description *</label>
                   <input
                     type="text"
                     required
+                    className="form-input"
                     placeholder="e.g. 3D LED Illuminated Acrylic Channel Letters Signage (6m x 1.2m)"
                     value={proformaItemDesc}
                     onChange={(e) => setProformaItemDesc(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '9px 12px',
-                      background: 'var(--bg-input)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: 'var(--radius-md)',
-                      color: 'var(--text-bright)',
-                      fontSize: '0.82rem',
-                      outline: 'none',
-                    }}
                   />
                 </div>
 
                 {/* Quantity & Unit Price */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: '10px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '4px' }}>
-                      Quantity:
-                    </label>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Quantity</label>
                     <input
                       type="number"
                       min={1}
+                      className="form-input"
                       value={proformaItemQty}
                       onChange={(e) => setProformaItemQty(Number(e.target.value))}
-                      style={{
-                        width: '100%',
-                        padding: '8px 10px',
-                        background: 'var(--bg-input)',
-                        border: '1px solid var(--border-subtle)',
-                        borderRadius: 'var(--radius-md)',
-                        color: 'var(--text-bright)',
-                        fontSize: '0.85rem',
-                        outline: 'none',
-                      }}
                     />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '4px' }}>
-                      Unit:
-                    </label>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Unit</label>
                     <select
+                      className="form-select"
                       value={proformaItemUnit}
                       onChange={(e) => setProformaItemUnit(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '8px 10px',
-                        background: 'var(--bg-input)',
-                        border: '1px solid var(--border-subtle)',
-                        borderRadius: 'var(--radius-md)',
-                        color: 'var(--text-bright)',
-                        fontSize: '0.85rem',
-                        outline: 'none',
-                      }}
                     >
                       <option value="pcs">pcs</option>
                       <option value="m2">m²</option>
@@ -2143,51 +1982,28 @@ function SalesPageContent() {
                       <option value="rolls">rolls</option>
                     </select>
                   </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '4px' }}>
-                      Unit Price (ETB):
-                    </label>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Unit Price (ETB)</label>
                     <input
                       type="number"
                       min={0}
                       step={500}
+                      className="form-input"
+                      style={{ fontFamily: 'monospace' }}
                       value={proformaItemPrice}
                       onChange={(e) => setProformaItemPrice(Number(e.target.value))}
-                      style={{
-                        width: '100%',
-                        padding: '8px 10px',
-                        background: 'var(--bg-input)',
-                        border: '1px solid var(--border-subtle)',
-                        borderRadius: 'var(--radius-md)',
-                        color: 'var(--text-bright)',
-                        fontSize: '0.85rem',
-                        outline: 'none',
-                        fontFamily: 'monospace',
-                      }}
                     />
                   </div>
                 </div>
 
                 {/* Terms / Notes */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '6px' }}>
-                    Quotation Terms & Conditions:
-                  </label>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Quotation Terms & Conditions</label>
                   <textarea
                     rows={2}
+                    className="form-textarea"
                     value={proformaNotes}
                     onChange={(e) => setProformaNotes(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '9px 12px',
-                      background: 'var(--bg-input)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: 'var(--radius-md)',
-                      color: 'var(--text-bright)',
-                      fontSize: '0.82rem',
-                      outline: 'none',
-                      resize: 'none',
-                    }}
                   />
                 </div>
 
@@ -2195,23 +2011,23 @@ function SalesPageContent() {
                 <div
                   style={{
                     padding: '14px',
-                    background: 'rgba(56, 189, 248, 0.05)',
+                    background: '#f0f9ff',
                     borderRadius: 'var(--radius-md)',
-                    border: '1px solid rgba(56, 189, 248, 0.2)',
+                    border: '1px solid #bae6fd',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '4px',
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
-                    <span style={{ color: 'var(--text-dim)' }}>Subtotal Net:</span>
-                    <span style={{ fontFamily: 'monospace', color: '#ffffff' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Subtotal Net:</span>
+                    <span style={{ fontFamily: 'monospace', color: 'var(--text-main)', fontWeight: 600 }}>
                       {formatETB(proformaItemQty * proformaItemPrice)}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
-                    <span style={{ color: 'var(--text-dim)' }}>15% VAT:</span>
-                    <span style={{ fontFamily: 'monospace', color: '#c084fc' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>15% VAT:</span>
+                    <span style={{ fontFamily: 'monospace', color: '#7e22ce', fontWeight: 600 }}>
                       {formatETB(proformaItemQty * proformaItemPrice * 0.15)}
                     </span>
                   </div>
@@ -2221,20 +2037,21 @@ function SalesPageContent() {
                       justifyContent: 'space-between',
                       fontSize: '0.95rem',
                       fontWeight: 700,
-                      borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderTop: '1px solid #bae6fd',
                       paddingTop: '6px',
                       marginTop: '4px',
+                      color: 'var(--text-main)',
                     }}
                   >
                     <span>Quotation Grand Total:</span>
-                    <span style={{ fontFamily: 'monospace', color: '#38bdf8' }}>
+                    <span style={{ fontFamily: 'monospace', color: '#075985' }}>
                       {formatETB(proformaItemQty * proformaItemPrice * 1.15)}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '24px' }}>
+              <div className="modal-footer">
                 <button
                   type="button"
                   className="btn btn-secondary btn-sm"
@@ -2242,14 +2059,7 @@ function SalesPageContent() {
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary btn-sm"
-                  style={{
-                    background: 'linear-gradient(135deg, #0284c7, #2563eb)',
-                    padding: '8px 20px',
-                  }}
-                >
+                <button type="submit" className="btn btn-primary btn-sm">
                   <CheckCircle2 size={15} />
                   <span>Issue Proforma Quotation</span>
                 </button>
@@ -2263,96 +2073,57 @@ function SalesPageContent() {
       {/* MODAL 3: RECORD PAYMENT COLLECTION                       */}
       {/* ======================================================== */}
       {showCollectModal && selectedInvoiceForForm && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(6px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '20px',
-          }}
-        >
-          <div
-            style={{
-              background: '#0e111d',
-              border: '1px solid rgba(16, 185, 129, 0.35)',
-              borderRadius: 'var(--radius-lg)',
-              maxWidth: '560px',
-              width: '100%',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.6)',
-            }}
-          >
-            <div
-              style={{
-                padding: '20px 24px',
-                borderBottom: '1px solid rgba(16, 185, 129, 0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '560px', width: '95%' }}>
+            <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div
                   style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '8px',
+                    background: '#ecfdf5',
+                    border: '1px solid #a7f3d0',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#ffffff',
+                    color: '#047857',
+                    flexShrink: 0,
                   }}
                 >
                   <CreditCard size={17} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)' }}>
                     Record Collection Voucher
                   </h3>
-                  <p style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                     Reconcile invoice payment & adjust customer credit balance
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowCollectModal(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmitCollection} style={{ padding: '24px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleSubmitCollection}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {/* Select Invoice */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '6px' }}>
-                    Target Customer Invoice:
-                  </label>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Target Customer Invoice *</label>
                   <select
+                    className="form-select"
                     value={selectedInvoiceIdForCollect}
                     onChange={(e) => {
                       setSelectedInvoiceIdForCollect(e.target.value);
                       const inv = invoices.find((i) => i.id === e.target.value);
                       if (inv) setAmountToCollect(inv.balanceDue);
                     }}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      background: 'var(--bg-input)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: 'var(--radius-md)',
-                      color: 'var(--text-bright)',
-                      fontSize: '0.85rem',
-                      outline: 'none',
-                    }}
+                    required
                   >
                     {invoices.map((i) => (
                       <option key={i.id} value={i.id}>
@@ -2367,7 +2138,7 @@ function SalesPageContent() {
                   style={{
                     padding: '12px 14px',
                     borderRadius: 'var(--radius-md)',
-                    background: 'rgba(255, 255, 255, 0.03)',
+                    background: '#f8fafc',
                     border: '1px solid var(--border-subtle)',
                     display: 'grid',
                     gridTemplateColumns: '1fr 1fr 1fr',
@@ -2376,36 +2147,36 @@ function SalesPageContent() {
                   }}
                 >
                   <div>
-                    <div style={{ color: 'var(--text-dim)' }}>Grand Total</div>
-                    <div style={{ fontWeight: 700, color: '#ffffff', fontFamily: 'monospace' }}>
+                    <div style={{ color: 'var(--text-muted)' }}>Grand Total</div>
+                    <div style={{ fontWeight: 700, color: 'var(--text-main)', fontFamily: 'monospace' }}>
                       {formatETB(selectedInvoiceForForm.grandTotal)}
                     </div>
                   </div>
                   <div>
-                    <div style={{ color: 'var(--text-dim)' }}>Already Paid</div>
-                    <div style={{ fontWeight: 700, color: '#10b981', fontFamily: 'monospace' }}>
+                    <div style={{ color: 'var(--text-muted)' }}>Already Paid</div>
+                    <div style={{ fontWeight: 700, color: '#047857', fontFamily: 'monospace' }}>
                       {formatETB(selectedInvoiceForForm.paidAmount)}
                     </div>
                   </div>
                   <div>
-                    <div style={{ color: 'var(--text-dim)' }}>Current Balance Due</div>
-                    <div style={{ fontWeight: 700, color: '#fbbf24', fontFamily: 'monospace' }}>
+                    <div style={{ color: 'var(--text-muted)' }}>Current Balance Due</div>
+                    <div style={{ fontWeight: 700, color: '#b45309', fontFamily: 'monospace' }}>
                       {formatETB(selectedInvoiceForForm.balanceDue)}
                     </div>
                   </div>
                 </div>
 
                 {/* Amount to Collect */}
-                <div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <label style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>Amount to Collect (ETB):</label>
+                    <label className="form-label" style={{ marginBottom: 0 }}>Amount to Collect (ETB) *</label>
                     <button
                       type="button"
                       onClick={() => setAmountToCollect(selectedInvoiceForForm.balanceDue)}
                       style={{
                         background: 'none',
                         border: 'none',
-                        color: '#10b981',
+                        color: '#047857',
                         fontSize: '0.72rem',
                         cursor: 'pointer',
                         padding: 0,
@@ -2420,33 +2191,21 @@ function SalesPageContent() {
                     required
                     min={1}
                     max={selectedInvoiceForForm.balanceDue || selectedInvoiceForForm.grandTotal}
+                    className="form-input"
+                    style={{ borderColor: '#059669', fontFamily: 'monospace', fontWeight: 700 }}
                     value={amountToCollect}
                     onChange={(e) => setAmountToCollect(Number(e.target.value))}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      background: 'var(--bg-input)',
-                      border: '1px solid #10b981',
-                      borderRadius: 'var(--radius-md)',
-                      color: 'var(--text-bright)',
-                      fontSize: '0.95rem',
-                      fontFamily: 'monospace',
-                      fontWeight: 700,
-                      outline: 'none',
-                    }}
                   />
                 </div>
 
                 {/* Payment Channel */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '8px' }}>
-                    Payment Channel:
-                  </label>
+                  <label className="form-label">Payment Channel</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
                     {[
-                      { id: 'telebirr', label: 'Telebirr', icon: Smartphone, color: '#10b981' },
-                      { id: 'bank_transfer', label: 'CBE / Wire', icon: Building2, color: '#3b82f6' },
-                      { id: 'cash', label: 'Counter Cash', icon: Banknote, color: '#f59e0b' },
+                      { id: 'telebirr', label: 'Telebirr', icon: Smartphone, color: '#059669' },
+                      { id: 'bank_transfer', label: 'CBE / Wire', icon: Building2, color: '#2563eb' },
+                      { id: 'cash', label: 'Counter Cash', icon: Banknote, color: '#b45309' },
                     ].map((ch) => {
                       const Icon = ch.icon;
                       const isSelected = paymentMethod === ch.id;
@@ -2468,8 +2227,8 @@ function SalesPageContent() {
                             padding: '8px 10px',
                             borderRadius: 'var(--radius-md)',
                             border: isSelected ? `2px solid ${ch.color}` : '1px solid var(--border-subtle)',
-                            background: isSelected ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-                            color: isSelected ? '#ffffff' : 'var(--text-muted)',
+                            background: isSelected ? '#f8fafc' : '#ffffff',
+                            color: 'var(--text-main)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -2488,54 +2247,32 @@ function SalesPageContent() {
                 </div>
 
                 {/* Bank / Transaction Reference */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '6px' }}>
-                    Transaction Reference / Telebirr Txn ID:
-                  </label>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Transaction Reference / Telebirr Txn ID *</label>
                   <input
                     type="text"
                     required
+                    className="form-input"
+                    style={{ fontFamily: 'monospace' }}
                     value={bankRef}
                     onChange={(e) => setBankRef(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '9px 12px',
-                      background: 'var(--bg-input)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: 'var(--radius-md)',
-                      color: 'var(--text-bright)',
-                      fontSize: '0.85rem',
-                      fontFamily: 'monospace',
-                      outline: 'none',
-                    }}
                   />
                 </div>
 
                 {/* Notes */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '6px' }}>
-                    Internal Reconciliation Notes:
-                  </label>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Internal Reconciliation Notes</label>
                   <input
                     type="text"
+                    className="form-input"
                     value={collectorNotes}
                     onChange={(e) => setCollectorNotes(e.target.value)}
                     placeholder="e.g. Paid in full via Telebirr merchant code 948210"
-                    style={{
-                      width: '100%',
-                      padding: '9px 12px',
-                      background: 'var(--bg-input)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: 'var(--radius-md)',
-                      color: 'var(--text-bright)',
-                      fontSize: '0.82rem',
-                      outline: 'none',
-                    }}
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '24px' }}>
+              <div className="modal-footer">
                 <button
                   type="button"
                   className="btn btn-secondary btn-sm"
@@ -2543,14 +2280,7 @@ function SalesPageContent() {
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary btn-sm"
-                  style={{
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    padding: '8px 20px',
-                  }}
-                >
+                <button type="submit" className="btn btn-primary btn-sm">
                   <CheckCircle2 size={15} />
                   <span>Confirm Payment & Print Voucher</span>
                 </button>

@@ -166,7 +166,7 @@ function StoreSidebarContent() {
                 textTransform: 'uppercase',
               }}
             >
-              Stores & Inventory Desk
+              Store & Purchasing Inventory Desk
             </div>
           </div>
         </div>
@@ -248,7 +248,7 @@ function StoreSidebarContent() {
               padding: '6px 12px 4px',
             }}
           >
-            Inventory Workspaces
+            Store & Purchasing Workspaces
           </div>
 
           {storeNavItems.map((item) => {

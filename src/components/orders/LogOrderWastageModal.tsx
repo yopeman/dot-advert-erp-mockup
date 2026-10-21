@@ -82,13 +82,13 @@ export default function LogOrderWastageModal({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#ef4444',
+                color: '#dc2626',
               }}
             >
               <Trash2 size={18} />
             </div>
             <div>
-              <h3 style={{ color: '#ffffff', margin: 0, fontSize: '1.1rem' }}>Log Order Wastage & Scrap</h3>
+              <h3 style={{ color: 'var(--text-main)', margin: 0, fontSize: '1.1rem' }}>Log Order Wastage & Scrap</h3>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                 Attributed to {order.orderNumber} • Deducts directly from order profit margin
               </div>
@@ -112,7 +112,7 @@ export default function LogOrderWastageModal({
             {/* Target Order Info */}
             <div
               style={{
-                background: 'rgba(255, 255, 255, 0.03)',
+                background: '#f8fafc',
                 border: '1px solid var(--border-subtle)',
                 borderRadius: 'var(--radius-md)',
                 padding: '12px 14px',
@@ -120,14 +120,14 @@ export default function LogOrderWastageModal({
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#38bdf8', fontWeight: 700, fontFamily: 'monospace' }}>
+                <span style={{ color: '#0e7490', fontWeight: 700, fontFamily: 'monospace' }}>
                   {order.orderNumber}
                 </span>
                 <span className="badge badge-secondary" style={{ fontSize: '0.7rem' }}>
                   {order.status.replace('_', ' ')}
                 </span>
               </div>
-              <div style={{ fontWeight: 600, color: '#ffffff', marginTop: '2px' }}>{order.title}</div>
+              <div style={{ fontWeight: 600, color: 'var(--text-main)', marginTop: '2px' }}>{order.title}</div>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.775rem' }}>
                 Client: <strong>{order.customerName}</strong>
               </div>
@@ -219,13 +219,13 @@ export default function LogOrderWastageModal({
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <AlertTriangle size={18} color="#ef4444" />
-                <span style={{ fontSize: '0.825rem', color: '#fca5a5' }}>
+                <AlertTriangle size={18} color="#dc2626" />
+                <span style={{ fontSize: '0.825rem', color: '#b91c1c' }}>
                   Wastage Cost Impact:
                 </span>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ef4444' }}>
+                <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#dc2626' }}>
                   - {formatETB(scrapCost)}
                 </span>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
@@ -254,7 +254,7 @@ export default function LogOrderWastageModal({
             <button
               type="submit"
               className="btn btn-primary btn-sm"
-              style={{ background: '#ef4444', borderColor: '#dc2626' }}
+              style={{ background: '#dc2626', borderColor: '#b91c1c' }}
             >
               <Trash2 size={14} />
               <span>Record Wastage (- {formatETB(scrapCost)})</span>

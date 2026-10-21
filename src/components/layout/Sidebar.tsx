@@ -50,7 +50,7 @@ export default function Sidebar() {
       badgeType: 'emerald',
     },
     {
-      label: 'Inventory & Stores',
+      label: 'Store & Purchasing Inventory',
       href: '/inventory',
       icon: Boxes,
       badge: lowStockItems.length > 0 ? `${lowStockItems.length} Low` : 'Dedicated Hub',

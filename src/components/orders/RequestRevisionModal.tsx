@@ -31,8 +31,8 @@ export default function RequestRevisionModal({
       <div className="modal-content" style={{ maxWidth: '520px', width: '95%' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <AlertTriangle size={20} color="#f43f5e" />
-            <h3 style={{ color: '#ffffff' }}>Request Artwork Revision</h3>
+            <AlertTriangle size={20} color="#dc2626" />
+            <h3 style={{ color: 'var(--text-main)' }}>Request Artwork Revision</h3>
           </div>
           <button
             onClick={onClose}
@@ -51,7 +51,7 @@ export default function RequestRevisionModal({
           <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div
               style={{
-                background: 'rgba(255, 255, 255, 0.03)',
+                background: '#f8fafc',
                 border: '1px solid var(--border-subtle)',
                 borderRadius: 'var(--radius-md)',
                 padding: '12px',
@@ -83,7 +83,7 @@ export default function RequestRevisionModal({
             <button
               type="submit"
               className="btn btn-primary btn-sm"
-              style={{ background: '#f43f5e', borderColor: '#f43f5e', color: '#ffffff' }}
+              style={{ background: '#dc2626', borderColor: '#b91c1c', color: '#ffffff' }}
             >
               <AlertTriangle size={14} />
               <span>Submit Revision Request</span>

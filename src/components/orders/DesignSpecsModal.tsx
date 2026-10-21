@@ -45,8 +45,8 @@ export default function DesignSpecsModal({
                   fontFamily: 'monospace',
                   fontSize: '0.85rem',
                   fontWeight: 700,
-                  color: '#818cf8',
-                  background: 'rgba(99, 102, 241, 0.15)',
+                  color: '#4338ca',
+                  background: '#eef2ff',
                   padding: '3px 8px',
                   borderRadius: 'var(--radius-sm)',
                 }}
@@ -58,7 +58,7 @@ export default function DesignSpecsModal({
                 Linked Order: <strong>{proof.orderNumber}</strong>
               </span>
             </div>
-            <h3 style={{ fontSize: '1.25rem', color: '#ffffff' }}>{proof.title}</h3>
+            <h3 style={{ fontSize: '1.25rem', color: 'var(--text-main)' }}>{proof.title}</h3>
           </div>
           <button
             onClick={onClose}
@@ -176,7 +176,7 @@ export default function DesignSpecsModal({
             >
               <div
                 style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
+                  background: '#f8fafc',
                   border: '1px solid var(--border-subtle)',
                   borderRadius: 'var(--radius-md)',
                   padding: '12px',
@@ -190,35 +190,35 @@ export default function DesignSpecsModal({
 
               <div
                 style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
+                  background: '#f8fafc',
                   border: '1px solid var(--border-subtle)',
                   borderRadius: 'var(--radius-md)',
                   padding: '12px',
                 }}
               >
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Color Mode & Standard</div>
-                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#38bdf8', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0e7490', marginTop: '2px' }}>
                   {proof.colorProfile} (Calibrated for Roland & Mutoh Printers)
                 </div>
               </div>
 
               <div
                 style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
+                  background: '#f8fafc',
                   border: '1px solid var(--border-subtle)',
                   borderRadius: 'var(--radius-md)',
                   padding: '12px',
                 }}
               >
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Graphic Artist / Drafter</div>
-                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#a5b4fc', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#4338ca', marginTop: '2px' }}>
                   {proof.designerName}
                 </div>
               </div>
 
               <div
                 style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
+                  background: '#f8fafc',
                   border: '1px solid var(--border-subtle)',
                   borderRadius: 'var(--radius-md)',
                   padding: '12px',
@@ -235,7 +235,7 @@ export default function DesignSpecsModal({
           {/* Client Feedback & Revision History Trail */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-              <History size={15} color="#818cf8" />
+              <History size={15} color="#4338ca" />
               <h4 style={{ fontSize: '0.85rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
                 Artwork Revision History & Audit Trail ({proof.revisions.length} iterations)
               </h4>
@@ -254,7 +254,7 @@ export default function DesignSpecsModal({
                         ? 'rgba(16, 185, 129, 0.06)'
                         : isRevRequested
                         ? 'rgba(244, 63, 94, 0.06)'
-                        : 'rgba(255, 255, 255, 0.02)',
+                        : '#f8fafc',
                       border: isRevApproved
                         ? '1px solid rgba(16, 185, 129, 0.25)'
                         : isRevRequested
@@ -270,7 +270,7 @@ export default function DesignSpecsModal({
                           style={{
                             fontSize: '0.75rem',
                             fontWeight: 700,
-                            color: isRevApproved ? '#34d399' : isRevRequested ? '#fda4af' : '#a5b4fc',
+                            color: isRevApproved ? '#047857' : isRevRequested ? '#be123c' : '#4338ca',
                           }}
                         >
                           Revision v{rev.versionNumber}
@@ -313,7 +313,7 @@ export default function DesignSpecsModal({
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <button
                 className="btn btn-secondary btn-sm"
-                style={{ color: '#fda4af', borderColor: 'rgba(244, 63, 94, 0.4)' }}
+                style={{ color: '#be123c', borderColor: 'rgba(220, 38, 38, 0.3)' }}
                 onClick={() => {
                   onClose();
                   onRequestRevision(proof);
@@ -324,7 +324,7 @@ export default function DesignSpecsModal({
               </button>
               <button
                 className="btn btn-primary btn-sm"
-                style={{ background: '#10b981', borderColor: '#10b981', color: '#ffffff' }}
+                style={{ background: '#047857', borderColor: '#047857', color: '#ffffff' }}
                 onClick={() => {
                   onClose();
                   onApprove(proof);

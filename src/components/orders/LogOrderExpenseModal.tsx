@@ -98,13 +98,13 @@ export default function LogOrderExpenseModal({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#fb7185',
+                color: '#dc2626',
               }}
             >
               <Receipt size={18} />
             </div>
             <div>
-              <h3 style={{ color: '#ffffff', margin: 0, fontSize: '1.1rem' }}>Log Order Direct Expense</h3>
+              <h3 style={{ color: 'var(--text-main)', margin: 0, fontSize: '1.1rem' }}>Log Order Direct Expense</h3>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                 Attributed directly to {order.orderNumber} • Real-time Cost Waterfall Rollup
               </div>
@@ -136,14 +136,14 @@ export default function LogOrderExpenseModal({
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#38bdf8', fontWeight: 700, fontFamily: 'monospace' }}>
+                <span style={{ color: '#0e7490', fontWeight: 700, fontFamily: 'monospace' }}>
                   {order.orderNumber}
                 </span>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
                   Delivery: {order.expectedDeliveryDate}
                 </span>
               </div>
-              <div style={{ fontWeight: 600, color: '#ffffff', marginTop: '2px' }}>{order.title}</div>
+              <div style={{ fontWeight: 600, color: 'var(--text-main)', marginTop: '2px' }}>{order.title}</div>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.775rem' }}>
                 Client: <strong>{order.customerName}</strong>
               </div>
@@ -215,7 +215,7 @@ export default function LogOrderExpenseModal({
             {/* VAT Checkbox & Financial Rollup Preview */}
             <div
               style={{
-                background: 'rgba(255, 255, 255, 0.03)',
+                background: '#f8fafc',
                 border: '1px solid var(--border-subtle)',
                 borderRadius: 'var(--radius-md)',
                 padding: '12px 14px',
@@ -248,12 +248,12 @@ export default function LogOrderExpenseModal({
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   fontSize: '0.85rem',
-                  borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderTop: '1px solid var(--border-subtle)',
                   paddingTop: '6px',
                 }}
               >
                 <span style={{ color: 'var(--text-muted)' }}>Total Outlay (Net + VAT):</span>
-                <strong style={{ color: '#fb7185', fontSize: '1rem' }}>{formatETB(totalAmount)}</strong>
+                <strong style={{ color: '#dc2626', fontSize: '1rem' }}>{formatETB(totalAmount)}</strong>
               </div>
             </div>
 
@@ -301,7 +301,7 @@ export default function LogOrderExpenseModal({
             <button
               type="submit"
               className="btn btn-primary btn-sm"
-              style={{ background: '#f43f5e', borderColor: '#e11d48' }}
+              style={{ background: '#dc2626', borderColor: '#b91c1c' }}
             >
               <Receipt size={14} />
               <span>Record Order Expense ({formatETB(amountNet)})</span>
