@@ -26,7 +26,7 @@ export default function Sidebar() {
   const activeOrders = orders.filter((o) => o.status === 'in_production' || o.status === 'pending');
   const activeLeads = leads.filter((l) => l.stage !== 'lost' && l.stage !== 'won');
 
-  const isHr = pathname?.startsWith('/hr');
+  const isHr = pathname?.startsWith('/hr') || pathname?.startsWith('/inventory');
 
   const navItems = [
     {

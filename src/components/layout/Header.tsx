@@ -23,7 +23,7 @@ interface HeaderProps {
 export default function Header({ onOpenGoldenStory }: HeaderProps) {
   const pathname = usePathname();
   const isNoSidebarPage = pathname === '/modules' || pathname === '/forms';
-  const isHr = pathname?.startsWith('/hr');
+  const isHr = pathname?.startsWith('/hr') || pathname?.startsWith('/inventory');
 
   const {
     currentRole,

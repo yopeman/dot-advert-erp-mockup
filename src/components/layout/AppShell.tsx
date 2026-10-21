@@ -12,7 +12,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const isNoSidebarPage = pathname === '/modules' || pathname === '/forms';
-  const isHrPage = pathname?.startsWith('/hr');
+  const isHrPage = pathname?.startsWith('/hr') || pathname?.startsWith('/inventory');
 
   return (
     <ErpDataProvider>
