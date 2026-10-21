@@ -63,6 +63,7 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
 
   return (
     <header
+      className="global-app-header"
       style={{
         height: '68px',
         background: '#ffffff',
@@ -80,24 +81,25 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
       }}
     >
       {/* Left: Organization & Currency */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flexShrink: 0 }}>
         {isNoSidebarPage ? (
           <Link
-            href="/dashboard"
+            href="/"
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
+              gap: '10px',
               textDecoration: 'none',
+              flexShrink: 0,
             }}
-            title="Return to Executive Dashboard"
+            title="Dot Advert ERP Home"
           >
-            <BrandLogo size={34} radius={8} />
+            <BrandLogo size={32} radius={8} />
             <div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#09090b' }}>
+              <div style={{ fontSize: '0.9rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#09090b', lineHeight: 1.1 }}>
                 DOT ADVERT
               </div>
-              <div style={{ fontSize: '0.62rem', fontWeight: 800, color: '#ca8a04', letterSpacing: '0.08em' }}>
+              <div className="header-subtitle" style={{ fontSize: '0.6rem', fontWeight: 800, color: '#ca8a04', letterSpacing: '0.08em' }}>
                 SYSTEM DIRECTORY
               </div>
             </div>
@@ -120,6 +122,7 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
         )}
 
         <span
+          className="header-currency-pill"
           style={{
             fontSize: '0.7rem',
             color: '#71717a',
@@ -128,6 +131,7 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
             padding: '3px 10px',
             borderRadius: '9999px',
             fontWeight: 600,
+            whiteSpace: 'nowrap',
           }}
         >
           Addis Ababa • ETB (15% VAT)
@@ -135,16 +139,16 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
       </div>
 
       {/* Right Controls: Role Switcher, Guided Story, Reset */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
         {/* Low Stock Warning Pill */}
         {lowStockItems.length > 0 && (
           <div
             className="badge badge-amber"
-            style={{ cursor: 'pointer', padding: '5px 12px' }}
+            style={{ cursor: 'pointer', padding: '5px 10px', whiteSpace: 'nowrap' }}
             title={`${lowStockItems.length} items below reorder threshold`}
           >
             <AlertTriangle size={13} />
-            <span>{lowStockItems.length} Low Stock Alert</span>
+            <span className="badge-text">{lowStockItems.length} Low Stock</span>
           </div>
         )}
 
@@ -152,30 +156,31 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
         {unpaidInvoices.length > 0 && (
           <div
             className="badge badge-rose"
-            style={{ cursor: 'pointer', padding: '5px 12px' }}
+            style={{ cursor: 'pointer', padding: '5px 10px', whiteSpace: 'nowrap' }}
             title={`${unpaidInvoices.length} invoices pending payment`}
           >
             <Layers size={13} />
-            <span>{unpaidInvoices.length} Invoices Due</span>
+            <span className="badge-text">{unpaidInvoices.length} Due</span>
           </div>
         )}
 
         {/* Persona / Role Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <UserCheck size={16} color="#71717a" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <UserCheck size={15} color="#71717a" className="role-icon" />
           <select
-            className="form-select"
+            className="form-select header-role-select"
             value={currentRole}
             onChange={(e) => setCurrentRole(e.target.value as ErpRole)}
             style={{
-              padding: '6px 12px',
-              fontSize: '0.8rem',
+              padding: '5px 10px',
+              fontSize: '0.78rem',
               fontWeight: 600,
               background: '#ffffff',
               border: '1px solid #d4d4d8',
               borderRadius: 'var(--radius-md)',
               color: '#09090b',
               cursor: 'pointer',
+              maxWidth: '160px',
             }}
           >
             {Object.entries(roleLabels).map(([roleKey, meta]) => (
@@ -186,22 +191,8 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
           </select>
         </div>
 
-        {/* Dynamic Navigation CTA: Return to Dashboard when on Directory, or Open Directory when on modules */}
-        {isNoSidebarPage ? (
-          <Link
-            href="/dashboard"
-            className="btn btn-secondary btn-sm"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
-            title="Return to Executive Dashboard"
-          >
-            <LayoutDashboard size={14} />
-            <span>Dashboard</span>
-          </Link>
-        ) : (
+        {/* Return to Modules Directory link when on child module pages */}
+        {!isNoSidebarPage && (
           <Link
             href="/"
             className="btn btn-secondary btn-sm"
@@ -213,33 +204,70 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
             title="Browse all 8 modules and operational forms"
           >
             <LayoutGrid size={14} />
-            <span>Modules Directory</span>
+            <span className="btn-text">Modules Directory</span>
           </Link>
         )}
 
         {/* Golden Story Walkthrough CTA */}
         <button
-          className="btn btn-primary btn-sm"
+          className="btn btn-primary btn-sm header-story-btn"
           onClick={onOpenGoldenStory}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
+            whiteSpace: 'nowrap',
           }}
+          title="The Golden Demo Story"
         >
           <Sparkles size={14} />
-          <span>The Golden Demo Story</span>
+          <span className="btn-text">Demo Story</span>
         </button>
 
         {/* Reset Demo Data Button */}
         <button
-          className="btn btn-secondary btn-sm"
+          className="btn btn-secondary btn-sm header-reset-btn"
           onClick={() => setShowResetConfirm(true)}
           title="Restore original factory demo dataset"
         >
           <RotateCcw size={13} />
-          <span>Reset Demo</span>
+          <span className="btn-text">Reset</span>
         </button>
+      </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .global-app-header {
+            padding: 0 12px !important;
+            height: 60px !important;
+          }
+          .header-currency-pill {
+            display: none !important;
+          }
+          .header-subtitle {
+            display: none !important;
+          }
+          .badge-text {
+            display: none !important;
+          }
+          .header-role-select {
+            max-width: 110px !important;
+            padding: 4px 6px !important;
+            font-size: 0.72rem !important;
+          }
+        }
+        @media (max-width: 520px) {
+          .role-icon {
+            display: none !important;
+          }
+          .btn-text {
+            display: none !important;
+          }
+          .header-story-btn, .header-reset-btn {
+            padding: 6px 8px !important;
+          }
+        }
+      `}</style>
 
         {/* Reset Confirmation Modal */}
         {showResetConfirm && (
@@ -301,7 +329,6 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
             </span>
           </div>
         )}
-      </div>
     </header>
   );
 }

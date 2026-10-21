@@ -3528,12 +3528,12 @@ export default function StoreModule() {
           <div style={{ maxWidth: 900 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.7rem', fontWeight: 900, color: C.yellow, background: 'rgba(250,204,21,0.14)', border: '1px solid rgba(250,204,21,0.4)', padding: '3px 12px', borderRadius: 6, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                <Sparkles size={12} /> Enterprise Stores & Inventory Control Tower
+                <Sparkles size={12} /> Enterprise Store & Purchasing Inventory Control Tower
               </span>
               <span style={{ fontSize: '0.73rem', color: '#a1a1aa' }}>• ISO 9001 • IFRS-compliant valuation • Ethiopian VAT ready</span>
             </div>
             <h1 style={{ color: C.white, fontSize: '2.05rem', fontWeight: 900, letterSpacing: '-0.03em', margin: 0 }}>
-              Stores, Inventory & Warehouse Governance
+              Store & Purchasing Inventory Governance
             </h1>
             <p style={{ color: '#a1a1aa', fontSize: '0.84rem', marginTop: 6, maxWidth: 880, lineHeight: 1.5 }}>
               Multi-warehouse control for advertising and large-format signage manufacturing: goods receipt, QC, put-away, production issue, inter-store transfer, cycle counting, batch expiry, wastage, valuation and an immutable Admin-approved audit trail.
