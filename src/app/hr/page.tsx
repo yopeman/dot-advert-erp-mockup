@@ -132,7 +132,17 @@ function HrModuleDashboardInner() {
 
   // React to URL search parameters
   useEffect(() => {
-    if (paramTab === 'payroll') setActiveTab('payroll');
+    if (
+      paramTab === 'overview' ||
+      paramTab === 'payroll' ||
+      paramTab === 'employees' ||
+      paramTab === 'attendance' ||
+      paramTab === 'leaves' ||
+      paramTab === 'recruitment' ||
+      paramTab === 'performance'
+    ) {
+      setActiveTab(paramTab);
+    }
     if (paramTab === 'allocation') {
       setActiveTab('payroll');
       setPayrollSubTab('labor_allocation');

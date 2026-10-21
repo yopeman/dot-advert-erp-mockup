@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useErp } from '@/context/ErpDataContext';
+import BrandLogo from '@/components/layout/BrandLogo';
 import { ErpRole } from '@/types/erp';
 import {
   Sparkles,
@@ -90,27 +91,7 @@ export default function Header({ onOpenGoldenStory }: HeaderProps) {
             }}
             title="Return to Executive Dashboard"
           >
-            <div
-              style={{
-                width: '34px',
-                height: '34px',
-                borderRadius: '8px',
-                background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 2px 8px rgba(79, 70, 229, 0.4)',
-              }}
-            >
-              <div
-                style={{
-                  width: '10px',
-                  height: '10px',
-                  borderRadius: '50%',
-                  background: '#ffffff',
-                }}
-              />
-            </div>
+            <BrandLogo size={34} radius={8} />
             <div>
               <div style={{ fontSize: '0.95rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>
                 DOT ADVERT

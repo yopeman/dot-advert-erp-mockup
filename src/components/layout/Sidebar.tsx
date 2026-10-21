@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useErp } from '@/context/ErpDataContext';
+import BrandLogo from '@/components/layout/BrandLogo';
 import {
   LayoutDashboard,
   LayoutGrid,
@@ -16,11 +17,12 @@ import {
   PieChart,
   TrendingUp,
   BarChart3,
+  Building2,
 } from 'lucide-react';
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { lowStockItems, invoices, orders } = useErp();
+  const { lowStockItems, invoices, orders, suppliers } = useErp();
 
   const unpaidInvoices = invoices.filter((i) => i.paymentStatus !== 'paid');
   const activeOrders = orders.filter((o) => o.status === 'in_production' || o.status === 'pending');
@@ -49,15 +51,22 @@ export default function Sidebar() {
     },
     {
       label: 'Inventory & Stores',
-      href: '/dashboard/inventory',
+      href: '/inventory',
       icon: Boxes,
-      badge: lowStockItems.length > 0 ? `${lowStockItems.length} Low` : undefined,
+      badge: lowStockItems.length > 0 ? `${lowStockItems.length} Low` : 'Dedicated Hub',
       badgeType: 'amber',
     },
     {
       label: 'Procurement & POs',
       href: '/dashboard/procurement',
       icon: ShoppingCart,
+    },
+    {
+      label: 'Suppliers & Vendors',
+      href: '/inventory?tab=suppliers',
+      icon: Building2,
+      badge: `${suppliers.length} Vendors`,
+      badgeType: 'emerald',
     },
     {
       label: 'Production & Orders',
@@ -131,28 +140,7 @@ export default function Sidebar() {
             borderBottom: '1px solid var(--border-subtle)',
           }}
         >
-          <div
-            style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '8px',
-              background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(79, 70, 229, 0.4)',
-            }}
-          >
-            <div
-              style={{
-                width: '12px',
-                height: '12px',
-                borderRadius: '50%',
-                background: '#ffffff',
-                boxShadow: '0 0 6px rgba(255, 255, 255, 0.8)',
-              }}
-            />
-          </div>
+          <BrandLogo size={34} radius={8} />
           <div>
             <div style={{ fontSize: '1.05rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>
               DOT ADVERT

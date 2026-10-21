@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useErp } from '@/context/ErpDataContext';
+import BrandLogo from '@/components/layout/BrandLogo';
 import {
   TrendingUp,
   Building2,
@@ -13,7 +14,6 @@ import {
   Wallet,
   ArrowLeft,
   LayoutGrid,
-  Users,
   Sparkles,
   DollarSign,
   ChevronRight,
@@ -114,21 +114,7 @@ function CrmSidebarContent() {
             gap: '12px',
           }}
         >
-          <div
-            style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: 'var(--radius-md)',
-              background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
-              color: '#ffffff',
-            }}
-          >
-            <Users size={20} />
-          </div>
+          <BrandLogo size={38} radius={10} />
           <div>
             <div style={{ fontSize: '1.05rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>
               DOT ADVERT

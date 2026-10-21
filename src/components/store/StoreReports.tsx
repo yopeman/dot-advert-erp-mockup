@@ -84,6 +84,8 @@ const ITEM_TYPE_COLORS: Record<ItemType, string> = {
 const REQUEST_LABELS: Record<StoreRequestType, string> = {
   goods_receipt: 'Goods Receipt',
   material_issue: 'Material Issue',
+  staff_requisition: 'Staff Requisition',
+  staff_return: 'Staff Item Return',
   inter_store_transfer: 'Inter-Store Transfer',
   stock_adjustment: 'Stock Adjustment',
   cycle_count: 'Cycle Count',
@@ -577,6 +579,73 @@ export default function StoreReports({
     onNotify('Full store report pack exported as JSON.');
   };
 
+  const printReport = () => {
+    const printWindow = window.open('', '_blank', 'width=1100,height=820');
+    if (!printWindow) {
+      onNotify('Print window was blocked. Allow pop-ups for this site and try again.');
+      return;
+    }
+    const sectionLabel = REPORT_TABS.find((tab) => tab.id === activeReport)?.label || 'Store Report';
+    const warehouseRows = warehouseValues
+      .map((row) => `<tr><td>${row.store.name}</td><td>${row.skuCount}</td><td>${formatETB(row.value)}</td></tr>`)
+      .join('');
+    const topItemRows = sortedByValue
+      .slice(0, 15)
+      .map((item) => `<tr><td>${item.code}</td><td>${item.name}</td><td>${item.currentStock} ${item.unit}</td><td>${formatETB(item.purchasePrice)}</td><td>${formatETB(item.currentStock * item.purchasePrice)}</td></tr>`)
+      .join('');
+    const approvalRows = requestPerformance
+      .map((row) => `<tr><td>${row.label}</td><td>${row.total}</td><td>${row.approved}</td><td>${row.rejected}</td><td>${row.pending}</td><td>${formatETB(row.value)}</td></tr>`)
+      .join('');
+    printWindow.document.write(`<!doctype html>
+      <html><head><title>${reportRef} — ${periodMeta.label}</title>
+      <style>
+        @page { size: A4; margin: 16mm; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 0; font-size: 11px; }
+        h1 { font-size: 20px; margin: 0; }
+        h2 { font-size: 13px; margin: 22px 0 8px; border-bottom: 2px solid #09090b; padding-bottom: 4px; }
+        .brand { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 4px solid #facc15; padding-bottom: 12px; }
+        .brand p { margin: 3px 0 0; color: #64748b; font-size: 10px; }
+        .meta { text-align: right; color: #64748b; font-size: 10px; line-height: 1.6; }
+        .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
+        .metric { border: 1px solid #e2e8f0; border-radius: 6px; padding: 9px; background: #f8fafc; }
+        .metric span { display: block; color: #64748b; font-size: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: .5px; }
+        .metric strong { display: block; font-size: 14px; margin-top: 3px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+        th { background: #09090b; color: #facc15; text-align: left; padding: 6px 7px; font-size: 9px; }
+        td { border-bottom: 1px solid #e2e8f0; padding: 6px 7px; font-size: 9.5px; }
+        tr:nth-child(even) td { background: #f8fafc; }
+        .footer { margin-top: 26px; border-top: 1px solid #cbd5e1; padding-top: 8px; color: #94a3b8; font-size: 8.5px; display: flex; justify-content: space-between; }
+        .stamp { margin-top: 20px; padding: 10px; border: 1px dashed #cbd5e1; font-size: 9px; color: #64748b; }
+      </style></head>
+      <body>
+        <div class="brand">
+          <div><h1>Dot Advert ERP — Stores & Inventory</h1><p>${sectionLabel} • ${periodMeta.label} • ${reportRef}</p></div>
+          <div class="meta">Generated: ${formatDateTime('2026-10-21T14:00:00')}<br/>Prepared for: Admin / Store Governance<br/>Classification: Internal</div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><span>Inventory Valuation</span><strong>${formatETB(totalValuation)}</strong></div>
+          <div class="metric"><span>Posted Movement Value</span><strong>${formatETB(movementValue)}</strong></div>
+          <div class="metric"><span>Pending Approvals</span><strong>${pendingRequests.length}</strong></div>
+          <div class="metric"><span>Inventory Accuracy</span><strong>${inventoryAccuracy.toFixed(1)}%</strong></div>
+          <div class="metric"><span>Wastage Value</span><strong>${formatETB(wastageValue)}</strong></div>
+          <div class="metric"><span>Expiry Exposure</span><strong>${formatETB(expiringValue)}</strong></div>
+          <div class="metric"><span>Dead Stock</span><strong>${formatETB(deadStockValue)}</strong></div>
+          <div class="metric"><span>Open PO Value</span><strong>${formatETB(openPurchaseValue)}</strong></div>
+        </div>
+        <h2>Inventory by Warehouse</h2>
+        <table><thead><tr><th>Warehouse</th><th>Active SKUs</th><th>Valuation</th></tr></thead><tbody>${warehouseRows}</tbody></table>
+        <h2>Top Inventory Holdings</h2>
+        <table><thead><tr><th>SKU</th><th>Item</th><th>On Hand</th><th>Unit Cost</th><th>Valuation</th></tr></thead><tbody>${topItemRows}</tbody></table>
+        <h2>Admin Approval Performance</h2>
+        <table><thead><tr><th>Request Type</th><th>Total</th><th>Approved</th><th>Rejected</th><th>Pending</th><th>Value</th></tr></thead><tbody>${approvalRows}</tbody></table>
+        <div class="stamp">Control statement: This report is generated from the live store ledger and maker-checker approval records. Figures are denominated in Ethiopian Birr (ETB). System signature: ${reportRef} • Admin approval authority required for all stock postings.</div>
+        <div class="footer"><span>Dot Advert ERP • Stores & Inventory Control</span><span>${reportRef} • Page 1</span></div>
+        <script>window.onload = function () { window.print(); };</script>
+      </body></html>`);
+    printWindow.document.close();
+    onNotify(`Print-ready PDF report opened for ${periodMeta.label}.`);
+  };
+
   const renderExecutive = () => (
     <div style={{ display: 'grid', gap: 18 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(185px, 1fr))', gap: 13 }}>
@@ -946,7 +1015,8 @@ export default function StoreReports({
           </div>
           <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap' }}>
             <button className="btn-hr-yellow" onClick={exportFullPack}><Download size={14} /><span>Download Report Pack</span></button>
-            <button className="btn-hr-black" style={{ background: '#18181b', border: '1px solid #3f3f46' }} onClick={() => onNotify(`Report ${reportRef} generated for ${periodMeta.label}.`)}><FileSpreadsheet size={14} color={C.yellow} /><span>Generate Snapshot</span></button>
+            <button className="btn-hr-black" style={{ background: '#18181b', border: '1px solid #3f3f46' }} onClick={printReport}><FileText size={14} color={C.yellow} /><span>Print / PDF</span></button>
+            <button className="btn-hr-black" style={{ background: '#18181b', border: '1px solid #3f3f46' }} onClick={() => onNotify(`Snapshot ${reportRef} generated for ${periodMeta.label}.`)}><FileSpreadsheet size={14} color={C.yellow} /><span>Generate Snapshot</span></button>
           </div>
         </div>
       </section>

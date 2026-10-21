@@ -543,7 +543,7 @@ export default function DashboardPage() {
               <Boxes size={17} color="#06b6d4" />
               <h3>Store Inventory Balances</h3>
             </div>
-            <Link href="/dashboard/inventory" style={{ fontSize: '0.75rem', color: '#67e8f9', textDecoration: 'underline' }}>
+            <Link href="/inventory" style={{ fontSize: '0.75rem', color: '#67e8f9', textDecoration: 'underline' }}>
               Manage Stores
             </Link>
           </div>

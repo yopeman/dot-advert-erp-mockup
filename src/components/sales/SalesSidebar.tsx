@@ -4,6 +4,7 @@ import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useErp } from '@/context/ErpDataContext';
+import BrandLogo from '@/components/layout/BrandLogo';
 import {
   Receipt,
   FileSpreadsheet,
@@ -106,7 +107,7 @@ function SalesSidebarContent() {
     },
     {
       label: 'Inventory & Materials',
-      href: '/dashboard/inventory',
+      href: '/inventory',
       icon: Layers,
     },
   ];
@@ -156,21 +157,7 @@ function SalesSidebarContent() {
         </Link>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div
-            style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: 'var(--radius-md)',
-              background: 'linear-gradient(135deg, #9333ea 0%, #c084fc 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(168, 85, 247, 0.35)',
-              color: '#ffffff',
-            }}
-          >
-            <Receipt size={20} />
-          </div>
+          <BrandLogo size={38} radius={10} />
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ fontWeight: 800, fontSize: '1rem', color: '#ffffff', letterSpacing: '-0.02em' }}>

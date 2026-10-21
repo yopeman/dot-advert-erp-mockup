@@ -4,6 +4,7 @@ import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useErp } from '@/context/ErpDataContext';
+import BrandLogo from '@/components/layout/BrandLogo';
 import {
   TrendingUp,
   FileSpreadsheet,
@@ -123,7 +124,7 @@ function FinanceSidebarContent() {
     },
     {
       label: 'Inventory & Materials',
-      href: '/dashboard/inventory',
+      href: '/inventory',
       icon: Layers,
     },
     {
@@ -178,21 +179,7 @@ function FinanceSidebarContent() {
         </Link>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div
-            style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: 'var(--radius-md)',
-              background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)',
-              color: '#ffffff',
-            }}
-          >
-            <TrendingUp size={20} />
-          </div>
+          <BrandLogo size={38} radius={10} />
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ fontWeight: 800, fontSize: '1rem', color: '#ffffff', letterSpacing: '-0.02em' }}>

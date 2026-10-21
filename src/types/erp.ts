@@ -109,17 +109,29 @@ export interface Supplier {
   isVatRegistered: boolean;
 }
 
-export type POStatus = 'draft' | 'approved' | 'partially_received' | 'received' | 'closed' | 'cancelled';
+export type POStatus =
+  | 'draft'
+  | 'pending_admin'
+  | 'approved'
+  | 'partially_received'
+  | 'received'
+  | 'closed'
+  | 'cancelled';
 
 export interface PurchaseOrderItem {
   itemId: string;
+  itemCode?: string;
   itemName: string;
+  category?: string;
+  specifications?: string;
+  isNewItem?: boolean;
   quantity: number;
   unit: UnitOfMeasure;
   unitPrice: number;
   vatRate: number;
   vatAmount: number;
   totalAmount: number;
+  targetStoreId?: string;
 }
 
 export interface PurchaseOrder {
@@ -129,6 +141,7 @@ export interface PurchaseOrder {
   supplierId: string;
   supplierName: string;
   supplierTin: string;
+  isNewSupplier?: boolean;
   items: PurchaseOrderItem[];
   subtotal: number;
   vatTotal: number;
@@ -136,8 +149,13 @@ export interface PurchaseOrder {
   expectedDeliveryDate: string;
   status: POStatus;
   requestedBy: string;
+  requestedByRole?: string;
   approvedBy?: string;
+  approvedAt?: string;
+  approvalNotes?: string;
   paymentTerms: string;
+  targetStoreId?: string;
+  targetStoreName?: string;
   notes?: string;
 }
 

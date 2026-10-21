@@ -213,11 +213,11 @@ export default function ModulesDirectoryPage() {
         },
         tags: ['Stores Catalog', 'Supplier POs', 'Inbound GRN QA', 'Store Transfers', 'Wastage & Scrap'],
         quickActions: [
-          { label: 'Stock Matrix', href: '/dashboard/inventory' },
+          { label: 'Stock Matrix', href: '/inventory' },
           { label: 'Purchase Orders', href: '/dashboard/procurement' },
           { label: 'Goods Receipts (GRN)', href: '/dashboard/procurement' },
-          { label: 'Store Transfers', href: '/dashboard/inventory' },
-          { label: 'Wastage Center', href: '/dashboard/inventory' },
+          { label: 'Store Transfers', href: '/inventory?tab=outbound' },
+          { label: 'Wastage Center', href: '/inventory?tab=wastage' },
         ],
       },
 
