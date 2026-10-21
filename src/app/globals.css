@@ -120,6 +120,12 @@ aside,
   margin: 0 auto;
 }
 
+@media (max-width: 768px) {
+  .page-body {
+    padding: 12px 10px 32px;
+  }
+}
+
 /* ─── Typography ─── */
 h1 {
   font-size: 1.75rem;
