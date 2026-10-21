@@ -36,10 +36,10 @@ export default function OrdersHeader() {
     <header
       style={{
         height: '68px',
-        background: 'rgba(12, 19, 34, 0.92)',
+        background: 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(56, 189, 248, 0.2)',
+        borderBottom: '1px solid var(--border-light)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -51,42 +51,44 @@ export default function OrdersHeader() {
     >
       {/* Left: Breadcrumbs & Module Title */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div
             style={{
-              width: '32px',
-              height: '32px',
+              width: '34px',
+              height: '34px',
               borderRadius: 'var(--radius-sm)',
-              background: 'linear-gradient(135deg, #0284c7 0%, #a855f7 100%)',
+              background: '#09090b',
+              border: '1px solid #27272a',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#ffffff',
+              color: '#facc15',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.06)',
             }}
           >
-            <Cog size={17} />
+            <Cog size={18} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff' }}>
+              <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.01em' }}>
                 Order & Production Desk
               </span>
               <span
                 style={{
                   fontSize: '0.65rem',
                   fontWeight: 700,
-                  color: '#38bdf8',
-                  background: 'rgba(56, 189, 248, 0.15)',
-                  padding: '2px 7px',
-                  borderRadius: '10px',
-                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                  color: '#854d0e',
+                  background: '#fef9c3',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  border: '1px solid #fde047',
                   letterSpacing: '0.04em',
                 }}
               >
                 MODULE 2
               </span>
             </div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
               Dot Advert ERP • Large-Format Printing, Fabrication & Cost Rollup
             </div>
           </div>
@@ -99,37 +101,37 @@ export default function OrdersHeader() {
           display: 'flex',
           alignItems: 'center',
           gap: '16px',
-          background: 'rgba(255, 255, 255, 0.03)',
-          border: '1px solid rgba(255, 255, 255, 0.06)',
+          background: '#f8fafc',
+          border: '1px solid var(--border-light)',
           padding: '6px 16px',
           borderRadius: 'var(--radius-md)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem' }}>
-          <Boxes size={14} color="#818cf8" />
-          <span style={{ color: 'var(--text-dim)' }}>Jobs:</span>
-          <strong style={{ color: '#ffffff' }}>{orders.length}</strong>
+          <Boxes size={14} color="#71717a" />
+          <span style={{ color: 'var(--text-muted)' }}>Jobs:</span>
+          <strong style={{ color: '#09090b', fontWeight: 700 }}>{orders.length}</strong>
         </div>
 
-        <div style={{ width: '1px', height: '14px', background: 'rgba(255, 255, 255, 0.1)' }} />
+        <div style={{ width: '1px', height: '14px', background: 'var(--border-light)' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem' }}>
-          <Palette size={14} color="#c084fc" />
-          <span style={{ color: 'var(--text-dim)' }}>Proofs:</span>
-          <strong style={{ color: '#c084fc' }}>{approvedDesigns}/{designProofs.length}</strong>
+          <Palette size={14} color="#ca8a04" />
+          <span style={{ color: 'var(--text-muted)' }}>Proofs:</span>
+          <strong style={{ color: '#854d0e', fontWeight: 700 }}>{approvedDesigns}/{designProofs.length}</strong>
           {pendingProofs > 0 && (
-            <span style={{ fontSize: '0.65rem', color: '#f59e0b', fontWeight: 700 }}>
+            <span style={{ fontSize: '0.65rem', color: '#b45309', fontWeight: 700, background: '#fef3c7', padding: '1px 5px', borderRadius: '4px' }}>
               ({pendingProofs} awaiting)
             </span>
           )}
         </div>
 
-        <div style={{ width: '1px', height: '14px', background: 'rgba(255, 255, 255, 0.1)' }} />
+        <div style={{ width: '1px', height: '14px', background: 'var(--border-light)' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem' }}>
-          <Cog size={14} color="#38bdf8" />
-          <span style={{ color: 'var(--text-dim)' }}>Active WOs:</span>
-          <strong style={{ color: '#38bdf8' }}>{inProgressWOs} in hall</strong>
+          <Cog size={14} color="#09090b" />
+          <span style={{ color: 'var(--text-muted)' }}>Active WOs:</span>
+          <strong style={{ color: '#09090b', fontWeight: 700 }}>{inProgressWOs} in hall</strong>
         </div>
       </div>
 
@@ -141,8 +143,6 @@ export default function OrdersHeader() {
           style={{
             fontSize: '0.75rem',
             padding: '6px 12px',
-            color: 'var(--text-muted)',
-            borderColor: 'rgba(255, 255, 255, 0.1)',
           }}
           title="Reset sample order and proof data to factory initial defaults"
         >
@@ -162,7 +162,7 @@ export default function OrdersHeader() {
         <Link
           href="/dashboard"
           className="btn btn-primary btn-sm"
-          style={{ fontSize: '0.75rem', padding: '6px 12px' }}
+          style={{ fontSize: '0.75rem', padding: '6px 14px' }}
         >
           <LayoutDashboard size={13} />
           <span>Dashboard</span>

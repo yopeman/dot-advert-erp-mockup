@@ -68,6 +68,7 @@ export default function OrdersPage() {
     expectedDeliveryDate: '2026-10-30',
     priority: 'normal' as 'low' | 'normal' | 'high' | 'urgent',
     notes: '',
+    siteSurveyIds: [] as string[],
   });
 
   // New Work Order Form State
@@ -141,6 +142,7 @@ export default function OrdersPage() {
       expectedDeliveryDate: newOrderForm.expectedDeliveryDate,
       priority: newOrderForm.priority,
       notes: newOrderForm.notes,
+      siteSurveyIds: newOrderForm.siteSurveyIds,
     });
 
     setShowNewOrderModal(false);

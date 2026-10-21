@@ -31,7 +31,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <ErpDataProvider>
-      <div className="app-container" style={{ background: isHrPage ? '#f8fafc' : undefined }}>
+      <div className="app-container" style={{ background: 'var(--bg-app)' }}>
         <Suspense fallback={null}>
           {isCrmPage ? (
             <CrmSidebar />
@@ -51,7 +51,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           className="main-content"
           style={{
             width: isNoSidebarPage ? '100%' : undefined,
-            background: isHrPage ? '#f8fafc' : undefined,
+            background: 'var(--bg-app)',
           }}
         >
           <Suspense fallback={null}>
@@ -72,9 +72,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <main
             className="page-body"
             style={{
-              background: isHrPage ? '#f8fafc' : undefined,
-              color: isHrPage ? '#0f172a' : undefined,
-              maxWidth: isHrPage ? '1680px' : undefined,
+              background: 'var(--bg-app)',
+              color: 'var(--text-main)',
+              maxWidth: isNoSidebarPage ? '1440px' : '1680px',
             }}
           >
             {children}

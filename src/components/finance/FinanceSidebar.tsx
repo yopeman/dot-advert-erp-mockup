@@ -137,8 +137,8 @@ function FinanceSidebarContent() {
     <aside
       style={{
         width: '275px',
-        background: '#09131a',
-        borderRight: '1px solid rgba(16, 185, 129, 0.2)',
+        background: '#09090b',
+        borderRight: '1px solid rgba(255, 255, 255, 0.08)',
         display: 'flex',
         flexDirection: 'column',
         height: '100vh',
@@ -153,8 +153,8 @@ function FinanceSidebarContent() {
       <div
         style={{
           padding: '20px 18px 16px',
-          borderBottom: '1px solid rgba(16, 185, 129, 0.15)',
-          background: 'linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, transparent 100%)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'linear-gradient(180deg, rgba(250, 204, 21, 0.06) 0%, transparent 100%)',
         }}
       >
         <Link
@@ -169,7 +169,7 @@ function FinanceSidebarContent() {
             textDecoration: 'none',
             padding: '3px 8px',
             borderRadius: 'var(--radius-sm)',
-            background: 'rgba(255, 255, 255, 0.04)',
+            background: 'rgba(255, 255, 255, 0.06)',
             transition: 'all 0.15s ease',
           }}
         >
@@ -183,15 +183,15 @@ function FinanceSidebarContent() {
               width: '38px',
               height: '38px',
               borderRadius: 'var(--radius-md)',
-              background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+              background: '#facc15',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)',
-              color: '#ffffff',
+              boxShadow: '0 4px 14px rgba(250, 204, 21, 0.25)',
+              color: '#000000',
             }}
           >
-            <TrendingUp size={20} />
+            <TrendingUp size={20} strokeWidth={2.5} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -202,11 +202,11 @@ function FinanceSidebarContent() {
                 style={{
                   fontSize: '0.62rem',
                   fontWeight: 700,
-                  color: '#10b981',
-                  background: 'rgba(16, 185, 129, 0.18)',
+                  color: '#facc15',
+                  background: 'rgba(250, 204, 21, 0.15)',
                   padding: '2px 6px',
                   borderRadius: '6px',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  border: '1px solid rgba(250, 204, 21, 0.3)',
                 }}
               >
                 CFO / P&L
@@ -227,7 +227,7 @@ function FinanceSidebarContent() {
             fontWeight: 700,
             textTransform: 'uppercase',
             letterSpacing: '0.08em',
-            color: '#10b981',
+            color: '#facc15',
             padding: '0 8px',
             marginBottom: '8px',
             display: 'flex',
@@ -255,21 +255,21 @@ function FinanceSidebarContent() {
                   borderRadius: 'var(--radius-md)',
                   textDecoration: 'none',
                   fontSize: '0.82rem',
-                  fontWeight: isActive ? 600 : 500,
-                  color: isActive ? '#ffffff' : 'var(--text-muted)',
+                  fontWeight: isActive ? 700 : 500,
+                  color: isActive ? '#facc15' : 'var(--text-muted)',
                   background: isActive
-                    ? 'linear-gradient(90deg, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0.08) 100%)'
+                    ? 'rgba(250, 204, 21, 0.12)'
                     : 'transparent',
-                  borderLeft: isActive ? '3px solid #10b981' : '3px solid transparent',
-                  borderTop: isActive ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid transparent',
-                  borderBottom: isActive ? '1px solid rgba(16, 185, 129, 0.15)' : '1px solid transparent',
+                  borderLeft: isActive ? '3px solid #facc15' : '3px solid transparent',
+                  borderTop: isActive ? '1px solid rgba(250, 204, 21, 0.25)' : '1px solid transparent',
+                  borderBottom: isActive ? '1px solid rgba(250, 204, 21, 0.15)' : '1px solid transparent',
                   transition: 'all 0.15s ease',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <Icon
                     size={16}
-                    color={isActive ? '#10b981' : 'var(--text-dim)'}
+                    color={isActive ? '#facc15' : 'var(--text-dim)'}
                     style={{ flexShrink: 0 }}
                   />
                   <span>{item.label}</span>
@@ -278,35 +278,14 @@ function FinanceSidebarContent() {
                   <span
                     style={{
                       fontSize: '0.65rem',
-                      fontWeight: 600,
+                      fontWeight: 700,
                       padding: '2px 6px',
                       borderRadius: '8px',
-                      background:
-                        item.badgeType === 'emerald'
-                          ? 'rgba(16, 185, 129, 0.2)'
-                          : item.badgeType === 'blue'
-                          ? 'rgba(59, 130, 246, 0.2)'
-                          : item.badgeType === 'cyan'
-                          ? 'rgba(6, 182, 212, 0.2)'
-                          : item.badgeType === 'amber'
-                          ? 'rgba(245, 158, 11, 0.2)'
-                          : 'rgba(168, 85, 247, 0.2)',
-                      color:
-                        item.badgeType === 'emerald'
-                          ? '#6ee7b7'
-                          : item.badgeType === 'blue'
-                          ? '#93c5fd'
-                          : item.badgeType === 'cyan'
-                          ? '#67e8f9'
-                          : item.badgeType === 'amber'
-                          ? '#fcd34d'
-                          : '#d8b4fe',
-                      border:
-                        item.badgeType === 'emerald'
-                          ? '1px solid rgba(16, 185, 129, 0.3)'
-                          : item.badgeType === 'amber'
-                          ? '1px solid rgba(245, 158, 11, 0.3)'
-                          : '1px solid transparent',
+                      background: isActive
+                        ? 'rgba(250, 204, 21, 0.25)'
+                        : 'rgba(255, 255, 255, 0.08)',
+                      color: isActive ? '#fef08a' : 'var(--text-dim)',
+                      border: isActive ? '1px solid rgba(250, 204, 21, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
                     }}
                   >
                     {item.badge}
@@ -323,8 +302,8 @@ function FinanceSidebarContent() {
         style={{
           margin: '8px 12px',
           padding: '14px',
-          background: 'rgba(16, 185, 129, 0.06)',
-          border: '1px solid rgba(16, 185, 129, 0.2)',
+          background: 'rgba(250, 204, 21, 0.05)',
+          border: '1px solid rgba(250, 204, 21, 0.25)',
           borderRadius: 'var(--radius-md)',
         }}
       >
@@ -336,7 +315,7 @@ function FinanceSidebarContent() {
             marginBottom: '10px',
           }}
         >
-          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#6ee7b7', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#facc15', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Operating Profit Margin
           </span>
           <span
@@ -344,8 +323,8 @@ function FinanceSidebarContent() {
               width: '6px',
               height: '6px',
               borderRadius: '50%',
-              background: '#10b981',
-              boxShadow: '0 0 8px #10b981',
+              background: '#facc15',
+              boxShadow: '0 0 8px #facc15',
             }}
           />
         </div>
@@ -353,21 +332,21 @@ function FinanceSidebarContent() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div>
             <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>Net Operating Income (EBITDA)</div>
-            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#10b981', fontFamily: 'monospace' }}>
+            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#facc15', fontFamily: 'monospace' }}>
               {formatETB(operatingProfit)}
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '6px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '6px' }}>
             <div>
               <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)' }}>Gross Margin</div>
-              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#38bdf8' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#ffffff' }}>
                 {grossMarginPct.toFixed(1)}%
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)' }}>Net Margin</div>
-              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#10b981' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#facc15' }}>
                 {netMarginPct.toFixed(1)}%
               </div>
             </div>
@@ -424,8 +403,8 @@ function FinanceSidebarContent() {
       <div
         style={{
           padding: '12px 14px',
-          borderTop: '1px solid rgba(16, 185, 129, 0.15)',
-          background: 'rgba(0, 0, 0, 0.25)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'rgba(0, 0, 0, 0.4)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -434,8 +413,8 @@ function FinanceSidebarContent() {
             style={{
               fontSize: '0.65rem',
               fontWeight: 700,
-              color: '#10b981',
-              background: 'rgba(16, 185, 129, 0.15)',
+              color: '#facc15',
+              background: 'rgba(250, 204, 21, 0.15)',
               padding: '1px 6px',
               borderRadius: '4px',
               textTransform: 'uppercase',
@@ -451,8 +430,8 @@ function FinanceSidebarContent() {
             width: '100%',
             padding: '6px 10px',
             fontSize: '0.75rem',
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(16, 185, 129, 0.25)',
+            background: '#18181b',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
             borderRadius: 'var(--radius-sm)',
             color: '#ffffff',
             outline: 'none',
@@ -475,8 +454,8 @@ export default function FinanceSidebar() {
         <aside
           style={{
             width: '275px',
-            background: '#09131a',
-            borderRight: '1px solid rgba(16, 185, 129, 0.2)',
+            background: '#09090b',
+            borderRight: '1px solid rgba(255, 255, 255, 0.08)',
             height: '100vh',
           }}
         />

@@ -108,8 +108,8 @@ export default function Sidebar() {
     <aside
       style={{
         width: '275px',
-        background: isHr ? '#000000' : 'var(--bg-sidebar)',
-        borderRight: isHr ? '1px solid #1f1f23' : '1px solid var(--border-subtle)',
+        background: '#09090b',
+        borderRight: '1px solid #18181b',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -117,6 +117,7 @@ export default function Sidebar() {
         height: '100vh',
         position: 'sticky',
         top: 0,
+        zIndex: 40,
       }}
     >
       {/* Brand Header */}
@@ -128,7 +129,8 @@ export default function Sidebar() {
             alignItems: 'center',
             gap: '12px',
             padding: '0 24px',
-            borderBottom: '1px solid var(--border-subtle)',
+            borderBottom: '1px solid #18181b',
+            background: '#09090b',
           }}
         >
           <div
@@ -136,11 +138,12 @@ export default function Sidebar() {
               width: '34px',
               height: '34px',
               borderRadius: '8px',
-              background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+              background: '#000000',
+              border: '1px solid #27272a',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(79, 70, 229, 0.4)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
             }}
           >
             <div
@@ -148,8 +151,8 @@ export default function Sidebar() {
                 width: '12px',
                 height: '12px',
                 borderRadius: '50%',
-                background: '#ffffff',
-                boxShadow: '0 0 6px rgba(255, 255, 255, 0.8)',
+                background: '#facc15',
+                boxShadow: '0 0 10px rgba(250, 204, 21, 0.9)',
               }}
             />
           </div>
@@ -157,7 +160,7 @@ export default function Sidebar() {
             <div style={{ fontSize: '1.05rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>
               DOT ADVERT
             </div>
-            <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#818cf8', letterSpacing: '0.08em' }}>
+            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#facc15', letterSpacing: '0.08em' }}>
               MANUFACTURING ERP
             </div>
           </div>
@@ -168,9 +171,9 @@ export default function Sidebar() {
           <div
             style={{
               fontSize: '0.675rem',
-              fontWeight: 700,
+              fontWeight: 800,
               textTransform: 'uppercase',
-              color: 'var(--text-dim)',
+              color: '#71717a',
               letterSpacing: '0.08em',
               padding: '6px 12px 4px',
             }}
@@ -204,32 +207,60 @@ export default function Sidebar() {
                   justifyContent: 'space-between',
                   padding: '9px 12px',
                   borderRadius: 'var(--radius-md)',
-                  color: isActive
-                    ? (isHr ? '#facc15' : '#ffffff')
-                    : 'var(--text-muted)',
-                  background: isActive
-                    ? (isHr ? 'rgba(250, 204, 21, 0.12)' : 'rgba(99, 102, 241, 0.16)')
-                    : 'transparent',
-                  fontWeight: isActive ? 600 : 500,
+                  color: isActive ? '#facc15' : '#a1a1aa',
+                  background: isActive ? 'rgba(250, 204, 21, 0.12)' : 'transparent',
+                  fontWeight: isActive ? 700 : 500,
                   fontSize: '0.84rem',
-                  border: isActive
-                    ? (isHr ? '1px solid rgba(250, 204, 21, 0.35)' : '1px solid rgba(99, 102, 241, 0.3)')
-                    : '1px solid transparent',
+                  border: isActive ? '1px solid rgba(250, 204, 21, 0.35)' : '1px solid transparent',
                   transition: 'all 0.15s ease',
+                  textDecoration: 'none',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.color = '#ffffff';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.color = '#a1a1aa';
+                    e.currentTarget.style.background = 'transparent';
+                  }
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <Icon
                     size={17}
-                    color={isActive ? (isHr ? '#facc15' : '#818cf8') : '#94a3b8'}
+                    color={isActive ? '#facc15' : '#71717a'}
                   />
                   <span>{item.label}</span>
                 </div>
 
                 {item.badge && (
                   <span
-                    className={`badge badge-${item.badgeType || 'gray'}`}
-                    style={{ fontSize: '0.65rem', padding: '2px 7px' }}
+                    style={{
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      padding: '2px 8px',
+                      borderRadius: '9999px',
+                      background:
+                        item.badgeType === 'yellow'
+                          ? '#facc15'
+                          : item.badgeType === 'rose'
+                          ? '#fee2e2'
+                          : item.badgeType === 'amber'
+                          ? '#fef3c7'
+                          : '#27272a',
+                      color:
+                        item.badgeType === 'yellow'
+                          ? '#09090b'
+                          : item.badgeType === 'rose'
+                          ? '#991b1b'
+                          : item.badgeType === 'amber'
+                          ? '#92400e'
+                          : '#e4e4e7',
+                      whiteSpace: 'nowrap',
+                    }}
                   >
                     {item.badge}
                   </span>
@@ -244,28 +275,28 @@ export default function Sidebar() {
       <div
         style={{
           padding: '16px 20px',
-          borderTop: '1px solid var(--border-subtle)',
-          background: 'rgba(15, 23, 42, 0.4)',
+          borderTop: '1px solid #18181b',
+          background: '#000000',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-          <span style={{ fontSize: '0.725rem', color: 'var(--text-dim)', fontWeight: 500 }}>
+          <span style={{ fontSize: '0.725rem', color: '#71717a', fontWeight: 600 }}>
             Mock Database
           </span>
           <span
             style={{
               fontSize: '0.7rem',
-              color: '#34d399',
+              color: '#facc15',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px',
-              fontWeight: 600,
+              gap: '5px',
+              fontWeight: 700,
             }}
           >
             ● Synced (Local)
           </span>
         </div>
-        <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', lineHeight: 1.4 }}>
+        <div style={{ fontSize: '0.7rem', color: '#71717a', lineHeight: 1.4 }}>
           Ethiopian Tax: 15% VAT • TIN: 0048291032
         </div>
       </div>

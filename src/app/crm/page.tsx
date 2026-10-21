@@ -7,6 +7,7 @@ import { useErp } from '@/context/ErpDataContext';
 import {
   Lead,
   Customer,
+  CustomerOrder,
   LeadStage,
   LeadSource,
   SignageType,
@@ -20,34 +21,41 @@ import {
   CheckCircle2,
   Building2,
   Phone,
-  Mail,
   MapPin,
   Ruler,
   TrendingUp,
   DollarSign,
-  AlertTriangle,
   ChevronRight,
   Filter,
-  ArrowRight,
   Sparkles,
-  Zap,
-  Check,
+  Plus,
   X,
   Eye,
   Edit3,
-  Calendar,
-  Layers,
   ShoppingBag,
-  Clock,
-  Briefcase,
   Trash2,
-  Plus,
-  Box,
-  Maximize2,
   XCircle,
   RotateCcw,
-  FileQuestion,
 } from 'lucide-react';
+
+// ─── Black / White / Yellow palette ───
+const T = {
+  yellow: '#facc15',
+  yellowDark: '#ca8a04',
+  yellowSoft: '#fef9c3',
+  yellowPale: '#fffbeb',
+  yellowText: '#854d0e', // readable dark-yellow on white
+  black: '#09090b',
+  white: '#ffffff',
+  gray50: '#fafafa',
+  gray100: '#f4f4f5',
+  gray200: '#e4e4e7',
+  gray300: '#d4d4d8',
+  gray400: '#a1a1aa',
+  gray500: '#71717a',
+  gray600: '#52525b',
+  gray700: '#3f3f46',
+};
 
 interface DraftSurvey {
   id: string;
@@ -78,16 +86,13 @@ const getLeadSurveys = (lead: Lead): SiteSurvey[] => {
   return [];
 };
 
-const getCustomerSurveys = (customer: Customer): SiteSurvey[] => {
-  return customer.siteSurveys || [];
-};
+const getCustomerSurveys = (customer: Customer): SiteSurvey[] => customer.siteSurveys || [];
 
-const calculateSurveysArea = (surveys: SiteSurvey[]): number => {
-  return surveys.reduce(
+const calculateSurveysArea = (surveys: SiteSurvey[]): number =>
+  surveys.reduce(
     (sum, s) => sum + (Number(s.widthMeters) || 0) * (Number(s.heightMeters) || 0),
     0
   );
-};
 
 const createInitialDraftSurvey = (idx: number, city: string = 'Addis Ababa'): DraftSurvey => ({
   id: `draft-${Date.now()}-${idx}`,
@@ -116,7 +121,6 @@ function CrmContent() {
     markLeadAsLost,
     reopenLead,
     createCustomer,
-    updateCustomer,
     convertLeadToCustomer,
     addSiteSurveyToLead,
     updateLeadSiteSurvey,
@@ -139,11 +143,9 @@ function CrmContent() {
   const [projectTypeFilter, setProjectTypeFilter] = useState<'all' | SignageType>('all');
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
 
-  // Tab 3 Filter States
   const [surveySourceFilter, setSurveySourceFilter] = useState<'all' | 'lead' | 'customer'>('all');
   const [surveyEnvironmentFilter, setSurveyEnvironmentFilter] = useState<'all' | 'indoor' | 'outdoor'>('all');
 
-  // Modals
   const [showNewLeadModal, setShowNewLeadModal] = useState(false);
   const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
   const [surveyModalLead, setSurveyModalLead] = useState<Lead | null>(null);
@@ -160,7 +162,6 @@ function CrmContent() {
   const [selectedCustomerProfile, setSelectedCustomerProfile] = useState<Customer | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
 
-  // Form States: New Lead (Multiple Surveys Supported)
   const [leadForm, setLeadForm] = useState({
     companyName: '',
     contactPerson: '',
@@ -180,7 +181,6 @@ function CrmContent() {
     surveys: [createInitialDraftSurvey(1, 'Addis Ababa')],
   });
 
-  // Form States: New Customer
   const [customerForm, setCustomerForm] = useState({
     name: '',
     tin: '',
@@ -193,7 +193,6 @@ function CrmContent() {
     isVatRegistered: true,
   });
 
-  // Form States: Site Survey Edit/Add
   const [surveyForm, setSurveyForm] = useState<SiteSurvey>({
     id: '',
     title: '',
@@ -216,15 +215,10 @@ function CrmContent() {
     setTimeout(() => setNotification(null), 3500);
   };
 
-  const formatETB = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'ETB',
-      maximumFractionDigits: 0,
-    })
+  const formatETB = (amount: number) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ETB', maximumFractionDigits: 0 })
       .format(amount)
       .replace('ETB', 'ETB ');
-  };
 
   const projectTypeLabels: Record<SignageType, string> = {
     acrylic_3d: '3D Acrylic Letters',
@@ -256,7 +250,6 @@ function CrmContent() {
     { stage: 'lost', label: '6. Closed / Lost', color: '#f43f5e' },
   ];
 
-  // Filtered Leads
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
       const matchesStage = stageFilter === 'all' || lead.stage === stageFilter;
@@ -273,7 +266,6 @@ function CrmContent() {
     });
   }, [leads, stageFilter, projectTypeFilter, searchQuery]);
 
-  // Filtered Customers
   const filteredCustomers = useMemo(() => {
     return customers.filter((cust) => {
       const q = searchQuery.toLowerCase().trim();
@@ -287,7 +279,6 @@ function CrmContent() {
     });
   }, [customers, searchQuery]);
 
-  // All display surveys across Leads and Customers
   interface DisplaySurveyItem {
     survey: SiteSurvey;
     sourceType: 'lead' | 'customer';
@@ -295,36 +286,29 @@ function CrmContent() {
     parentCode: string;
     lead?: Lead;
     customer?: Customer;
+    linkedOrders: CustomerOrder[];
   }
 
   const allDisplaySurveys = useMemo((): DisplaySurveyItem[] => {
     const list: DisplaySurveyItem[] = [];
     leads.forEach((l) => {
-      const surveys = getLeadSurveys(l);
-      surveys.forEach((s) => {
-        list.push({
-          survey: s,
-          sourceType: 'lead',
-          parentName: l.companyName,
-          parentCode: l.leadNumber,
-          lead: l,
-        });
+      getLeadSurveys(l).forEach((s) => {
+        const linkedOrders = orders.filter(
+          (o) => (o.siteSurveyIds && o.siteSurveyIds.includes(s.id)) || s.orderId === o.id
+        );
+        list.push({ survey: s, sourceType: 'lead', parentName: l.companyName, parentCode: l.leadNumber, lead: l, linkedOrders });
       });
     });
     customers.forEach((c) => {
-      const surveys = getCustomerSurveys(c);
-      surveys.forEach((s) => {
-        list.push({
-          survey: s,
-          sourceType: 'customer',
-          parentName: c.name,
-          parentCode: c.code,
-          customer: c,
-        });
+      getCustomerSurveys(c).forEach((s) => {
+        const linkedOrders = orders.filter(
+          (o) => (o.siteSurveyIds && o.siteSurveyIds.includes(s.id)) || s.orderId === o.id
+        );
+        list.push({ survey: s, sourceType: 'customer', parentName: c.name, parentCode: c.code, customer: c, linkedOrders });
       });
     });
     return list;
-  }, [leads, customers]);
+  }, [leads, customers, orders]);
 
   const filteredDisplaySurveys = useMemo(() => {
     return allDisplaySurveys.filter((item) => {
@@ -343,31 +327,25 @@ function CrmContent() {
     });
   }, [allDisplaySurveys, surveySourceFilter, surveyEnvironmentFilter, projectTypeFilter, searchQuery]);
 
-  // Total surveys count across system
   const totalSystemSurveysCount = allDisplaySurveys.length;
   const totalSystemSurveyArea = allDisplaySurveys.reduce(
     (acc, it) => acc + (Number(it.survey.widthMeters) || 0) * (Number(it.survey.heightMeters) || 0),
     0
   );
 
-  // KPI calculations
-  const totalPipelineValue = useMemo(() => {
-    return leads
-      .filter((l) => l.stage !== 'lost' && l.stage !== 'won')
-      .reduce((sum, l) => sum + l.estimatedBudget, 0);
-  }, [leads]);
-
+  const totalPipelineValue = useMemo(
+    () => leads.filter((l) => l.stage !== 'lost' && l.stage !== 'won').reduce((sum, l) => sum + l.estimatedBudget, 0),
+    [leads]
+  );
   const activeLeadsCount = leads.filter((l) => l.stage !== 'lost' && l.stage !== 'won').length;
   const wonLeadsCount = leads.filter((l) => l.stage === 'won').length;
 
-  // Handlers: Create Lead with multiple signboards
   const handleCreateLead = (e: React.FormEvent) => {
     e.preventDefault();
     if (!leadForm.companyName || !leadForm.phone) {
       alert('Please provide company name and phone number.');
       return;
     }
-
     const createdSurveys: SiteSurvey[] = leadForm.hasSurvey
       ? leadForm.surveys.map((s, idx) => ({
           id: `srv-${Date.now()}-${idx + 1}`,
@@ -386,7 +364,6 @@ function CrmContent() {
           status: 'completed',
         }))
       : [];
-
     const newLead = createLead({
       companyName: leadForm.companyName,
       contactPerson: leadForm.contactPerson || 'General Manager',
@@ -405,12 +382,8 @@ function CrmContent() {
       siteSurveys: createdSurveys,
       siteSurvey: createdSurveys[0] || undefined,
     });
-
     setShowNewLeadModal(false);
-    showToast(
-      `Lead ${newLead.leadNumber} (${newLead.companyName}) created with ${createdSurveys.length} signboard surveys!`
-    );
-    // Reset Form
+    showToast(`Lead ${newLead.leadNumber} (${newLead.companyName}) created with ${createdSurveys.length} signboard surveys!`);
     setLeadForm({
       companyName: '',
       contactPerson: '',
@@ -431,26 +404,20 @@ function CrmContent() {
     });
   };
 
-  const handleAddDraftSurveyToLeadForm = () => {
+  const handleAddDraftSurveyToLeadForm = () =>
     setLeadForm((prev) => ({
       ...prev,
       surveys: [...prev.surveys, createInitialDraftSurvey(prev.surveys.length + 1, prev.city)],
     }));
-  };
 
-  const handleRemoveDraftSurvey = (idx: number) => {
-    setLeadForm((prev) => ({
-      ...prev,
-      surveys: prev.surveys.filter((_, i) => i !== idx),
-    }));
-  };
+  const handleRemoveDraftSurvey = (idx: number) =>
+    setLeadForm((prev) => ({ ...prev, surveys: prev.surveys.filter((_, i) => i !== idx) }));
 
-  const handleUpdateDraftSurvey = (idx: number, updates: Partial<DraftSurvey>) => {
+  const handleUpdateDraftSurvey = (idx: number, updates: Partial<DraftSurvey>) =>
     setLeadForm((prev) => ({
       ...prev,
       surveys: prev.surveys.map((s, i) => (i === idx ? { ...s, ...updates } : s)),
     }));
-  };
 
   const handleCreateCustomer = (e: React.FormEvent) => {
     e.preventDefault();
@@ -458,7 +425,6 @@ function CrmContent() {
       alert('Please fill out customer name and valid TIN.');
       return;
     }
-
     const newCust = createCustomer({
       name: customerForm.name,
       tin: customerForm.tin,
@@ -470,7 +436,6 @@ function CrmContent() {
       paymentTerms: customerForm.paymentTerms,
       isVatRegistered: customerForm.isVatRegistered,
     });
-
     setShowNewCustomerModal(false);
     showToast(`Customer account ${newCust.code} (${newCust.name}) added to directory!`);
     setCustomerForm({
@@ -491,14 +456,12 @@ function CrmContent() {
     showToast(`Lead stage updated to "${newStage.toUpperCase()}"`);
   };
 
-  // Open survey manager for a Lead
   const handleOpenLeadSurveyManager = (lead: Lead) => {
     setSurveyModalLead(lead);
     setSurveyModalCustomer(null);
     setEditingSurveyId(null);
   };
 
-  // Open survey manager for a Customer
   const handleOpenCustomerSurveyManager = (customer: Customer) => {
     setSurveyModalCustomer(customer);
     setSurveyModalLead(null);
@@ -536,7 +499,6 @@ function CrmContent() {
       alert('Please enter a signboard title.');
       return;
     }
-
     if (surveyModalLead) {
       if (editingSurveyId && editingSurveyId !== 'new') {
         updateLeadSiteSurvey(surveyModalLead.id, editingSurveyId, {
@@ -555,9 +517,7 @@ function CrmContent() {
           depthMeters: Number(surveyForm.depthMeters) || 0,
           installationHeightMeters: Number(surveyForm.installationHeightMeters) || 0,
         });
-        if (surveyModalLead.stage === 'new') {
-          updateLead(surveyModalLead.id, { stage: 'site_visit' });
-        }
+        if (surveyModalLead.stage === 'new') updateLead(surveyModalLead.id, { stage: 'site_visit' });
         showToast(`Added signboard "${surveyForm.title}" to ${surveyModalLead.companyName}!`);
       }
       setEditingSurveyId(null);
@@ -596,7 +556,6 @@ function CrmContent() {
     }
   };
 
-  // Quick Add Survey from Tab 3 directly
   const handleQuickAddSurvey = (e: React.FormEvent) => {
     e.preventDefault();
     if (!quickAddTargetId) {
@@ -607,7 +566,6 @@ function CrmContent() {
       alert('Please specify a title for this signboard.');
       return;
     }
-
     if (quickAddTargetType === 'lead') {
       const target = leads.find((l) => l.id === quickAddTargetId);
       addSiteSurveyToLead(quickAddTargetId, {
@@ -617,9 +575,7 @@ function CrmContent() {
         depthMeters: Number(surveyForm.depthMeters) || 0,
         installationHeightMeters: Number(surveyForm.installationHeightMeters) || 0,
       });
-      if (target?.stage === 'new') {
-        updateLead(quickAddTargetId, { stage: 'site_visit' });
-      }
+      if (target?.stage === 'new') updateLead(quickAddTargetId, { stage: 'site_visit' });
       showToast(`Added "${surveyForm.title}" to ${target?.companyName || 'Lead'}!`);
     } else {
       const target = customers.find((c) => c.id === quickAddTargetId);
@@ -632,7 +588,6 @@ function CrmContent() {
       });
       showToast(`Added "${surveyForm.title}" to ${target?.name || 'Customer'}!`);
     }
-
     setShowQuickAddSurveyModal(false);
   };
 
@@ -670,24 +625,23 @@ function CrmContent() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-      {/* Toast Notification */}
+      {/* Toast */}
       {notification && (
         <div
           style={{
             position: 'fixed',
             bottom: '24px',
             right: '24px',
-            background: 'var(--bg-card)',
+            background: T.white,
             border: '1px solid var(--emerald)',
-            color: 'var(--text-main)',
+            color: T.black,
             padding: '14px 20px',
             borderRadius: 'var(--radius-md)',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+            boxShadow: '0 8px 24px rgba(10,10,10,0.15)',
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
             zIndex: 100,
-            animation: 'fadeIn 0.2s ease-in-out',
           }}
         >
           <CheckCircle2 size={18} color="var(--emerald)" />
@@ -695,11 +649,11 @@ function CrmContent() {
         </div>
       )}
 
-      {/* Hero & Top Controls */}
+      {/* ═══════════════ HERO ═══════════════ */}
       <div
         style={{
-          background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%)',
-          border: '1px solid var(--border-medium)',
+          background: `radial-gradient(ellipse at top right, rgba(250,204,21,0.18) 0%, transparent 55%), ${T.black}`,
+          border: `1px solid #1a1a1a`,
           borderRadius: 'var(--radius-lg)',
           padding: '28px 32px',
           display: 'flex',
@@ -707,8 +661,20 @@ function CrmContent() {
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: '20px',
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '4px',
+            background: `linear-gradient(90deg, ${T.yellow} 0%, ${T.yellowDark} 100%)`,
+          }}
+        />
         <div>
           <div
             style={{
@@ -716,23 +682,23 @@ function CrmContent() {
               alignItems: 'center',
               gap: '6px',
               padding: '4px 10px',
-              background: 'rgba(99, 102, 241, 0.2)',
+              background: T.yellow,
               borderRadius: '12px',
-              border: '1px solid var(--border-glow)',
               marginBottom: '10px',
               fontSize: '11px',
-              fontWeight: 700,
-              color: 'var(--primary-light)',
+              fontWeight: 800,
+              color: T.black,
               textTransform: 'uppercase',
+              letterSpacing: '0.04em',
             }}
           >
             <Sparkles size={13} />
-            <span>COMMERCIAL CRM & CLIENT ACCOUNTS</span>
+            <span>Commercial CRM & Client Accounts</span>
           </div>
-          <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 800, color: T.white, letterSpacing: '-0.02em' }}>
             CRM: Leads & Customer Accounts
           </h1>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px', maxWidth: '680px' }}>
+          <p style={{ fontSize: '13px', color: T.gray400, marginTop: '4px', maxWidth: '680px', lineHeight: 1.6 }}>
             Capture advertising inquiries, book site measurement surveys across Addis Ababa, guide opportunities through the sales funnel, and manage verified customer credit lines.
           </p>
         </div>
@@ -740,17 +706,38 @@ function CrmContent() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <button
             onClick={() => setShowNewLeadModal(true)}
-            className="btn btn-primary"
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px' }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 18px',
+              background: T.yellow,
+              color: T.black,
+              border: `1px solid ${T.yellowDark}`,
+              borderRadius: '10px',
+              fontSize: '13px',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
           >
             <PlusCircle size={16} />
             <span>New Lead / Inquiry</span>
           </button>
-
           <button
             onClick={() => setShowNewCustomerModal(true)}
-            className="btn btn-secondary"
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px' }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 18px',
+              background: 'transparent',
+              color: T.yellow,
+              border: `1px solid ${T.yellow}`,
+              borderRadius: '10px',
+              fontSize: '13px',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
           >
             <UserCheck size={16} />
             <span>Add Customer</span>
@@ -758,19 +745,13 @@ function CrmContent() {
         </div>
       </div>
 
-      {/* KPI Stat Cards */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: '16px',
-        }}
-      >
+      {/* ═══════════════ KPI CARDS ═══════════════ */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
         <div className="stat-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div className="stat-label">Active Opportunities</div>
-              <div className="stat-value" style={{ color: 'var(--primary-light)' }}>
+              <div className="stat-card-title">Active Opportunities</div>
+              <div className="stat-card-value" style={{ color: '#a16207' }}>
                 {activeLeadsCount} Leads
               </div>
             </div>
@@ -779,11 +760,11 @@ function CrmContent() {
                 width: '40px',
                 height: '40px',
                 borderRadius: '8px',
-                background: 'rgba(99, 102, 241, 0.15)',
+                background: T.yellowSoft,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--primary-light)',
+                color: T.yellowText,
               }}
             >
               <Users size={20} />
@@ -797,8 +778,8 @@ function CrmContent() {
         <div className="stat-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div className="stat-label">Estimated Pipeline Value</div>
-              <div className="stat-value" style={{ color: 'var(--emerald)' }}>
+              <div className="stat-card-title">Estimated Pipeline Value</div>
+              <div className="stat-card-value" style={{ color: 'var(--emerald)' }}>
                 {formatETB(totalPipelineValue)}
               </div>
             </div>
@@ -807,11 +788,11 @@ function CrmContent() {
                 width: '40px',
                 height: '40px',
                 borderRadius: '8px',
-                background: 'rgba(16, 185, 129, 0.15)',
+                background: '#dcfce7',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--emerald)',
+                color: '#166534',
               }}
             >
               <DollarSign size={20} />
@@ -825,8 +806,8 @@ function CrmContent() {
         <div className="stat-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div className="stat-label">Site Surveys Booked</div>
-              <div className="stat-value" style={{ color: 'var(--cyan)' }}>
+              <div className="stat-card-title">Site Surveys Booked</div>
+              <div className="stat-card-value" style={{ color: 'var(--cyan)' }}>
                 {totalSystemSurveysCount} Signboards
               </div>
             </div>
@@ -835,11 +816,11 @@ function CrmContent() {
                 width: '40px',
                 height: '40px',
                 borderRadius: '8px',
-                background: 'rgba(6, 182, 212, 0.15)',
+                background: '#cffafe',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--cyan)',
+                color: '#0e7490',
               }}
             >
               <Ruler size={20} />
@@ -853,8 +834,8 @@ function CrmContent() {
         <div className="stat-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div className="stat-label">Managed Customer Accounts</div>
-              <div className="stat-value" style={{ color: 'var(--amber)' }}>
+              <div className="stat-card-title">Managed Customer Accounts</div>
+              <div className="stat-card-value" style={{ color: 'var(--amber)' }}>
                 {customers.length} Accounts
               </div>
             </div>
@@ -863,11 +844,11 @@ function CrmContent() {
                 width: '40px',
                 height: '40px',
                 borderRadius: '8px',
-                background: 'rgba(245, 158, 11, 0.15)',
+                background: '#fef3c7',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--amber)',
+                color: '#92400e',
               }}
             >
               <Building2 size={20} />
@@ -879,84 +860,51 @@ function CrmContent() {
         </div>
       </div>
 
-      {/* Main Tabs Navigation */}
+      {/* ═══════════════ TABS ═══════════════ */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderBottom: '1px solid var(--border-subtle)',
+          borderBottom: `1px solid var(--border-subtle)`,
           paddingBottom: '2px',
           gap: '16px',
           flexWrap: 'wrap',
         }}
       >
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            onClick={() => setActiveTab('pipeline')}
-            style={{
-              padding: '10px 18px',
-              fontSize: '14px',
-              fontWeight: 600,
-              background: activeTab === 'pipeline' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
-              color: activeTab === 'pipeline' ? 'var(--primary-light)' : 'var(--text-muted)',
-              border: 'none',
-              borderBottom: activeTab === 'pipeline' ? '2px solid var(--primary-light)' : '2px solid transparent',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0',
-            }}
-          >
-            <TrendingUp size={16} />
-            <span>Leads Pipeline ({leads.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('customers')}
-            style={{
-              padding: '10px 18px',
-              fontSize: '14px',
-              fontWeight: 600,
-              background: activeTab === 'customers' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
-              color: activeTab === 'customers' ? 'var(--primary-light)' : 'var(--text-muted)',
-              border: 'none',
-              borderBottom: activeTab === 'customers' ? '2px solid var(--primary-light)' : '2px solid transparent',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0',
-            }}
-          >
-            <Building2 size={16} />
-            <span>Customer Directory ({customers.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('surveys')}
-            style={{
-              padding: '10px 18px',
-              fontSize: '14px',
-              fontWeight: 600,
-              background: activeTab === 'surveys' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
-              color: activeTab === 'surveys' ? 'var(--primary-light)' : 'var(--text-muted)',
-              border: 'none',
-              borderBottom: activeTab === 'surveys' ? '2px solid var(--primary-light)' : '2px solid transparent',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0',
-            }}
-          >
-            <Ruler size={16} />
-            <span>Site Surveys & Dimensions ({totalSystemSurveysCount})</span>
-          </button>
+          {[
+            { key: 'pipeline' as const, icon: TrendingUp, label: `Leads Pipeline (${leads.length})` },
+            { key: 'customers' as const, icon: Building2, label: `Customer Directory (${customers.length})` },
+            { key: 'surveys' as const, icon: Ruler, label: `Site Surveys & Dimensions (${totalSystemSurveysCount})` },
+          ].map(({ key, icon: Icon, label }) => {
+            const isActive = activeTab === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                style={{
+                  padding: '10px 18px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  background: isActive ? T.yellowSoft : 'transparent',
+                  color: isActive ? T.yellowText : 'var(--text-muted)',
+                  border: 'none',
+                  borderBottom: isActive ? `2px solid ${T.yellowDark}` : '2px solid transparent',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0',
+                }}
+              >
+                <Icon size={16} />
+                <span>{label}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Search input */}
         <div style={{ position: 'relative', minWidth: '260px' }}>
           <Search
             size={16}
@@ -965,7 +913,8 @@ function CrmContent() {
               left: '12px',
               top: '50%',
               transform: 'translateY(-50%)',
-              color: 'var(--text-dim)',
+              color: T.gray400,
+              pointerEvents: 'none',
             }}
           />
           <input
@@ -980,10 +929,10 @@ function CrmContent() {
             style={{
               width: '100%',
               padding: '8px 12px 8px 36px',
-              background: 'var(--bg-input)',
-              border: '1px solid var(--border-subtle)',
+              background: T.white,
+              border: `1px solid ${T.gray300}`,
               borderRadius: 'var(--radius-md)',
-              color: 'var(--text-main)',
+              color: T.black,
               fontSize: '13px',
               outline: 'none',
             }}
@@ -991,19 +940,10 @@ function CrmContent() {
         </div>
       </div>
 
-      {/* TAB 1: LEADS PIPELINE */}
+      {/* ═══════════════ TAB 1: PIPELINE ═══════════════ */}
       {activeTab === 'pipeline' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Filters Bar & View Switcher */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '16px',
-              flexWrap: 'wrap',
-            }}
-          >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '12px', color: 'var(--text-dim)', fontWeight: 600 }}>Filter:</span>
               <select
@@ -1014,12 +954,9 @@ function CrmContent() {
               >
                 <option value="all">All Pipeline Stages</option>
                 {stageColumns.map((col) => (
-                  <option key={col.stage} value={col.stage}>
-                    {col.label}
-                  </option>
+                  <option key={col.stage} value={col.stage}>{col.label}</option>
                 ))}
               </select>
-
               <select
                 className="form-select"
                 value={projectTypeFilter}
@@ -1028,78 +965,60 @@ function CrmContent() {
               >
                 <option value="all">All Project Types</option>
                 {Object.entries(projectTypeLabels).map(([key, label]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
+                  <option key={key} value={key}>{label}</option>
                 ))}
               </select>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <button
-                onClick={() => setViewMode('kanban')}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-subtle)',
-                  background: viewMode === 'kanban' ? 'var(--primary)' : 'var(--bg-card)',
-                  color: viewMode === 'kanban' ? '#fff' : 'var(--text-muted)',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Kanban Funnel
-              </button>
-              <button
-                onClick={() => setViewMode('table')}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-subtle)',
-                  background: viewMode === 'table' ? 'var(--primary)' : 'var(--bg-card)',
-                  color: viewMode === 'table' ? '#fff' : 'var(--text-muted)',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Detailed List
-              </button>
+              {[
+                { mode: 'kanban' as const, label: 'Kanban Funnel' },
+                { mode: 'table' as const, label: 'Detailed List' },
+              ].map(({ mode, label }) => {
+                const isActive = viewMode === mode;
+                return (
+                  <button
+                    key={mode}
+                    onClick={() => setViewMode(mode)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 'var(--radius-sm)',
+                      border: `1px solid ${isActive ? T.black : 'var(--border-subtle)'}`,
+                      background: isActive ? T.black : T.white,
+                      color: isActive ? T.yellow : 'var(--text-muted)',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Kanban Board View */}
           {viewMode === 'kanban' ? (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: '16px',
-                alignItems: 'start',
-              }}
-            >
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', alignItems: 'start' }}>
               {stageColumns.map((col) => {
                 const stageLeads = filteredLeads.filter((l) => l.stage === col.stage);
                 const colValue = stageLeads.reduce((sum, l) => sum + l.estimatedBudget, 0);
-
                 return (
                   <div
                     key={col.stage}
                     style={{
-                      background: 'var(--bg-card)',
+                      background: T.white,
                       borderRadius: 'var(--radius-md)',
-                      border: '1px solid var(--border-subtle)',
+                      border: `1px solid var(--border-subtle)`,
                       display: 'flex',
                       flexDirection: 'column',
                       minHeight: '400px',
                     }}
                   >
-                    {/* Column Header */}
                     <div
                       style={{
                         padding: '14px 16px',
-                        borderBottom: '1px solid var(--border-subtle)',
+                        borderBottom: `1px solid var(--border-subtle)`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
@@ -1108,18 +1027,14 @@ function CrmContent() {
                       }}
                     >
                       <div>
-                        <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
-                          {col.label}
-                        </div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
-                          {formatETB(colValue)}
-                        </div>
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: T.black }}>{col.label}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>{formatETB(colValue)}</div>
                       </div>
                       <span
                         style={{
                           fontSize: '11px',
                           fontWeight: 700,
-                          background: 'rgba(255,255,255,0.08)',
+                          background: T.gray100,
                           padding: '2px 8px',
                           borderRadius: '10px',
                           color: col.color,
@@ -1129,16 +1044,7 @@ function CrmContent() {
                       </span>
                     </div>
 
-                    {/* Lead Cards List */}
-                    <div
-                      style={{
-                        padding: '12px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '12px',
-                        flex: 1,
-                      }}
-                    >
+                    <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
                       {stageLeads.length === 0 ? (
                         <div
                           style={{
@@ -1146,7 +1052,7 @@ function CrmContent() {
                             padding: '36px 12px',
                             color: 'var(--text-dim)',
                             fontSize: '12px',
-                            border: '1px dashed var(--border-subtle)',
+                            border: `1px dashed var(--border-subtle)`,
                             borderRadius: 'var(--radius-sm)',
                           }}
                         >
@@ -1157,47 +1063,35 @@ function CrmContent() {
                           <div
                             key={lead.id}
                             style={{
-                              background: 'var(--bg-app)',
-                              border: '1px solid var(--border-subtle)',
+                              background: T.gray50,
+                              border: `1px solid var(--border-subtle)`,
                               borderRadius: 'var(--radius-sm)',
                               padding: '14px',
                               display: 'flex',
                               flexDirection: 'column',
                               gap: '10px',
-                              transition: 'border-color 0.15s ease',
                             }}
                           >
-                            {/* Card Top */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                              <span style={{ fontSize: '10px', color: 'var(--text-dim)', fontWeight: 600 }}>
-                                {lead.leadNumber}
-                              </span>
-                              <span
-                                className="badge badge-indigo"
-                                style={{ fontSize: '10px', padding: '1px 6px' }}
-                              >
+                              <span style={{ fontSize: '10px', color: 'var(--text-dim)', fontWeight: 600 }}>{lead.leadNumber}</span>
+                              <span className="badge badge-primary" style={{ fontSize: '10px', padding: '1px 6px' }}>
                                 {projectTypeLabels[lead.projectType]}
                               </span>
                             </div>
 
-                            {/* Company Name */}
                             <div>
-                              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)' }}>
-                                {lead.companyName}
-                              </div>
+                              <div style={{ fontSize: '14px', fontWeight: 700, color: T.black }}>{lead.companyName}</div>
                               <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
                                 <MapPin size={12} color="var(--text-dim)" />
                                 <span>{lead.city}</span>
                               </div>
                             </div>
 
-                            {/* Contact Person & Phone */}
                             <div style={{ fontSize: '12px', color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <Phone size={11} />
                               <span>{lead.contactPerson} ({lead.phone})</span>
                             </div>
 
-                            {/* Site Survey Badge (Multiple Surveys Supported) */}
                             {(() => {
                               const surveys = getLeadSurveys(lead);
                               const totalArea = calculateSurveysArea(surveys);
@@ -1209,22 +1103,19 @@ function CrmContent() {
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
                                     padding: '5px 8px',
-                                    background: 'rgba(6, 182, 212, 0.1)',
-                                    border: '1px solid rgba(6, 182, 212, 0.25)',
+                                    background: '#ecfeff',
+                                    border: `1px solid #a5f3fc`,
                                     borderRadius: 'var(--radius-sm)',
-                                    color: 'var(--cyan)',
+                                    color: '#0e7490',
                                     fontSize: '11px',
                                     fontWeight: 600,
                                     cursor: 'pointer',
                                     textAlign: 'left',
                                   }}
-                                  title={surveys.map((s) => `${s.title}: ${s.widthMeters}m × ${s.heightMeters}m`).join(' | ')}
                                 >
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <Ruler size={12} />
-                                    <span>
-                                      {surveys.length} {surveys.length === 1 ? 'Signboard' : 'Signboards'} ({totalArea.toFixed(1)}m²)
-                                    </span>
+                                    <span>{surveys.length} {surveys.length === 1 ? 'Signboard' : 'Signboards'} ({totalArea.toFixed(1)}m²)</span>
                                   </div>
                                   <span style={{ fontSize: '10px', textDecoration: 'underline' }}>Manage</span>
                                 </button>
@@ -1236,8 +1127,8 @@ function CrmContent() {
                                     alignItems: 'center',
                                     gap: '4px',
                                     padding: '4px 8px',
-                                    background: 'rgba(255,255,255,0.03)',
-                                    border: '1px dashed var(--border-subtle)',
+                                    background: T.gray50,
+                                    border: `1px dashed var(--border-subtle)`,
                                     borderRadius: 'var(--radius-sm)',
                                     color: 'var(--text-dim)',
                                     fontSize: '11px',
@@ -1250,40 +1141,31 @@ function CrmContent() {
                               );
                             })()}
 
-                            {/* Budget & Probability */}
                             <div
                               style={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
                                 paddingTop: '8px',
-                                borderTop: '1px solid var(--border-subtle)',
+                                borderTop: `1px solid var(--border-subtle)`,
                               }}
                             >
                               <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--emerald)' }}>
                                 {formatETB(lead.estimatedBudget)}
                               </div>
-                              <div style={{ fontSize: '11px', color: 'var(--text-dim)' }}>
-                                {lead.probabilityPercent}% Win rate
-                              </div>
+                              <div style={{ fontSize: '11px', color: 'var(--text-dim)' }}>{lead.probabilityPercent}% Win rate</div>
                             </div>
 
-                            {/* Stage Progression Buttons */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
                               {lead.stage === 'new' && (
                                 <>
-                                  <button
-                                    onClick={() => handleStageChange(lead.id, 'site_visit')}
-                                    className="btn btn-secondary btn-sm"
-                                    style={{ flex: 1, padding: '4px 6px', fontSize: '11px' }}
-                                  >
+                                  <button onClick={() => handleStageChange(lead.id, 'site_visit')} className="btn btn-secondary btn-sm" style={{ flex: 1, padding: '4px 6px', fontSize: '11px' }}>
                                     Book Site Survey →
                                   </button>
                                   <button
                                     onClick={() => handleOpenLostModal(lead)}
                                     className="btn btn-secondary btn-sm"
-                                    style={{ padding: '4px 8px', fontSize: '11px', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)' }}
-                                    title="Mark opportunity as Closed / Lost"
+                                    style={{ padding: '4px 8px', fontSize: '11px', color: '#dc2626', border: `1px solid #fecaca` }}
                                   >
                                     <XCircle size={12} />
                                     <span>Lost</span>
@@ -1292,18 +1174,13 @@ function CrmContent() {
                               )}
                               {lead.stage === 'site_visit' && (
                                 <>
-                                  <button
-                                    onClick={() => handleStageChange(lead.id, 'quoted')}
-                                    className="btn btn-secondary btn-sm"
-                                    style={{ flex: 1, padding: '4px 6px', fontSize: '11px' }}
-                                  >
+                                  <button onClick={() => handleStageChange(lead.id, 'quoted')} className="btn btn-secondary btn-sm" style={{ flex: 1, padding: '4px 6px', fontSize: '11px' }}>
                                     Issue Quote →
                                   </button>
                                   <button
                                     onClick={() => handleOpenLostModal(lead)}
                                     className="btn btn-secondary btn-sm"
-                                    style={{ padding: '4px 8px', fontSize: '11px', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)' }}
-                                    title="Mark opportunity as Closed / Lost"
+                                    style={{ padding: '4px 8px', fontSize: '11px', color: '#dc2626', border: `1px solid #fecaca` }}
                                   >
                                     <XCircle size={12} />
                                     <span>Lost</span>
@@ -1312,18 +1189,13 @@ function CrmContent() {
                               )}
                               {lead.stage === 'quoted' && (
                                 <>
-                                  <button
-                                    onClick={() => handleStageChange(lead.id, 'negotiation')}
-                                    className="btn btn-secondary btn-sm"
-                                    style={{ flex: 1, padding: '4px 6px', fontSize: '11px' }}
-                                  >
+                                  <button onClick={() => handleStageChange(lead.id, 'negotiation')} className="btn btn-secondary btn-sm" style={{ flex: 1, padding: '4px 6px', fontSize: '11px' }}>
                                     In Negotiation →
                                   </button>
                                   <button
                                     onClick={() => handleOpenLostModal(lead)}
                                     className="btn btn-secondary btn-sm"
-                                    style={{ padding: '4px 8px', fontSize: '11px', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)' }}
-                                    title="Mark opportunity as Closed / Lost"
+                                    style={{ padding: '4px 8px', fontSize: '11px', color: '#dc2626', border: `1px solid #fecaca` }}
                                   >
                                     <XCircle size={12} />
                                     <span>Lost</span>
@@ -1342,8 +1214,7 @@ function CrmContent() {
                                   <button
                                     onClick={() => handleOpenLostModal(lead)}
                                     className="btn btn-secondary btn-sm"
-                                    style={{ padding: '4px 8px', fontSize: '11px', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)' }}
-                                    title="Mark opportunity as Closed / Lost"
+                                    style={{ padding: '4px 8px', fontSize: '11px', color: '#dc2626', border: `1px solid #fecaca` }}
                                   >
                                     <XCircle size={12} />
                                     <span>Lost</span>
@@ -1351,19 +1222,7 @@ function CrmContent() {
                                 </>
                               )}
                               {lead.stage === 'won' && (
-                                <div
-                                  style={{
-                                    width: '100%',
-                                    textAlign: 'center',
-                                    fontSize: '11px',
-                                    fontWeight: 700,
-                                    color: 'var(--emerald)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '4px',
-                                  }}
-                                >
+                                <div style={{ width: '100%', textAlign: 'center', fontSize: '11px', fontWeight: 700, color: 'var(--emerald)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                                   <CheckCircle2 size={13} />
                                   <span>Converted to Customer</span>
                                 </div>
@@ -1377,8 +1236,8 @@ function CrmContent() {
                                       justifyContent: 'space-between',
                                       fontSize: '11px',
                                       fontWeight: 700,
-                                      color: '#f43f5e',
-                                      background: 'rgba(244, 63, 94, 0.1)',
+                                      color: '#dc2626',
+                                      background: '#fee2e2',
                                       padding: '4px 8px',
                                       borderRadius: 'var(--radius-sm)',
                                     }}
@@ -1401,13 +1260,13 @@ function CrmContent() {
                                         color: 'var(--text-dim)',
                                         lineHeight: 1.35,
                                         padding: '6px 8px',
-                                        background: 'rgba(255, 255, 255, 0.03)',
+                                        background: T.gray50,
                                         borderRadius: 'var(--radius-sm)',
-                                        borderLeft: '2px solid #f43f5e',
+                                        borderLeft: `2px solid #f43f5e`,
                                       }}
                                     >
                                       {lead.competitorName && (
-                                        <div style={{ fontWeight: 600, color: '#fca5a5', marginBottom: '2px' }}>
+                                        <div style={{ fontWeight: 600, color: '#b91c1c', marginBottom: '2px' }}>
                                           Competitor: {lead.competitorName}
                                         </div>
                                       )}
@@ -1426,10 +1285,9 @@ function CrmContent() {
                                       gap: '6px',
                                       padding: '5px',
                                       fontSize: '11px',
-                                      color: '#818cf8',
-                                      border: '1px solid rgba(129, 140, 248, 0.3)',
+                                      color: T.yellowText,
+                                      border: `1px solid ${T.yellow}`,
                                     }}
-                                    title="Reopen deal back to Active Pipeline"
                                   >
                                     <RotateCcw size={12} />
                                     <span>Reopen Opportunity</span>
@@ -1446,7 +1304,6 @@ function CrmContent() {
               })}
             </div>
           ) : (
-            /* Table View */
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
               <div className="table-responsive">
                 <table className="data-table">
@@ -1468,11 +1325,11 @@ function CrmContent() {
                       <tr key={lead.id}>
                         <td style={{ fontWeight: 700, fontSize: '12px' }}>{lead.leadNumber}</td>
                         <td>
-                          <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{lead.companyName}</div>
+                          <div style={{ fontWeight: 700, color: T.black }}>{lead.companyName}</div>
                           <div style={{ fontSize: '11px', color: 'var(--text-dim)' }}>{lead.city}</div>
                         </td>
                         <td>
-                          <span className="badge badge-indigo" style={{ fontSize: '11px' }}>
+                          <span className="badge badge-primary" style={{ fontSize: '11px' }}>
                             {projectTypeLabels[lead.projectType]}
                           </span>
                         </td>
@@ -1484,28 +1341,16 @@ function CrmContent() {
                           <span
                             className="badge"
                             style={{
-                              background: lead.stage === 'lost' ? 'rgba(244, 63, 94, 0.15)' : 'rgba(255,255,255,0.08)',
-                              color: stageColumns.find((c) => c.stage === lead.stage)?.color || '#fff',
+                              background: lead.stage === 'lost' ? '#fee2e2' : T.gray100,
+                              color: stageColumns.find((c) => c.stage === lead.stage)?.color || T.black,
                               fontSize: '11px',
                               fontWeight: 700,
                             }}
-                            title={lead.stage === 'lost' && lead.lostReason ? lostReasonLabels[lead.lostReason] || lead.lostReason : undefined}
                           >
                             {lead.stage === 'lost' ? 'CLOSED / LOST' : lead.stage.toUpperCase()}
                           </span>
                           {lead.stage === 'lost' && lead.lostReason && (
-                            <div
-                              style={{
-                                fontSize: '10px',
-                                color: '#f43f5e',
-                                marginTop: '2px',
-                                maxWidth: '140px',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                              title={lead.lostNotes || lostReasonLabels[lead.lostReason]}
-                            >
+                            <div style={{ fontSize: '10px', color: '#dc2626', marginTop: '2px', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {lostReasonLabels[lead.lostReason] || lead.lostReason}
                             </div>
                           )}
@@ -1515,55 +1360,26 @@ function CrmContent() {
                             const surveys = getLeadSurveys(lead);
                             const totalArea = calculateSurveysArea(surveys);
                             return surveys.length > 0 ? (
-                              <button
-                                onClick={() => handleOpenLeadSurveyManager(lead)}
-                                style={{
-                                  background: 'none',
-                                  border: 'none',
-                                  padding: 0,
-                                  cursor: 'pointer',
-                                  textAlign: 'left',
-                                }}
-                              >
-                                <div style={{ fontSize: '12px', color: 'var(--cyan)', fontWeight: 700 }}>
+                              <button onClick={() => handleOpenLeadSurveyManager(lead)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}>
+                                <div style={{ fontSize: '12px', color: '#0e7490', fontWeight: 700 }}>
                                   {surveys.length} {surveys.length === 1 ? 'Sign' : 'Signs'} ({totalArea.toFixed(1)} m²)
                                 </div>
-                                <div
-                                  style={{
-                                    fontSize: '10px',
-                                    color: 'var(--text-dim)',
-                                    maxWidth: '160px',
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                  }}
-                                  title={surveys.map((s) => s.title).join(', ')}
-                                >
+                                <div style={{ fontSize: '10px', color: 'var(--text-dim)', maxWidth: '160px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                   {surveys.map((s) => s.title).join(', ')}
                                 </div>
                               </button>
                             ) : (
-                              <button
-                                onClick={() => handleOpenLeadSurveyManager(lead)}
-                                className="badge badge-amber"
-                                style={{ fontSize: '10px', cursor: 'pointer', border: 'none' }}
-                              >
+                              <button onClick={() => handleOpenLeadSurveyManager(lead)} className="badge badge-amber" style={{ fontSize: '10px', cursor: 'pointer', border: 'none' }}>
                                 + Add Survey
                               </button>
                             );
                           })()}
                         </td>
-                        <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--emerald)' }}>
-                          {formatETB(lead.estimatedBudget)}
-                        </td>
+                        <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--emerald)' }}>{formatETB(lead.estimatedBudget)}</td>
                         <td style={{ fontSize: '12px' }}>{lead.assignedTo}</td>
                         <td style={{ textAlign: 'right' }}>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px' }}>
-                            <button
-                              onClick={() => handleOpenLeadSurveyManager(lead)}
-                              className="btn btn-secondary btn-sm"
-                              title="Manage site surveys & dimensions"
-                            >
+                            <button onClick={() => handleOpenLeadSurveyManager(lead)} className="btn btn-secondary btn-sm" title="Manage site surveys & dimensions">
                               <Ruler size={13} />
                             </button>
                             {lead.stage !== 'won' && lead.stage !== 'lost' && (
@@ -1572,15 +1388,13 @@ function CrmContent() {
                                   onClick={() => setConvertModalLead(lead)}
                                   className="btn btn-primary btn-sm"
                                   style={{ background: 'var(--emerald)' }}
-                                  title="Convert to Customer"
                                 >
                                   Convert
                                 </button>
                                 <button
                                   onClick={() => handleOpenLostModal(lead)}
                                   className="btn btn-secondary btn-sm"
-                                  style={{ color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)' }}
-                                  title="Mark as Closed / Lost"
+                                  style={{ color: '#dc2626', border: `1px solid #fecaca` }}
                                 >
                                   <XCircle size={13} />
                                   <span>Lost</span>
@@ -1591,17 +1405,14 @@ function CrmContent() {
                               <button
                                 onClick={() => handleReopenLead(lead)}
                                 className="btn btn-secondary btn-sm"
-                                style={{ color: 'var(--primary-light)', border: '1px solid rgba(129, 140, 248, 0.3)' }}
-                                title="Reopen Closed Deal"
+                                style={{ color: T.yellowText, border: `1px solid ${T.yellow}` }}
                               >
                                 <RotateCcw size={12} />
                                 <span>Reopen</span>
                               </button>
                             )}
                             {lead.stage === 'won' && (
-                              <span className="badge badge-emerald" style={{ fontSize: '10px' }}>
-                                Won ✓
-                              </span>
+                              <span className="badge badge-emerald" style={{ fontSize: '10px' }}>Won ✓</span>
                             )}
                           </div>
                         </td>
@@ -1615,38 +1426,22 @@ function CrmContent() {
         </div>
       )}
 
-      {/* TAB 2: CUSTOMER DIRECTORY */}
+      {/* ═══════════════ TAB 2: CUSTOMERS ═══════════════ */}
       {activeTab === 'customers' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '16px',
-              flexWrap: 'wrap',
-            }}
-          >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
             <div>
-              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-main)' }}>
-                Verified Client Directory & Credit Ledgers
-              </h3>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: T.black }}>Verified Client Directory & Credit Ledgers</h3>
               <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                 Ethiopian TIN matching, 15% VAT status, and automated credit balance protection.
               </p>
             </div>
-
-            <button
-              onClick={() => setShowNewCustomerModal(true)}
-              className="btn btn-primary btn-sm"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
+            <button onClick={() => setShowNewCustomerModal(true)} className="btn btn-primary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <PlusCircle size={14} />
               <span>New Customer Account</span>
             </button>
           </div>
 
-          {/* Customer Table */}
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
             <div className="table-responsive">
               <table className="data-table">
@@ -1668,32 +1463,19 @@ function CrmContent() {
                     const availableCredit = cust.creditLimit - cust.outstandingBalance;
                     const isOverLimit = availableCredit <= 0;
                     const isWarning = availableCredit < cust.creditLimit * 0.25;
-
                     return (
                       <tr key={cust.id}>
-                        <td style={{ fontWeight: 700, fontSize: '12px', color: 'var(--primary-light)' }}>
-                          {cust.code}
+                        <td style={{ fontWeight: 700, fontSize: '12px', color: T.yellowText }}>{cust.code}</td>
+                        <td>
+                          <div style={{ fontWeight: 700, color: T.black, fontSize: '14px' }}>{cust.name}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'capitalize' }}>{cust.customerType} Account</div>
                         </td>
                         <td>
-                          <div style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '14px' }}>
-                            {cust.name}
-                          </div>
-                          <div style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'capitalize' }}>
-                            {cust.customerType} Account
-                          </div>
-                        </td>
-                        <td>
-                          <div style={{ fontSize: '12px', fontFamily: 'monospace', color: 'var(--text-main)' }}>
-                            TIN: {cust.tin}
-                          </div>
+                          <div style={{ fontSize: '12px', fontFamily: 'monospace', color: T.black }}>TIN: {cust.tin}</div>
                           {cust.isVatRegistered ? (
-                            <span className="badge badge-emerald" style={{ fontSize: '10px', marginTop: '2px' }}>
-                              15% VAT Registered
-                            </span>
+                            <span className="badge badge-emerald" style={{ fontSize: '10px', marginTop: '2px' }}>15% VAT Registered</span>
                           ) : (
-                            <span className="badge badge-amber" style={{ fontSize: '10px', marginTop: '2px' }}>
-                              VAT Exempt Entity
-                            </span>
+                            <span className="badge badge-amber" style={{ fontSize: '10px', marginTop: '2px' }}>VAT Exempt Entity</span>
                           )}
                         </td>
                         <td>
@@ -1701,33 +1483,15 @@ function CrmContent() {
                           <div style={{ fontSize: '11px', color: 'var(--text-dim)' }}>{cust.address}</div>
                         </td>
                         <td style={{ fontSize: '12px' }}>{cust.paymentTerms}</td>
-                        <td style={{ textAlign: 'right', fontWeight: 600 }}>
-                          {formatETB(cust.creditLimit)}
-                        </td>
-                        <td
-                          style={{
-                            textAlign: 'right',
-                            fontWeight: 700,
-                            color: cust.outstandingBalance > 0 ? 'var(--rose)' : 'var(--text-dim)',
-                          }}
-                        >
+                        <td style={{ textAlign: 'right', fontWeight: 600 }}>{formatETB(cust.creditLimit)}</td>
+                        <td style={{ textAlign: 'right', fontWeight: 700, color: cust.outstandingBalance > 0 ? 'var(--rose)' : 'var(--text-dim)' }}>
                           {formatETB(cust.outstandingBalance)}
                         </td>
-                        <td
-                          style={{
-                            textAlign: 'right',
-                            fontWeight: 800,
-                            color: isOverLimit ? 'var(--rose)' : isWarning ? 'var(--amber)' : 'var(--emerald)',
-                          }}
-                        >
+                        <td style={{ textAlign: 'right', fontWeight: 800, color: isOverLimit ? 'var(--rose)' : isWarning ? 'var(--amber)' : 'var(--emerald)' }}>
                           {formatETB(availableCredit)}
                         </td>
                         <td style={{ textAlign: 'right' }}>
-                          <button
-                            onClick={() => setSelectedCustomerProfile(cust)}
-                            className="btn btn-secondary btn-sm"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                          >
+                          <button onClick={() => setSelectedCustomerProfile(cust)} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                             <Eye size={12} />
                             <span>Profile</span>
                           </button>
@@ -1742,28 +1506,16 @@ function CrmContent() {
         </div>
       )}
 
-      {/* TAB 3: SITE SURVEYS & MEASUREMENTS CENTER (MULTIPLE PER LEAD/CUSTOMER) */}
+      {/* ═══════════════ TAB 3: SURVEYS ═══════════════ */}
       {activeTab === 'surveys' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
-          {/* Header & Quick Action */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              flexWrap: 'wrap',
-              gap: '12px',
-            }}
-          >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)' }}>
-                Site Survey & Signboard Dimensions Center
-              </h3>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, color: T.black }}>Site Survey & Signboard Dimensions Center</h3>
               <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
                 Manage multiple facade surveys, 3D channel letter depths, ground elevation, and power availability per deal/client.
               </p>
             </div>
-
             <button
               onClick={() => {
                 setQuickAddTargetType('lead');
@@ -1779,101 +1531,38 @@ function CrmContent() {
             </button>
           </div>
 
-          {/* Sub-KPI Bar for Surveys */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '12px',
-            }}
-          >
-            <div
-              style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '12px 16px',
-              }}
-            >
-              <div style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
-                Total Signboards Surveyed
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+            {[
+              { label: 'Total Signboards Surveyed', value: `${totalSystemSurveysCount} Items`, color: 'var(--cyan)', icon: Ruler, sub: `Across ${leads.filter((l) => getLeadSurveys(l).length > 0).length} Deals & ${customers.filter((c) => getCustomerSurveys(c).length > 0).length} Accounts` },
+              { label: 'Combined Fabricated Area', value: `${totalSystemSurveyArea.toFixed(1)} m²`, color: 'var(--emerald)', icon: TrendingUp, sub: 'Directly drives vinyl & acrylic BOM cutting' },
+              { label: 'Outdoor Weatherproof Signages', value: `${allDisplaySurveys.filter((s) => s.survey.indoorOutdoor === 'outdoor').length} Signs`, color: 'var(--amber)', icon: MapPin, sub: 'IP67 transformers & high-durability flex/acrylic' },
+              { label: 'Indoor / Retail POS Signages', value: `${allDisplaySurveys.filter((s) => s.survey.indoorOutdoor === 'indoor').length} Signs`, color: '#7e22ce', icon: Building2, sub: 'VIP lounges, trade booths & reception logos' },
+            ].map((k, i) => (
+              <div
+                key={i}
+                style={{
+                  background: T.white,
+                  border: `1px solid var(--border-subtle)`,
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '12px 16px',
+                }}
+              >
+                <div style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 600 }}>{k.label}</div>
+                <div style={{ fontSize: '20px', fontWeight: 800, color: k.color, marginTop: '4px' }}>{k.value}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{k.sub}</div>
               </div>
-              <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--cyan)', marginTop: '4px' }}>
-                {totalSystemSurveysCount} Items
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                Across {leads.filter((l) => getLeadSurveys(l).length > 0).length} Deals & {customers.filter((c) => getCustomerSurveys(c).length > 0).length} Accounts
-              </div>
-            </div>
-
-            <div
-              style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '12px 16px',
-              }}
-            >
-              <div style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
-                Combined Fabricated Area
-              </div>
-              <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--emerald)', marginTop: '4px' }}>
-                {totalSystemSurveyArea.toFixed(1)} m²
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                Directly drives vinyl & acrylic BOM cutting
-              </div>
-            </div>
-
-            <div
-              style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '12px 16px',
-              }}
-            >
-              <div style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
-                Outdoor Weatherproof Signages
-              </div>
-              <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--amber)', marginTop: '4px' }}>
-                {allDisplaySurveys.filter((s) => s.survey.indoorOutdoor === 'outdoor').length} Signs
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                IP67 transformers & high-durability flex/acrylic
-              </div>
-            </div>
-
-            <div
-              style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '12px 16px',
-              }}
-            >
-              <div style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
-                Indoor / Retail POS Signages
-              </div>
-              <div style={{ fontSize: '20px', fontWeight: 800, color: '#a855f7', marginTop: '4px' }}>
-                {allDisplaySurveys.filter((s) => s.survey.indoorOutdoor === 'indoor').length} Signs
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                VIP lounges, trade booths & reception logos
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* Filter Toolbar for Surveys */}
           <div
             style={{
               display: 'flex',
               gap: '12px',
               flexWrap: 'wrap',
-              background: 'var(--bg-card)',
+              background: T.white,
               padding: '12px 16px',
               borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border-subtle)',
+              border: `1px solid var(--border-subtle)`,
               alignItems: 'center',
             }}
           >
@@ -1881,58 +1570,36 @@ function CrmContent() {
               <Filter size={13} />
               <span>Filter Signboards:</span>
             </div>
-
-            <select
-              className="form-select"
-              style={{ padding: '6px 12px', fontSize: '12px', width: 'auto' }}
-              value={surveySourceFilter}
-              onChange={(e) => setSurveySourceFilter(e.target.value as 'all' | 'lead' | 'customer')}
-            >
+            <select className="form-select" style={{ padding: '6px 12px', fontSize: '12px', width: 'auto' }} value={surveySourceFilter} onChange={(e) => setSurveySourceFilter(e.target.value as any)}>
               <option value="all">All Accounts ({allDisplaySurveys.length})</option>
               <option value="lead">Pipeline Leads Only ({allDisplaySurveys.filter((i) => i.sourceType === 'lead').length})</option>
               <option value="customer">Customer Directory Only ({allDisplaySurveys.filter((i) => i.sourceType === 'customer').length})</option>
             </select>
-
-            <select
-              className="form-select"
-              style={{ padding: '6px 12px', fontSize: '12px', width: 'auto' }}
-              value={surveyEnvironmentFilter}
-              onChange={(e) => setSurveyEnvironmentFilter(e.target.value as 'all' | 'indoor' | 'outdoor')}
-            >
+            <select className="form-select" style={{ padding: '6px 12px', fontSize: '12px', width: 'auto' }} value={surveyEnvironmentFilter} onChange={(e) => setSurveyEnvironmentFilter(e.target.value as any)}>
               <option value="all">All Environments</option>
               <option value="outdoor">Outdoor Only</option>
               <option value="indoor">Indoor Only</option>
             </select>
-
-            <select
-              className="form-select"
-              style={{ padding: '6px 12px', fontSize: '12px', width: 'auto' }}
-              value={projectTypeFilter}
-              onChange={(e) => setProjectTypeFilter(e.target.value as 'all' | SignageType)}
-            >
+            <select className="form-select" style={{ padding: '6px 12px', fontSize: '12px', width: 'auto' }} value={projectTypeFilter} onChange={(e) => setProjectTypeFilter(e.target.value as any)}>
               <option value="all">All Signage Types</option>
               {Object.entries(projectTypeLabels).map(([val, label]) => (
-                <option key={val} value={val}>
-                  {label}
-                </option>
+                <option key={val} value={val}>{label}</option>
               ))}
             </select>
-
             <span style={{ fontSize: '11px', color: 'var(--text-dim)', marginLeft: 'auto' }}>
               Showing {filteredDisplaySurveys.length} of {allDisplaySurveys.length} Signboards
             </span>
           </div>
 
-          {/* Signboard Measurement Cards Grid */}
           {filteredDisplaySurveys.length === 0 ? (
             <div
               style={{
-                background: 'var(--bg-card)',
+                background: T.white,
                 borderRadius: 'var(--radius-md)',
                 padding: '48px',
                 textAlign: 'center',
                 color: 'var(--text-dim)',
-                border: '1px dashed var(--border-subtle)',
+                border: `1px dashed var(--border-subtle)`,
               }}
             >
               <Ruler size={36} style={{ margin: '0 auto 12px', opacity: 0.4 }} />
@@ -1940,25 +1607,18 @@ function CrmContent() {
               <div style={{ fontSize: '12px', marginTop: '4px' }}>Click &quot;+ New Site Survey&quot; above to log signboard dimensions.</div>
             </div>
           ) : (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
-                gap: '16px',
-              }}
-            >
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '16px' }}>
               {filteredDisplaySurveys.map((item) => {
                 const survey = item.survey;
                 const areaSqm = ((Number(survey.widthMeters) || 0) * (Number(survey.heightMeters) || 0)).toFixed(2);
-                const signageTypeKey = (survey.signageType || (item.lead?.projectType || 'acrylic_3d')) as SignageType;
-
+                const signageTypeKey = (survey.signageType || item.lead?.projectType || 'acrylic_3d') as SignageType;
                 return (
                   <div
                     key={survey.id}
                     style={{
-                      background: 'var(--bg-card)',
+                      background: T.white,
                       borderRadius: 'var(--radius-md)',
-                      border: '1px solid var(--border-subtle)',
+                      border: `1px solid var(--border-subtle)`,
                       padding: '20px',
                       display: 'flex',
                       flexDirection: 'column',
@@ -1967,54 +1627,37 @@ function CrmContent() {
                     }}
                   >
                     <div>
-                      {/* Top Badges */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                          <span
-                            className={`badge ${item.sourceType === 'lead' ? 'badge-indigo' : 'badge-emerald'}`}
-                            style={{ fontSize: '10px', textTransform: 'uppercase' }}
-                          >
+                          <span className={`badge ${item.sourceType === 'lead' ? 'badge-primary' : 'badge-emerald'}`} style={{ fontSize: '10px', textTransform: 'uppercase' }}>
                             {item.sourceType === 'lead' ? 'Pipeline Deal' : 'Customer Account'}
                           </span>
                           <span className="badge badge-cyan" style={{ fontSize: '10px' }}>
                             {projectTypeLabels[signageTypeKey] || 'Signage'}
                           </span>
+                          {item.linkedOrders && item.linkedOrders.length > 0 &&
+                            item.linkedOrders.map((lo) => (
+                              <Link key={lo.id} href="/orders?tab=orders" className="badge badge-primary" style={{ fontSize: '10px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                <span>📦 {lo.orderNumber}</span>
+                              </Link>
+                            ))}
                         </div>
-                        <span style={{ fontSize: '11px', color: 'var(--text-dim)', fontWeight: 600 }}>
-                          {item.parentCode}
-                        </span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-dim)', fontWeight: 600 }}>{item.parentCode}</span>
                       </div>
 
-                      {/* Signboard Title */}
-                      <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-main)', marginTop: '10px' }}>
-                        {survey.title}
-                      </h4>
+                      <h4 style={{ fontSize: '16px', fontWeight: 800, color: T.black, marginTop: '10px' }}>{survey.title}</h4>
 
-                      {/* Parent Company Name */}
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--primary-light)', marginTop: '2px' }}>
-                        {item.parentName}
-                      </div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: T.yellowText, marginTop: '2px' }}>{item.parentName}</div>
 
-                      {/* Location Address */}
-                      <div
-                        style={{
-                          fontSize: '12px',
-                          color: 'var(--text-muted)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          marginTop: '6px',
-                        }}
-                      >
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
                         <MapPin size={13} color="var(--cyan)" style={{ flexShrink: 0 }} />
                         <span>{survey.locationAddress}</span>
                       </div>
 
-                      {/* Dimensions Pill Box */}
                       <div
                         style={{
-                          background: 'rgba(6, 182, 212, 0.08)',
-                          border: '1px solid rgba(6, 182, 212, 0.2)',
+                          background: '#f0fdfa',
+                          border: `1px solid #a5f3fc`,
                           borderRadius: 'var(--radius-sm)',
                           padding: '12px',
                           marginTop: '14px',
@@ -2024,83 +1667,49 @@ function CrmContent() {
                         }}
                       >
                         <div>
-                          <div style={{ fontSize: '10px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
-                            Width × Height
-                          </div>
-                          <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-main)' }}>
-                            {survey.widthMeters}m × {survey.heightMeters}m
-                          </div>
+                          <div style={{ fontSize: '10px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Width × Height</div>
+                          <div style={{ fontSize: '14px', fontWeight: 800, color: T.black }}>{survey.widthMeters}m × {survey.heightMeters}m</div>
                         </div>
-
                         <div>
-                          <div style={{ fontSize: '10px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
-                            Total Surface Area
-                          </div>
-                          <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--cyan)' }}>
-                            {areaSqm} m²
-                          </div>
+                          <div style={{ fontSize: '10px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Total Surface Area</div>
+                          <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--cyan)' }}>{areaSqm} m²</div>
                         </div>
-
                         <div>
-                          <div style={{ fontSize: '10px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
-                            3D Letter / Box Depth
-                          </div>
+                          <div style={{ fontSize: '10px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>3D Letter / Box Depth</div>
                           <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>
                             {survey.depthMeters ? `${survey.depthMeters}m (${(survey.depthMeters * 100).toFixed(0)}cm)` : 'Flat Profile'}
                           </div>
                         </div>
-
                         <div>
-                          <div style={{ fontSize: '10px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
-                            Install Elevation
-                          </div>
-                          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>
-                            {survey.installationHeightMeters}m from ground
-                          </div>
+                          <div style={{ fontSize: '10px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Install Elevation</div>
+                          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>{survey.installationHeightMeters}m from ground</div>
                         </div>
-
                         <div>
-                          <div style={{ fontSize: '10px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
-                            Environment
-                          </div>
-                          <div style={{ fontSize: '12px', fontWeight: 600, color: survey.indoorOutdoor === 'outdoor' ? 'var(--amber)' : '#c084fc' }}>
+                          <div style={{ fontSize: '10px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Environment</div>
+                          <div style={{ fontSize: '12px', fontWeight: 600, color: survey.indoorOutdoor === 'outdoor' ? 'var(--amber)' : '#7e22ce' }}>
                             {survey.indoorOutdoor === 'outdoor' ? 'Outdoor (Weatherproof)' : 'Indoor Retail'}
                           </div>
                         </div>
-
                         <div>
-                          <div style={{ fontSize: '10px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
-                            220V Power Line
-                          </div>
-                          <div
-                            style={{
-                              fontSize: '12px',
-                              fontWeight: 600,
-                              color: survey.powerSourceAvailable ? 'var(--emerald)' : 'var(--amber)',
-                            }}
-                          >
+                          <div style={{ fontSize: '10px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>220V Power Line</div>
+                          <div style={{ fontSize: '12px', fontWeight: 600, color: survey.powerSourceAvailable ? 'var(--emerald)' : 'var(--amber)' }}>
                             {survey.powerSourceAvailable ? 'Available on Site' : 'Wiring Required'}
                           </div>
                         </div>
                       </div>
 
-                      {/* Surveyor & Date */}
                       {(survey.surveyorName || survey.surveyDate) && (
                         <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '10px' }}>
                           Surveyed by {survey.surveyorName || 'Technician'} • {survey.surveyDate || 'Recent'}
                         </div>
                       )}
 
-                      {/* Notes */}
                       {survey.notes && (
-                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '6px' }}>
-                          &ldquo;{survey.notes}&rdquo;
-                        </p>
+                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '6px' }}>&ldquo;{survey.notes}&rdquo;</p>
                       )}
                     </div>
 
-                    {/* Card Actions */}
-                    <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid var(--border-subtle)', paddingTop: '12px' }}>
+                    <div style={{ display: 'flex', gap: '8px', borderTop: `1px solid var(--border-subtle)`, paddingTop: '12px' }}>
                       <button
                         onClick={() => {
                           if (item.lead) {
@@ -2117,7 +1726,6 @@ function CrmContent() {
                         <Edit3 size={12} />
                         <span>Edit Dimensions</span>
                       </button>
-
                       <button
                         onClick={() => {
                           if (item.lead) {
@@ -2129,22 +1737,13 @@ function CrmContent() {
                           }
                         }}
                         className="btn btn-secondary btn-sm"
-                        title="Add another signboard for this client"
                         style={{ padding: '6px 10px' }}
                       >
                         <Plus size={13} />
                       </button>
-
                       <button
-                        onClick={() =>
-                          handleDeleteSurvey(
-                            item.sourceType,
-                            item.lead?.id || item.customer?.id || '',
-                            survey.id
-                          )
-                        }
+                        onClick={() => handleDeleteSurvey(item.sourceType, item.lead?.id || item.customer?.id || '', survey.id)}
                         className="btn btn-secondary btn-sm"
-                        title="Delete this signboard survey"
                         style={{ color: 'var(--rose)', padding: '6px 10px' }}
                       >
                         <Trash2 size={13} />
@@ -2158,23 +1757,18 @@ function CrmContent() {
         </div>
       )}
 
-      {/* MODAL 1: NEW LEAD MODAL */}
+      {/* ═══════════════ MODAL 1: NEW LEAD ═══════════════ */}
       {showNewLeadModal && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="modal-header">
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-main)' }}>
-                  New Advertising Lead / Inquiry
-                </h3>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, color: T.black }}>New Advertising Lead / Inquiry</h3>
                 <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                   Record new incoming client project specifications and schedule site survey.
                 </p>
               </div>
-              <button
-                onClick={() => setShowNewLeadModal(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
-              >
+              <button onClick={() => setShowNewLeadModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}>
                 <X size={20} />
               </button>
             </div>
@@ -2183,91 +1777,44 @@ function CrmContent() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div className="form-group">
                   <label className="form-label">Client / Company Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Dashen Bank, BGI Ethiopia..."
-                    className="form-input"
-                    value={leadForm.companyName}
-                    onChange={(e) => setLeadForm({ ...leadForm, companyName: e.target.value })}
-                  />
+                  <input type="text" required placeholder="e.g. Dashen Bank, BGI Ethiopia..." className="form-input" value={leadForm.companyName} onChange={(e) => setLeadForm({ ...leadForm, companyName: e.target.value })} />
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">Contact Person</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Yared Girma (Procurement Lead)"
-                    className="form-input"
-                    value={leadForm.contactPerson}
-                    onChange={(e) => setLeadForm({ ...leadForm, contactPerson: e.target.value })}
-                  />
+                  <input type="text" placeholder="e.g. Yared Girma (Procurement Lead)" className="form-input" value={leadForm.contactPerson} onChange={(e) => setLeadForm({ ...leadForm, contactPerson: e.target.value })} />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div className="form-group">
                   <label className="form-label">Phone Number *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="+251 911 ..."
-                    className="form-input"
-                    value={leadForm.phone}
-                    onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value })}
-                  />
+                  <input type="text" required placeholder="+251 911 ..." className="form-input" value={leadForm.phone} onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value })} />
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">Email Address</label>
-                  <input
-                    type="email"
-                    placeholder="procurement@company.com"
-                    className="form-input"
-                    value={leadForm.email}
-                    onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
-                  />
+                  <input type="email" placeholder="procurement@company.com" className="form-input" value={leadForm.email} onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })} />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div className="form-group">
                   <label className="form-label">Project Type *</label>
-                  <select
-                    className="form-select"
-                    value={leadForm.projectType}
-                    onChange={(e) => setLeadForm({ ...leadForm, projectType: e.target.value as SignageType })}
-                  >
+                  <select className="form-select" value={leadForm.projectType} onChange={(e) => setLeadForm({ ...leadForm, projectType: e.target.value as SignageType })}>
                     {Object.entries(projectTypeLabels).map(([key, label]) => (
-                      <option key={key} value={key}>
-                        {label}
-                      </option>
+                      <option key={key} value={key}>{label}</option>
                     ))}
                   </select>
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">Estimated Budget (ETB) *</label>
-                  <input
-                    type="number"
-                    required
-                    min="1000"
-                    step="5000"
-                    className="form-input"
-                    value={leadForm.estimatedBudget}
-                    onChange={(e) => setLeadForm({ ...leadForm, estimatedBudget: Number(e.target.value) })}
-                  />
+                  <input type="number" required min="1000" step="5000" className="form-input" value={leadForm.estimatedBudget} onChange={(e) => setLeadForm({ ...leadForm, estimatedBudget: Number(e.target.value) })} />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div className="form-group">
                   <label className="form-label">Lead Source</label>
-                  <select
-                    className="form-select"
-                    value={leadForm.source}
-                    onChange={(e) => setLeadForm({ ...leadForm, source: e.target.value as LeadSource })}
-                  >
+                  <select className="form-select" value={leadForm.source} onChange={(e) => setLeadForm({ ...leadForm, source: e.target.value as LeadSource })}>
                     <option value="walk_in">Walk-in Inquiry</option>
                     <option value="phone_inquiry">Phone Inquiry</option>
                     <option value="referral">Client Referral</option>
@@ -2275,23 +1822,16 @@ function CrmContent() {
                     <option value="field_sales">Field Sales</option>
                   </select>
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">City / Location</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={leadForm.city}
-                    onChange={(e) => setLeadForm({ ...leadForm, city: e.target.value })}
-                  />
+                  <input type="text" className="form-input" value={leadForm.city} onChange={(e) => setLeadForm({ ...leadForm, city: e.target.value })} />
                 </div>
               </div>
 
-              {/* Dynamic Multiple Site Surveys in New Lead Form */}
               <div
                 style={{
-                  background: 'rgba(6, 182, 212, 0.04)',
-                  border: '1px solid rgba(6, 182, 212, 0.2)',
+                  background: '#f0fdfa',
+                  border: `1px solid #a5f3fc`,
                   borderRadius: 'var(--radius-md)',
                   padding: '16px',
                   display: 'flex',
@@ -2300,32 +1840,12 @@ function CrmContent() {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      cursor: 'pointer',
-                      fontSize: '13px',
-                      fontWeight: 700,
-                      color: 'var(--cyan)',
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={leadForm.hasSurvey}
-                      onChange={(e) => setLeadForm({ ...leadForm, hasSurvey: e.target.checked })}
-                    />
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 700, color: '#0e7490' }}>
+                    <input type="checkbox" checked={leadForm.hasSurvey} onChange={(e) => setLeadForm({ ...leadForm, hasSurvey: e.target.checked })} />
                     <span>Attach Site Surveys & Dimensions ({leadForm.surveys.length} Signboards)</span>
                   </label>
-
                   {leadForm.hasSurvey && (
-                    <button
-                      type="button"
-                      onClick={handleAddDraftSurveyToLeadForm}
-                      className="btn btn-secondary btn-sm"
-                      style={{ fontSize: '11px', padding: '4px 8px' }}
-                    >
+                    <button type="button" onClick={handleAddDraftSurveyToLeadForm} className="btn btn-secondary btn-sm" style={{ fontSize: '11px', padding: '4px 8px' }}>
                       <Plus size={12} />
                       <span>+ Add Another Sign</span>
                     </button>
@@ -2338,8 +1858,8 @@ function CrmContent() {
                       <div
                         key={draft.id}
                         style={{
-                          background: 'var(--bg-app)',
-                          border: '1px solid var(--border-subtle)',
+                          background: T.white,
+                          border: `1px solid var(--border-subtle)`,
                           borderRadius: 'var(--radius-sm)',
                           padding: '12px',
                           display: 'flex',
@@ -2348,24 +1868,9 @@ function CrmContent() {
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)' }}>
-                            Signboard #{idx + 1}
-                          </span>
+                          <span style={{ fontSize: '12px', fontWeight: 700, color: T.black }}>Signboard #{idx + 1}</span>
                           {leadForm.surveys.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveDraftSurvey(idx)}
-                              style={{
-                                background: 'none',
-                                border: 'none',
-                                color: 'var(--rose)',
-                                cursor: 'pointer',
-                                fontSize: '11px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '3px',
-                              }}
-                            >
+                            <button type="button" onClick={() => handleRemoveDraftSurvey(idx)} style={{ background: 'none', border: 'none', color: 'var(--rose)', cursor: 'pointer', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '3px' }}>
                               <Trash2 size={12} />
                               <span>Remove</span>
                             </button>
@@ -2374,142 +1879,55 @@ function CrmContent() {
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '10px' }}>
                           <div className="form-group">
-                            <label className="form-label" style={{ fontSize: '11px' }}>
-                              Signboard Title / Facade Spot *
-                            </label>
-                            <input
-                              type="text"
-                              required
-                              placeholder="e.g. Main Entrance Pylon, Rooftop 3D Logo"
-                              className="form-input"
-                              style={{ padding: '6px 10px', fontSize: '12px' }}
-                              value={draft.title}
-                              onChange={(e) => handleUpdateDraftSurvey(idx, { title: e.target.value })}
-                            />
+                            <label className="form-label" style={{ fontSize: '11px' }}>Signboard Title / Facade Spot *</label>
+                            <input type="text" required placeholder="e.g. Main Entrance Pylon, Rooftop 3D Logo" className="form-input" style={{ padding: '6px 10px', fontSize: '12px' }} value={draft.title} onChange={(e) => handleUpdateDraftSurvey(idx, { title: e.target.value })} />
                           </div>
-
                           <div className="form-group">
-                            <label className="form-label" style={{ fontSize: '11px' }}>
-                              Signage Fabrication Type
-                            </label>
-                            <select
-                              className="form-select"
-                              style={{ padding: '6px 10px', fontSize: '12px' }}
-                              value={draft.signageType}
-                              onChange={(e) =>
-                                handleUpdateDraftSurvey(idx, { signageType: e.target.value as SignageType })
-                              }
-                            >
+                            <label className="form-label" style={{ fontSize: '11px' }}>Signage Fabrication Type</label>
+                            <select className="form-select" style={{ padding: '6px 10px', fontSize: '12px' }} value={draft.signageType} onChange={(e) => handleUpdateDraftSurvey(idx, { signageType: e.target.value as SignageType })}>
                               {Object.entries(projectTypeLabels).map(([val, label]) => (
-                                <option key={val} value={val}>
-                                  {label}
-                                </option>
+                                <option key={val} value={val}>{label}</option>
                               ))}
                             </select>
                           </div>
                         </div>
 
                         <div className="form-group">
-                          <label className="form-label" style={{ fontSize: '11px' }}>
-                            Specific Installation Location
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="e.g. South Elevation Facade, 1st Floor"
-                            className="form-input"
-                            style={{ padding: '6px 10px', fontSize: '12px' }}
-                            value={draft.locationAddress}
-                            onChange={(e) => handleUpdateDraftSurvey(idx, { locationAddress: e.target.value })}
-                          />
+                          <label className="form-label" style={{ fontSize: '11px' }}>Specific Installation Location</label>
+                          <input type="text" placeholder="e.g. South Elevation Facade, 1st Floor" className="form-input" style={{ padding: '6px 10px', fontSize: '12px' }} value={draft.locationAddress} onChange={(e) => handleUpdateDraftSurvey(idx, { locationAddress: e.target.value })} />
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
                           <div className="form-group">
                             <label className="form-label" style={{ fontSize: '10px' }}>Width (m) *</label>
-                            <input
-                              type="number"
-                              step="0.05"
-                              min="0.1"
-                              required
-                              className="form-input"
-                              style={{ padding: '6px 8px', fontSize: '12px' }}
-                              value={draft.widthMeters}
-                              onChange={(e) => handleUpdateDraftSurvey(idx, { widthMeters: Number(e.target.value) })}
-                            />
+                            <input type="number" step="0.05" min="0.1" required className="form-input" style={{ padding: '6px 8px', fontSize: '12px' }} value={draft.widthMeters} onChange={(e) => handleUpdateDraftSurvey(idx, { widthMeters: Number(e.target.value) })} />
                           </div>
-
                           <div className="form-group">
                             <label className="form-label" style={{ fontSize: '10px' }}>Height (m) *</label>
-                            <input
-                              type="number"
-                              step="0.05"
-                              min="0.1"
-                              required
-                              className="form-input"
-                              style={{ padding: '6px 8px', fontSize: '12px' }}
-                              value={draft.heightMeters}
-                              onChange={(e) => handleUpdateDraftSurvey(idx, { heightMeters: Number(e.target.value) })}
-                            />
+                            <input type="number" step="0.05" min="0.1" required className="form-input" style={{ padding: '6px 8px', fontSize: '12px' }} value={draft.heightMeters} onChange={(e) => handleUpdateDraftSurvey(idx, { heightMeters: Number(e.target.value) })} />
                           </div>
-
                           <div className="form-group">
                             <label className="form-label" style={{ fontSize: '10px' }}>Depth (m)</label>
-                            <input
-                              type="number"
-                              step="0.02"
-                              min="0"
-                              className="form-input"
-                              style={{ padding: '6px 8px', fontSize: '12px' }}
-                              value={draft.depthMeters}
-                              onChange={(e) => handleUpdateDraftSurvey(idx, { depthMeters: Number(e.target.value) })}
-                            />
+                            <input type="number" step="0.02" min="0" className="form-input" style={{ padding: '6px 8px', fontSize: '12px' }} value={draft.depthMeters} onChange={(e) => handleUpdateDraftSurvey(idx, { depthMeters: Number(e.target.value) })} />
                           </div>
-
                           <div className="form-group">
                             <label className="form-label" style={{ fontSize: '10px' }}>Elevation (m)</label>
-                            <input
-                              type="number"
-                              step="0.5"
-                              min="0"
-                              className="form-input"
-                              style={{ padding: '6px 8px', fontSize: '12px' }}
-                              value={draft.installationHeightMeters}
-                              onChange={(e) =>
-                                handleUpdateDraftSurvey(idx, { installationHeightMeters: Number(e.target.value) })
-                              }
-                            />
+                            <input type="number" step="0.5" min="0" className="form-input" style={{ padding: '6px 8px', fontSize: '12px' }} value={draft.installationHeightMeters} onChange={(e) => handleUpdateDraftSurvey(idx, { installationHeightMeters: Number(e.target.value) })} />
                           </div>
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)' }}>
                           <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                            <input
-                              type="checkbox"
-                              checked={draft.powerSourceAvailable}
-                              onChange={(e) => handleUpdateDraftSurvey(idx, { powerSourceAvailable: e.target.checked })}
-                            />
+                            <input type="checkbox" checked={draft.powerSourceAvailable} onChange={(e) => handleUpdateDraftSurvey(idx, { powerSourceAvailable: e.target.checked })} />
                             <span>220V Power Line on Site</span>
                           </label>
-
                           <div style={{ display: 'flex', gap: '8px' }}>
                             <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-                              <input
-                                type="radio"
-                                name={`env-${draft.id}`}
-                                value="outdoor"
-                                checked={draft.indoorOutdoor === 'outdoor'}
-                                onChange={() => handleUpdateDraftSurvey(idx, { indoorOutdoor: 'outdoor' })}
-                              />
+                              <input type="radio" name={`env-${draft.id}`} value="outdoor" checked={draft.indoorOutdoor === 'outdoor'} onChange={() => handleUpdateDraftSurvey(idx, { indoorOutdoor: 'outdoor' })} />
                               <span>Outdoor</span>
                             </label>
                             <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-                              <input
-                                type="radio"
-                                name={`env-${draft.id}`}
-                                value="indoor"
-                                checked={draft.indoorOutdoor === 'indoor'}
-                                onChange={() => handleUpdateDraftSurvey(idx, { indoorOutdoor: 'indoor' })}
-                              />
+                              <input type="radio" name={`env-${draft.id}`} value="indoor" checked={draft.indoorOutdoor === 'indoor'} onChange={() => handleUpdateDraftSurvey(idx, { indoorOutdoor: 'indoor' })} />
                               <span>Indoor</span>
                             </label>
                           </div>
@@ -2522,49 +1940,30 @@ function CrmContent() {
 
               <div className="form-group">
                 <label className="form-label">Project Notes & Specifications</label>
-                <textarea
-                  className="form-textarea"
-                  rows={2}
-                  placeholder="Material preferences (e.g. 3mm cast acrylic, high-lumen waterproof LEDs, aluminum composite backing)..."
-                  value={leadForm.notes}
-                  onChange={(e) => setLeadForm({ ...leadForm, notes: e.target.value })}
-                />
+                <textarea className="form-textarea" rows={2} placeholder="Material preferences (e.g. 3mm cast acrylic, high-lumen waterproof LEDs, aluminum composite backing)..." value={leadForm.notes} onChange={(e) => setLeadForm({ ...leadForm, notes: e.target.value })} />
               </div>
 
               <div className="modal-footer" style={{ marginTop: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowNewLeadModal(false)}
-                  className="btn btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Save Opportunity
-                </button>
+                <button type="button" onClick={() => setShowNewLeadModal(false)} className="btn btn-secondary">Cancel</button>
+                <button type="submit" className="btn btn-primary">Save Opportunity</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* MODAL 2: NEW CUSTOMER MODAL */}
+      {/* ═══════════════ MODAL 2: NEW CUSTOMER ═══════════════ */}
       {showNewCustomerModal && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '560px' }}>
             <div className="modal-header">
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-main)' }}>
-                  Add Customer Account
-                </h3>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, color: T.black }}>Add Customer Account</h3>
                 <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                   Onboard client with verified TIN, VAT status, and credit limit.
                 </p>
               </div>
-              <button
-                onClick={() => setShowNewCustomerModal(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
-              >
+              <button onClick={() => setShowNewCustomerModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}>
                 <X size={20} />
               </button>
             </div>
@@ -2572,36 +1971,17 @@ function CrmContent() {
             <form onSubmit={handleCreateCustomer} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div className="form-group">
                 <label className="form-label">Company Legal Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Commercial Bank of Ethiopia S.C."
-                  className="form-input"
-                  value={customerForm.name}
-                  onChange={(e) => setCustomerForm({ ...customerForm, name: e.target.value })}
-                />
+                <input type="text" required placeholder="e.g. Commercial Bank of Ethiopia S.C." className="form-input" value={customerForm.name} onChange={(e) => setCustomerForm({ ...customerForm, name: e.target.value })} />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
                   <label className="form-label">Ethiopian TIN Number *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="10-digit TIN: 0001092834"
-                    className="form-input"
-                    value={customerForm.tin}
-                    onChange={(e) => setCustomerForm({ ...customerForm, tin: e.target.value })}
-                  />
+                  <input type="text" required placeholder="10-digit TIN: 0001092834" className="form-input" value={customerForm.tin} onChange={(e) => setCustomerForm({ ...customerForm, tin: e.target.value })} />
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">Customer Type</label>
-                  <select
-                    className="form-select"
-                    value={customerForm.customerType}
-                    onChange={(e) => setCustomerForm({ ...customerForm, customerType: e.target.value as any })}
-                  >
+                  <select className="form-select" value={customerForm.customerType} onChange={(e) => setCustomerForm({ ...customerForm, customerType: e.target.value as any })}>
                     <option value="business">Private Business / Corporate</option>
                     <option value="government">Government Ministry / Agency</option>
                     <option value="individual">Individual Sole Proprietor</option>
@@ -2613,58 +1993,27 @@ function CrmContent() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
                   <label className="form-label">Phone Number</label>
-                  <input
-                    type="text"
-                    placeholder="+251 115 ..."
-                    className="form-input"
-                    value={customerForm.phone}
-                    onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
-                  />
+                  <input type="text" placeholder="+251 115 ..." className="form-input" value={customerForm.phone} onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })} />
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">Email</label>
-                  <input
-                    type="email"
-                    placeholder="finance@client.com"
-                    className="form-input"
-                    value={customerForm.email}
-                    onChange={(e) => setCustomerForm({ ...customerForm, email: e.target.value })}
-                  />
+                  <input type="email" placeholder="finance@client.com" className="form-input" value={customerForm.email} onChange={(e) => setCustomerForm({ ...customerForm, email: e.target.value })} />
                 </div>
               </div>
 
               <div className="form-group">
                 <label className="form-label">Business Address</label>
-                <input
-                  type="text"
-                  placeholder="Street / Building / Sub-City, Addis Ababa"
-                  className="form-input"
-                  value={customerForm.address}
-                  onChange={(e) => setCustomerForm({ ...customerForm, address: e.target.value })}
-                />
+                <input type="text" placeholder="Street / Building / Sub-City, Addis Ababa" className="form-input" value={customerForm.address} onChange={(e) => setCustomerForm({ ...customerForm, address: e.target.value })} />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
                   <label className="form-label">Credit Limit (ETB)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="10000"
-                    className="form-input"
-                    value={customerForm.creditLimit}
-                    onChange={(e) => setCustomerForm({ ...customerForm, creditLimit: Number(e.target.value) })}
-                  />
+                  <input type="number" min="0" step="10000" className="form-input" value={customerForm.creditLimit} onChange={(e) => setCustomerForm({ ...customerForm, creditLimit: Number(e.target.value) })} />
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">Payment Terms</label>
-                  <select
-                    className="form-select"
-                    value={customerForm.paymentTerms}
-                    onChange={(e) => setCustomerForm({ ...customerForm, paymentTerms: e.target.value })}
-                  >
+                  <select className="form-select" value={customerForm.paymentTerms} onChange={(e) => setCustomerForm({ ...customerForm, paymentTerms: e.target.value })}>
                     <option value="Cash on Delivery">Cash on Delivery</option>
                     <option value="15 Days Net">15 Days Net</option>
                     <option value="30 Days Net">30 Days Net</option>
@@ -2675,91 +2024,60 @@ function CrmContent() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
-                <input
-                  type="checkbox"
-                  id="vatReg"
-                  checked={customerForm.isVatRegistered}
-                  onChange={(e) => setCustomerForm({ ...customerForm, isVatRegistered: e.target.checked })}
-                />
-                <label htmlFor="vatReg" style={{ fontSize: '13px', color: 'var(--text-main)', cursor: 'pointer' }}>
+                <input type="checkbox" id="vatReg" checked={customerForm.isVatRegistered} onChange={(e) => setCustomerForm({ ...customerForm, isVatRegistered: e.target.checked })} />
+                <label htmlFor="vatReg" style={{ fontSize: '13px', color: T.black, cursor: 'pointer' }}>
                   Is 15% VAT Registered Entity (Requires standard VAT Invoices)
                 </label>
               </div>
 
               <div className="modal-footer" style={{ marginTop: '12px' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowNewCustomerModal(false)}
-                  className="btn btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Create Customer
-                </button>
+                <button type="button" onClick={() => setShowNewCustomerModal(false)} className="btn btn-secondary">Cancel</button>
+                <button type="submit" className="btn btn-primary">Create Customer</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* MODAL 3: SITE SURVEYS & SIGNBOARDS MANAGER (MULTIPLE PER LEAD/CUSTOMER) */}
+      {/* ═══════════════ MODAL 3: SURVEY MANAGER ═══════════════ */}
       {(surveyModalLead || surveyModalCustomer) && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto' }}>
             {(() => {
-              const activeLead = surveyModalLead ? (leads.find((l) => l.id === surveyModalLead.id) || surveyModalLead) : null;
-              const activeCustomer = surveyModalCustomer ? (customers.find((c) => c.id === surveyModalCustomer.id) || surveyModalCustomer) : null;
-              const entityName = activeLead ? activeLead.companyName : (activeCustomer ? activeCustomer.name : '');
-              const entityCode = activeLead ? activeLead.leadNumber : (activeCustomer ? activeCustomer.code : '');
+              const activeLead = surveyModalLead ? leads.find((l) => l.id === surveyModalLead.id) || surveyModalLead : null;
+              const activeCustomer = surveyModalCustomer ? customers.find((c) => c.id === surveyModalCustomer.id) || surveyModalCustomer : null;
+              const entityName = activeLead ? activeLead.companyName : activeCustomer ? activeCustomer.name : '';
+              const entityCode = activeLead ? activeLead.leadNumber : activeCustomer ? activeCustomer.code : '';
               const entityType = activeLead ? 'lead' : 'customer';
-              const entityId = activeLead ? activeLead.id : (activeCustomer ? activeCustomer.id : '');
-              const surveys = activeLead ? getLeadSurveys(activeLead) : (activeCustomer ? getCustomerSurveys(activeCustomer) : []);
+              const entityId = activeLead ? activeLead.id : activeCustomer ? activeCustomer.id : '';
+              const surveys = activeLead ? getLeadSurveys(activeLead) : activeCustomer ? getCustomerSurveys(activeCustomer) : [];
               const totalArea = calculateSurveysArea(surveys);
 
               return (
                 <div>
-                  {/* Modal Header */}
                   <div className="modal-header">
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Ruler size={20} color="var(--cyan)" />
-                        <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)' }}>
-                          Site Surveys & Signboard Manager
-                        </h3>
-                        <span className="badge badge-cyan" style={{ fontSize: '11px' }}>
-                          {surveys.length} {surveys.length === 1 ? 'Signboard' : 'Signboards'}
-                        </span>
+                        <h3 style={{ fontSize: '18px', fontWeight: 800, color: T.black }}>Site Surveys & Signboard Manager</h3>
+                        <span className="badge badge-cyan" style={{ fontSize: '11px' }}>{surveys.length} {surveys.length === 1 ? 'Signboard' : 'Signboards'}</span>
                       </div>
                       <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                        Account: <strong style={{ color: 'var(--primary-light)' }}>{entityName}</strong> ({entityCode}) • Total Area: <strong style={{ color: 'var(--cyan)' }}>{totalArea.toFixed(1)} m²</strong>
+                        Account: <strong style={{ color: T.yellowText }}>{entityName}</strong> ({entityCode}) • Total Area: <strong style={{ color: 'var(--cyan)' }}>{totalArea.toFixed(1)} m²</strong>
                       </div>
                     </div>
-                    <button
-                      onClick={() => {
-                        setSurveyModalLead(null);
-                        setSurveyModalCustomer(null);
-                        setEditingSurveyId(null);
-                      }}
-                      style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
-                    >
+                    <button onClick={() => { setSurveyModalLead(null); setSurveyModalCustomer(null); setEditingSurveyId(null); }} style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}>
                       <X size={20} />
                     </button>
                   </div>
 
-                  {/* Mode 1: Edit or Add Specific Signboard */}
                   {editingSurveyId !== null ? (
                     <form onSubmit={handleSaveSurvey} style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '16px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(6, 182, 212, 0.08)', padding: '10px 14px', borderRadius: 'var(--radius-sm)' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--cyan)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ecfeff', padding: '10px 14px', borderRadius: 'var(--radius-sm)' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#0e7490' }}>
                           {editingSurveyId === 'new' ? '+ Add New Signboard / Facade Location' : `Edit Signboard: "${surveyForm.title}"`}
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => setEditingSurveyId(null)}
-                          className="btn btn-secondary btn-sm"
-                          style={{ fontSize: '11px', padding: '3px 8px' }}
-                        >
+                        <button type="button" onClick={() => setEditingSurveyId(null)} className="btn btn-secondary btn-sm" style={{ fontSize: '11px', padding: '3px 8px' }}>
                           ← Back to Signboards List
                         </button>
                       </div>
@@ -2767,27 +2085,13 @@ function CrmContent() {
                       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
                         <div className="form-group">
                           <label className="form-label">Signboard Title / Facade Spot *</label>
-                          <input
-                            type="text"
-                            required
-                            placeholder="e.g. Main Entrance 3D Sign, Rooftop Sky Sign"
-                            className="form-input"
-                            value={surveyForm.title}
-                            onChange={(e) => setSurveyForm({ ...surveyForm, title: e.target.value })}
-                          />
+                          <input type="text" required placeholder="e.g. Main Entrance 3D Sign, Rooftop Sky Sign" className="form-input" value={surveyForm.title} onChange={(e) => setSurveyForm({ ...surveyForm, title: e.target.value })} />
                         </div>
-
                         <div className="form-group">
                           <label className="form-label">Signage Fabrication Type</label>
-                          <select
-                            className="form-select"
-                            value={surveyForm.signageType || 'acrylic_3d'}
-                            onChange={(e) => setSurveyForm({ ...surveyForm, signageType: e.target.value as SignageType })}
-                          >
+                          <select className="form-select" value={surveyForm.signageType || 'acrylic_3d'} onChange={(e) => setSurveyForm({ ...surveyForm, signageType: e.target.value as SignageType })}>
                             {Object.entries(projectTypeLabels).map(([val, label]) => (
-                              <option key={val} value={val}>
-                                {label}
-                              </option>
+                              <option key={val} value={val}>{label}</option>
                             ))}
                           </select>
                         </div>
@@ -2795,191 +2099,88 @@ function CrmContent() {
 
                       <div className="form-group">
                         <label className="form-label">Installation Location Address *</label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="e.g. CBE HQ Plaza South Facade, Sengatera, Addis Ababa"
-                          className="form-input"
-                          value={surveyForm.locationAddress}
-                          onChange={(e) => setSurveyForm({ ...surveyForm, locationAddress: e.target.value })}
-                        />
+                        <input type="text" required placeholder="e.g. CBE HQ Plaza South Facade, Sengatera, Addis Ababa" className="form-input" value={surveyForm.locationAddress} onChange={(e) => setSurveyForm({ ...surveyForm, locationAddress: e.target.value })} />
                       </div>
 
-                      {/* Dimensional Blueprint Inputs */}
-                      <div
-                        style={{
-                          background: 'var(--bg-app)',
-                          border: '1px solid var(--border-subtle)',
-                          borderRadius: 'var(--radius-sm)',
-                          padding: '14px',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '12px',
-                        }}
-                      >
-                        <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--cyan)', textTransform: 'uppercase' }}>
+                      <div style={{ background: T.gray50, border: `1px solid var(--border-subtle)`, borderRadius: 'var(--radius-sm)', padding: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 700, color: '#0e7490', textTransform: 'uppercase' }}>
                           📐 Engineering Dimensions & Ground Elevation
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
                           <div className="form-group">
                             <label className="form-label">Width (m) *</label>
-                            <input
-                              type="number"
-                              step="0.05"
-                              min="0.1"
-                              required
-                              className="form-input"
-                              value={surveyForm.widthMeters}
-                              onChange={(e) => setSurveyForm({ ...surveyForm, widthMeters: Number(e.target.value) })}
-                            />
+                            <input type="number" step="0.05" min="0.1" required className="form-input" value={surveyForm.widthMeters} onChange={(e) => setSurveyForm({ ...surveyForm, widthMeters: Number(e.target.value) })} />
                           </div>
-
                           <div className="form-group">
                             <label className="form-label">Height (m) *</label>
-                            <input
-                              type="number"
-                              step="0.05"
-                              min="0.1"
-                              required
-                              className="form-input"
-                              value={surveyForm.heightMeters}
-                              onChange={(e) => setSurveyForm({ ...surveyForm, heightMeters: Number(e.target.value) })}
-                            />
+                            <input type="number" step="0.05" min="0.1" required className="form-input" value={surveyForm.heightMeters} onChange={(e) => setSurveyForm({ ...surveyForm, heightMeters: Number(e.target.value) })} />
                           </div>
-
                           <div className="form-group">
                             <label className="form-label">Depth (m)</label>
-                            <input
-                              type="number"
-                              step="0.02"
-                              min="0"
-                              placeholder="0.15"
-                              className="form-input"
-                              value={surveyForm.depthMeters || 0}
-                              onChange={(e) => setSurveyForm({ ...surveyForm, depthMeters: Number(e.target.value) })}
-                            />
+                            <input type="number" step="0.02" min="0" placeholder="0.15" className="form-input" value={surveyForm.depthMeters || 0} onChange={(e) => setSurveyForm({ ...surveyForm, depthMeters: Number(e.target.value) })} />
                           </div>
-
                           <div className="form-group">
                             <label className="form-label">Elevation (m)</label>
-                            <input
-                              type="number"
-                              step="0.5"
-                              min="0"
-                              placeholder="3.5"
-                              className="form-input"
-                              value={surveyForm.installationHeightMeters}
-                              onChange={(e) => setSurveyForm({ ...surveyForm, installationHeightMeters: Number(e.target.value) })}
-                            />
+                            <input type="number" step="0.5" min="0" placeholder="3.5" className="form-input" value={surveyForm.installationHeightMeters} onChange={(e) => setSurveyForm({ ...surveyForm, installationHeightMeters: Number(e.target.value) })} />
                           </div>
                         </div>
 
-                        {/* Calculated area preview */}
                         <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', gap: '16px' }}>
                           <span>Calculated Area: <strong style={{ color: 'var(--cyan)' }}>{((Number(surveyForm.widthMeters) || 0) * (Number(surveyForm.heightMeters) || 0)).toFixed(2)} m²</strong></span>
-                          <span>Depth: <strong style={{ color: 'var(--text-main)' }}>{((Number(surveyForm.depthMeters) || 0) * 100).toFixed(0)} cm</strong></span>
-                          <span>Elevation: <strong style={{ color: 'var(--text-main)' }}>{surveyForm.installationHeightMeters}m ground clearance</strong></span>
+                          <span>Depth: <strong style={{ color: T.black }}>{((Number(surveyForm.depthMeters) || 0) * 100).toFixed(0)} cm</strong></span>
+                          <span>Elevation: <strong style={{ color: T.black }}>{surveyForm.installationHeightMeters}m ground clearance</strong></span>
                         </div>
                       </div>
 
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                         <div className="form-group">
                           <label className="form-label">Environment</label>
-                          <select
-                            className="form-select"
-                            value={surveyForm.indoorOutdoor}
-                            onChange={(e) => setSurveyForm({ ...surveyForm, indoorOutdoor: e.target.value as 'indoor' | 'outdoor' })}
-                          >
+                          <select className="form-select" value={surveyForm.indoorOutdoor} onChange={(e) => setSurveyForm({ ...surveyForm, indoorOutdoor: e.target.value as 'indoor' | 'outdoor' })}>
                             <option value="outdoor">Outdoor (Weatherproof IP67 required)</option>
                             <option value="indoor">Indoor (Retail / Office reception)</option>
                           </select>
                         </div>
-
                         <div className="form-group">
                           <label className="form-label">Surveyor Name</label>
-                          <input
-                            type="text"
-                            className="form-input"
-                            value={surveyForm.surveyorName || 'Dawit Bekele'}
-                            onChange={(e) => setSurveyForm({ ...surveyForm, surveyorName: e.target.value })}
-                          />
+                          <input type="text" className="form-input" value={surveyForm.surveyorName || 'Dawit Bekele'} onChange={(e) => setSurveyForm({ ...surveyForm, surveyorName: e.target.value })} />
                         </div>
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <input
-                          type="checkbox"
-                          id="powerAvail"
-                          checked={surveyForm.powerSourceAvailable}
-                          onChange={(e) => setSurveyForm({ ...surveyForm, powerSourceAvailable: e.target.checked })}
-                        />
-                        <label htmlFor="powerAvail" style={{ fontSize: '13px', color: 'var(--text-main)', cursor: 'pointer' }}>
+                        <input type="checkbox" id="powerAvail" checked={surveyForm.powerSourceAvailable} onChange={(e) => setSurveyForm({ ...surveyForm, powerSourceAvailable: e.target.checked })} />
+                        <label htmlFor="powerAvail" style={{ fontSize: '13px', color: T.black, cursor: 'pointer' }}>
                           220V AC Power Line Available on Site (Ready for internal LED modules)
                         </label>
                       </div>
 
                       <div className="form-group">
                         <label className="form-label">Technician Notes & Scaffolding Requirements</label>
-                        <textarea
-                          className="form-textarea"
-                          rows={2}
-                          placeholder="e.g. Scaffolding needed up to 8m elevation, masonry anchor bolts, waterproof silicone sealant..."
-                          value={surveyForm.notes || ''}
-                          onChange={(e) => setSurveyForm({ ...surveyForm, notes: e.target.value })}
-                        />
+                        <textarea className="form-textarea" rows={2} placeholder="e.g. Scaffolding needed up to 8m elevation, masonry anchor bolts, waterproof silicone sealant..." value={surveyForm.notes || ''} onChange={(e) => setSurveyForm({ ...surveyForm, notes: e.target.value })} />
                       </div>
 
                       <div className="modal-footer" style={{ marginTop: '8px' }}>
-                        <button
-                          type="button"
-                          onClick={() => setEditingSurveyId(null)}
-                          className="btn btn-secondary"
-                        >
-                          Cancel
-                        </button>
-                        <button type="submit" className="btn btn-primary">
-                          Save Signboard Dimensions
-                        </button>
+                        <button type="button" onClick={() => setEditingSurveyId(null)} className="btn btn-secondary">Cancel</button>
+                        <button type="submit" className="btn btn-primary">Save Signboard Dimensions</button>
                       </div>
                     </form>
                   ) : (
-                    /* Mode 2: Multi-Signboard List for this Deal/Customer */
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '16px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
                           All recorded signage locations & dimensions for this account:
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleStartNewSurvey(surveys[0]?.locationAddress, `${entityName} Signboard #${surveys.length + 1}`)}
-                          className="btn btn-primary btn-sm"
-                          style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                        >
+                        <button type="button" onClick={() => handleStartNewSurvey(surveys[0]?.locationAddress, `${entityName} Signboard #${surveys.length + 1}`)} className="btn btn-primary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <Plus size={13} />
                           <span>+ Add Another Signboard</span>
                         </button>
                       </div>
 
                       {surveys.length === 0 ? (
-                        <div
-                          style={{
-                            background: 'var(--bg-app)',
-                            borderRadius: 'var(--radius-sm)',
-                            padding: '32px',
-                            textAlign: 'center',
-                            color: 'var(--text-dim)',
-                            border: '1px dashed var(--border-subtle)',
-                          }}
-                        >
+                        <div style={{ background: T.gray50, borderRadius: 'var(--radius-sm)', padding: '32px', textAlign: 'center', color: 'var(--text-dim)', border: `1px dashed var(--border-subtle)` }}>
                           <Ruler size={32} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
                           <div style={{ fontSize: '14px', fontWeight: 600 }}>No signboards measured yet for this client.</div>
-                          <button
-                            type="button"
-                            onClick={() => handleStartNewSurvey('', `${entityName} Main Facade Sign`)}
-                            className="btn btn-secondary btn-sm"
-                            style={{ marginTop: '10px' }}
-                          >
+                          <button type="button" onClick={() => handleStartNewSurvey('', `${entityName} Main Facade Sign`)} className="btn btn-secondary btn-sm" style={{ marginTop: '10px' }}>
                             + Record First Signboard Dimensions
                           </button>
                         </div>
@@ -2991,8 +2192,8 @@ function CrmContent() {
                               <div
                                 key={s.id}
                                 style={{
-                                  background: 'var(--bg-app)',
-                                  border: '1px solid var(--border-subtle)',
+                                  background: T.gray50,
+                                  border: `1px solid var(--border-subtle)`,
                                   borderRadius: 'var(--radius-sm)',
                                   padding: '14px',
                                   display: 'flex',
@@ -3003,20 +2204,9 @@ function CrmContent() {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                   <div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                      <span className="badge badge-cyan" style={{ fontSize: '10px' }}>
-                                        #{idx + 1}
-                                      </span>
-                                      <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-main)' }}>
-                                        {s.title}
-                                      </span>
-                                      <span
-                                        className="badge"
-                                        style={{
-                                          fontSize: '10px',
-                                          background: s.indoorOutdoor === 'outdoor' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(168, 85, 247, 0.15)',
-                                          color: s.indoorOutdoor === 'outdoor' ? 'var(--amber)' : '#c084fc',
-                                        }}
-                                      >
+                                      <span className="badge badge-cyan" style={{ fontSize: '10px' }}>#{idx + 1}</span>
+                                      <span style={{ fontSize: '14px', fontWeight: 800, color: T.black }}>{s.title}</span>
+                                      <span className="badge" style={{ fontSize: '10px', background: s.indoorOutdoor === 'outdoor' ? '#fef3c7' : '#f3e8ff', color: s.indoorOutdoor === 'outdoor' ? '#92400e' : '#7e22ce' }}>
                                         {s.indoorOutdoor.toUpperCase()}
                                       </span>
                                     </div>
@@ -3025,44 +2215,21 @@ function CrmContent() {
                                       <span>{s.locationAddress}</span>
                                     </div>
                                   </div>
-
                                   <div style={{ display: 'flex', gap: '6px' }}>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleStartEditSurvey(s)}
-                                      className="btn btn-secondary btn-sm"
-                                      style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}
-                                    >
+                                    <button type="button" onClick={() => handleStartEditSurvey(s)} className="btn btn-secondary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}>
                                       <Edit3 size={11} />
                                       <span>Edit</span>
                                     </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleDeleteSurvey(entityType, entityId, s.id)}
-                                      className="btn btn-secondary btn-sm"
-                                      style={{ color: 'var(--rose)', padding: '5px 8px' }}
-                                      title="Delete signboard"
-                                    >
+                                    <button type="button" onClick={() => handleDeleteSurvey(entityType, entityId, s.id)} className="btn btn-secondary btn-sm" style={{ color: 'var(--rose)', padding: '5px 8px' }}>
                                       <Trash2 size={12} />
                                     </button>
                                   </div>
                                 </div>
 
-                                {/* Dimension Metrics */}
-                                <div
-                                  style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: 'repeat(4, 1fr)',
-                                    background: 'rgba(6, 182, 212, 0.05)',
-                                    padding: '8px 12px',
-                                    borderRadius: 'var(--radius-sm)',
-                                    gap: '8px',
-                                    fontSize: '11px',
-                                  }}
-                                >
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', background: '#ecfeff', padding: '8px 12px', borderRadius: 'var(--radius-sm)', gap: '8px', fontSize: '11px' }}>
                                   <div>
                                     <span style={{ color: 'var(--text-dim)' }}>Width × Height: </span>
-                                    <strong style={{ color: 'var(--text-main)' }}>{s.widthMeters}m × {s.heightMeters}m</strong>
+                                    <strong style={{ color: T.black }}>{s.widthMeters}m × {s.heightMeters}m</strong>
                                   </div>
                                   <div>
                                     <span style={{ color: 'var(--text-dim)' }}>Surface Area: </span>
@@ -3070,18 +2237,16 @@ function CrmContent() {
                                   </div>
                                   <div>
                                     <span style={{ color: 'var(--text-dim)' }}>3D Depth: </span>
-                                    <strong style={{ color: 'var(--text-main)' }}>{s.depthMeters ? `${(s.depthMeters * 100).toFixed(0)}cm` : 'Flat'}</strong>
+                                    <strong style={{ color: T.black }}>{s.depthMeters ? `${(s.depthMeters * 100).toFixed(0)}cm` : 'Flat'}</strong>
                                   </div>
                                   <div>
                                     <span style={{ color: 'var(--text-dim)' }}>Elevation: </span>
-                                    <strong style={{ color: 'var(--text-main)' }}>{s.installationHeightMeters}m high</strong>
+                                    <strong style={{ color: T.black }}>{s.installationHeightMeters}m high</strong>
                                   </div>
                                 </div>
 
                                 {s.notes && (
-                                  <div style={{ fontSize: '11px', color: 'var(--text-dim)', fontStyle: 'italic' }}>
-                                    &ldquo;{s.notes}&rdquo;
-                                  </div>
+                                  <div style={{ fontSize: '11px', color: 'var(--text-dim)', fontStyle: 'italic' }}>&ldquo;{s.notes}&rdquo;</div>
                                 )}
                               </div>
                             );
@@ -3090,16 +2255,7 @@ function CrmContent() {
                       )}
 
                       <div className="modal-footer" style={{ marginTop: '8px' }}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSurveyModalLead(null);
-                            setSurveyModalCustomer(null);
-                          }}
-                          className="btn btn-primary"
-                        >
-                          Done
-                        </button>
+                        <button type="button" onClick={() => { setSurveyModalLead(null); setSurveyModalCustomer(null); }} className="btn btn-primary">Done</button>
                       </div>
                     </div>
                   )}
@@ -3110,21 +2266,16 @@ function CrmContent() {
         </div>
       )}
 
-      {/* MODAL 4: CONVERT LEAD TO CUSTOMER */}
+      {/* ═══════════════ MODAL 4: CONVERT LEAD ═══════════════ */}
       {convertModalLead && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '480px' }}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <CheckCircle2 size={22} color="var(--emerald)" />
-                <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-main)' }}>
-                  Convert Lead to Verified Customer
-                </h3>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, color: T.black }}>Convert Lead to Verified Customer</h3>
               </div>
-              <button
-                onClick={() => setConvertModalLead(null)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
-              >
+              <button onClick={() => setConvertModalLead(null)} style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}>
                 <X size={20} />
               </button>
             </div>
@@ -3134,17 +2285,8 @@ function CrmContent() {
                 Congratulations! Converting this deal will automatically create a verified profile in your Customer Directory, transfer all attached site surveys and dimensions, and assign credit limit.
               </p>
 
-              <div
-                style={{
-                  background: 'var(--bg-app)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '12px 16px',
-                }}
-              >
-                <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-main)' }}>
-                  {convertModalLead.companyName}
-                </div>
+              <div style={{ background: T.gray50, border: `1px solid var(--border-subtle)`, borderRadius: 'var(--radius-sm)', padding: '12px 16px' }}>
+                <div style={{ fontSize: '15px', fontWeight: 800, color: T.black }}>{convertModalLead.companyName}</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-dim)', marginTop: '2px' }}>
                   Contact: {convertModalLead.contactPerson} ({convertModalLead.phone})
                 </div>
@@ -3158,19 +2300,8 @@ function CrmContent() {
             </div>
 
             <div className="modal-footer">
-              <button
-                type="button"
-                onClick={() => setConvertModalLead(null)}
-                className="btn btn-secondary"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConvertLeadConfirm}
-                className="btn btn-primary"
-                style={{ background: 'var(--emerald)' }}
-              >
+              <button type="button" onClick={() => setConvertModalLead(null)} className="btn btn-secondary">Cancel</button>
+              <button type="button" onClick={handleConvertLeadConfirm} className="btn btn-primary" style={{ background: 'var(--emerald)' }}>
                 Confirm Onboarding
               </button>
             </div>
@@ -3178,7 +2309,7 @@ function CrmContent() {
         </div>
       )}
 
-      {/* MODAL 4B: MARK LEAD AS CLOSED / LOST */}
+      {/* ═══════════════ MODAL 4B: MARK LOST ═══════════════ */}
       {lostModalLead && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '520px' }}>
@@ -3189,38 +2320,30 @@ function CrmContent() {
                     width: '38px',
                     height: '38px',
                     borderRadius: '8px',
-                    background: 'rgba(244, 63, 94, 0.15)',
+                    background: '#fee2e2',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    border: '1px solid rgba(244, 63, 94, 0.3)',
+                    border: `1px solid #fecaca`,
                   }}
                 >
-                  <XCircle size={20} color="#f43f5e" />
+                  <XCircle size={20} color="#dc2626" />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-main)' }}>
-                    Mark Opportunity as Closed / Lost
-                  </h3>
-                  <div style={{ fontSize: '12px', color: 'var(--text-dim)' }}>
-                    Move deal to Stage 6 (Closed / Lost) with loss reasoning
-                  </div>
+                  <h3 style={{ fontSize: '18px', fontWeight: 700, color: T.black }}>Mark Opportunity as Closed / Lost</h3>
+                  <div style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Move deal to Stage 6 (Closed / Lost) with loss reasoning</div>
                 </div>
               </div>
-              <button
-                onClick={() => setLostModalLead(null)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
-              >
+              <button onClick={() => setLostModalLead(null)} style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}>
                 <X size={20} />
               </button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', margin: '16px 0' }}>
-              {/* Deal Snapshot Box */}
               <div
                 style={{
-                  background: 'var(--bg-app)',
-                  border: '1px solid rgba(244, 63, 94, 0.25)',
+                  background: T.gray50,
+                  border: `1px solid #fecaca`,
                   borderRadius: 'var(--radius-sm)',
                   padding: '14px 16px',
                   display: 'flex',
@@ -3232,9 +2355,7 @@ function CrmContent() {
                   <div style={{ fontSize: '11px', color: 'var(--text-dim)', fontWeight: 600 }}>
                     {lostModalLead.leadNumber} • {lostModalLead.city}
                   </div>
-                  <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px' }}>
-                    {lostModalLead.companyName}
-                  </div>
+                  <div style={{ fontSize: '15px', fontWeight: 800, color: T.black, marginTop: '2px' }}>{lostModalLead.companyName}</div>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
                     Contact: {lostModalLead.contactPerson} ({lostModalLead.phone})
                   </div>
@@ -3244,41 +2365,23 @@ function CrmContent() {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '11px', color: 'var(--text-dim)' }}>Opportunity Budget</div>
-                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#f43f5e', marginTop: '2px' }}>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#dc2626', marginTop: '2px' }}>
                     {formatETB(lostModalLead.estimatedBudget)}
                   </div>
-                  <span
-                    className="badge"
-                    style={{
-                      background: 'rgba(244, 63, 94, 0.12)',
-                      color: '#f43f5e',
-                      fontSize: '10px',
-                      padding: '2px 8px',
-                      marginTop: '4px',
-                      display: 'inline-block',
-                    }}
-                  >
+                  <span className="badge" style={{ background: '#fee2e2', color: '#dc2626', fontSize: '10px', padding: '2px 8px', marginTop: '4px', display: 'inline-block' }}>
                     Current: {lostModalLead.stage.toUpperCase()}
                   </span>
                 </div>
               </div>
 
-              {/* Loss Form Controls */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div>
                   <label className="form-label" style={{ fontWeight: 600, fontSize: '12px', marginBottom: '6px', display: 'block' }}>
                     Primary Reason for Loss *
                   </label>
-                  <select
-                    className="form-select"
-                    value={lostReason}
-                    onChange={(e) => setLostReason(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', fontSize: '13px' }}
-                  >
+                  <select className="form-select" value={lostReason} onChange={(e) => setLostReason(e.target.value)} style={{ width: '100%', padding: '9px 12px', fontSize: '13px' }}>
                     {Object.entries(lostReasonLabels).map(([key, label]) => (
-                      <option key={key} value={key}>
-                        {label}
-                      </option>
+                      <option key={key} value={key}>{label}</option>
                     ))}
                   </select>
                 </div>
@@ -3287,66 +2390,38 @@ function CrmContent() {
                   <label className="form-label" style={{ fontWeight: 600, fontSize: '12px', marginBottom: '6px', display: 'block' }}>
                     Winning Competitor (Optional)
                   </label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={competitorName}
-                    onChange={(e) => setCompetitorName(e.target.value)}
-                    placeholder="e.g. Al-Sam Advert, Sinotec, Printech Ethiopia, etc."
-                    style={{ width: '100%', padding: '9px 12px', fontSize: '13px' }}
-                  />
+                  <input type="text" className="form-input" value={competitorName} onChange={(e) => setCompetitorName(e.target.value)} placeholder="e.g. Al-Sam Advert, Sinotec, Printech Ethiopia, etc." style={{ width: '100%', padding: '9px 12px', fontSize: '13px' }} />
                 </div>
 
                 <div>
                   <label className="form-label" style={{ fontWeight: 600, fontSize: '12px', marginBottom: '6px', display: 'block' }}>
                     Commercial Feedback & Surveyor Notes
                   </label>
-                  <textarea
-                    className="form-textarea"
-                    rows={3}
-                    value={lostNotes}
-                    onChange={(e) => setLostNotes(e.target.value)}
-                    placeholder="Detail client feedback (e.g., price difference, delivery timeline issues, or recommended date for future re-engagement)..."
-                    style={{ width: '100%', padding: '10px 12px', fontSize: '13px', resize: 'vertical' }}
-                  />
+                  <textarea className="form-textarea" rows={3} value={lostNotes} onChange={(e) => setLostNotes(e.target.value)} placeholder="Detail client feedback (e.g., price difference, delivery timeline issues, or recommended date for future re-engagement)..." style={{ width: '100%', padding: '10px 12px', fontSize: '13px', resize: 'vertical' }} />
                 </div>
               </div>
 
-              <div
-                style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px dashed var(--border-subtle)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '10px 12px',
-                  fontSize: '11px',
-                  color: 'var(--text-dim)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                }}
-              >
-                <RotateCcw size={14} color="var(--primary-light)" />
-                <span>
-                  Closed / Lost opportunities can always be reopened and restored back into the active pipeline at any time.
-                </span>
+              <div style={{ background: T.gray50, border: `1px dashed var(--border-subtle)`, borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: '11px', color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <RotateCcw size={14} color={T.yellowText} />
+                <span>Closed / Lost opportunities can always be reopened and restored back into the active pipeline at any time.</span>
               </div>
             </div>
 
             <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-              <button
-                type="button"
-                onClick={() => setLostModalLead(null)}
-                className="btn btn-secondary"
-              >
-                Cancel
-              </button>
+              <button type="button" onClick={() => setLostModalLead(null)} className="btn btn-secondary">Cancel</button>
               <button
                 type="button"
                 onClick={handleConfirmMarkLost}
-                className="btn btn-primary"
                 style={{
                   background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
-                  boxShadow: '0 2px 10px rgba(244, 63, 94, 0.35)',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '9px 18px',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 10px rgba(244,63,94,0.35)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
@@ -3360,7 +2435,7 @@ function CrmContent() {
         </div>
       )}
 
-      {/* MODAL 5: CUSTOMER PROFILE DRAWER */}
+      {/* ═══════════════ MODAL 5: CUSTOMER PROFILE ═══════════════ */}
       {selectedCustomerProfile && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '620px', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -3368,135 +2443,77 @@ function CrmContent() {
               const currentCust = customers.find((c) => c.id === selectedCustomerProfile.id) || selectedCustomerProfile;
               const custSurveys = getCustomerSurveys(currentCust);
               const custArea = calculateSurveysArea(custSurveys);
-
               return (
                 <div>
                   <div className="modal-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <Building2 size={22} color="var(--primary-light)" />
+                      <Building2 size={22} color={T.yellowText} />
                       <div>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-main)' }}>
-                          {currentCust.name}
-                        </h3>
-                        <div style={{ fontSize: '12px', color: 'var(--text-dim)' }}>
-                          Code: {currentCust.code} • TIN: {currentCust.tin}
-                        </div>
+                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: T.black }}>{currentCust.name}</h3>
+                        <div style={{ fontSize: '12px', color: 'var(--text-dim)' }}>Code: {currentCust.code} • TIN: {currentCust.tin}</div>
                       </div>
                     </div>
-                    <button
-                      onClick={() => setSelectedCustomerProfile(null)}
-                      style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
-                    >
+                    <button onClick={() => setSelectedCustomerProfile(null)} style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}>
                       <X size={20} />
                     </button>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', margin: '16px 0' }}>
-                    {/* Credit Status Card */}
-                    <div
-                      style={{
-                        background: 'var(--bg-app)',
-                        border: '1px solid var(--border-subtle)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: '16px',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '12px',
-                        textAlign: 'center',
-                      }}
-                    >
+                    <div style={{ background: T.gray50, border: `1px solid var(--border-subtle)`, borderRadius: 'var(--radius-md)', padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', textAlign: 'center' }}>
                       <div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
-                          Credit Limit
-                        </div>
-                        <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', marginTop: '4px' }}>
-                          {formatETB(currentCust.creditLimit)}
-                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Credit Limit</div>
+                        <div style={{ fontSize: '15px', fontWeight: 700, color: T.black, marginTop: '4px' }}>{formatETB(currentCust.creditLimit)}</div>
                       </div>
-
                       <div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
-                          Current Due
-                        </div>
-                        <div
-                          style={{
-                            fontSize: '15px',
-                            fontWeight: 700,
-                            color: currentCust.outstandingBalance > 0 ? 'var(--rose)' : 'var(--text-dim)',
-                            marginTop: '4px',
-                          }}
-                        >
+                        <div style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Current Due</div>
+                        <div style={{ fontSize: '15px', fontWeight: 700, color: currentCust.outstandingBalance > 0 ? 'var(--rose)' : 'var(--text-dim)', marginTop: '4px' }}>
                           {formatETB(currentCust.outstandingBalance)}
                         </div>
                       </div>
-
                       <div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
-                          Available Line
-                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-dim)', textTransform: 'uppercase' }}>Available Line</div>
                         <div style={{ fontSize: '15px', fontWeight: 800, color: 'var(--emerald)', marginTop: '4px' }}>
                           {formatETB(currentCust.creditLimit - currentCust.outstandingBalance)}
                         </div>
                       </div>
                     </div>
 
-                    {/* Profile Details */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid var(--border-subtle)`, paddingBottom: '6px' }}>
                         <span style={{ color: 'var(--text-dim)' }}>Contact Person:</span>
                         <span style={{ fontWeight: 600 }}>{currentCust.contactPerson || 'Account Representative'}</span>
                       </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid var(--border-subtle)`, paddingBottom: '6px' }}>
                         <span style={{ color: 'var(--text-dim)' }}>Phone Number:</span>
                         <span style={{ fontWeight: 600 }}>{currentCust.phone}</span>
                       </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid var(--border-subtle)`, paddingBottom: '6px' }}>
                         <span style={{ color: 'var(--text-dim)' }}>Email:</span>
                         <span style={{ fontWeight: 600 }}>{currentCust.email}</span>
                       </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid var(--border-subtle)`, paddingBottom: '6px' }}>
                         <span style={{ color: 'var(--text-dim)' }}>Office Address:</span>
                         <span style={{ fontWeight: 600 }}>{currentCust.address}</span>
                       </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid var(--border-subtle)`, paddingBottom: '6px' }}>
                         <span style={{ color: 'var(--text-dim)' }}>Tax Status:</span>
                         <span style={{ fontWeight: 700, color: currentCust.isVatRegistered ? 'var(--emerald)' : 'var(--amber)' }}>
                           {currentCust.isVatRegistered ? 'Standard 15% VAT Invoiced' : 'Statutory VAT Exempt Entity'}
                         </span>
                       </div>
-
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ color: 'var(--text-dim)' }}>Agreed Payment Terms:</span>
                         <span style={{ fontWeight: 600 }}>{currentCust.paymentTerms}</span>
                       </div>
                     </div>
 
-                    {/* Site Surveys & Installed Signboards Section */}
-                    <div
-                      style={{
-                        background: 'rgba(6, 182, 212, 0.05)',
-                        border: '1px solid rgba(6, 182, 212, 0.2)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: '14px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '10px',
-                      }}
-                    >
+                    <div style={{ background: '#f0fdfa', border: `1px solid #a5f3fc`, borderRadius: 'var(--radius-md)', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <Ruler size={15} color="var(--cyan)" />
-                          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
-                            Site Surveys & Signboards ({custSurveys.length})
-                          </span>
+                          <span style={{ fontSize: '13px', fontWeight: 700, color: T.black }}>Site Surveys & Signboards ({custSurveys.length})</span>
                           {custSurveys.length > 0 && (
-                            <span className="badge badge-cyan" style={{ fontSize: '10px' }}>
-                              {custArea.toFixed(1)} m² Total
-                            </span>
+                            <span className="badge badge-cyan" style={{ fontSize: '10px' }}>{custArea.toFixed(1)} m² Total</span>
                           )}
                         </div>
                         <button
@@ -3519,62 +2536,64 @@ function CrmContent() {
                         </div>
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {custSurveys.map((s) => (
-                            <div
-                              key={s.id}
-                              style={{
-                                background: 'var(--bg-app)',
-                                border: '1px solid var(--border-subtle)',
-                                borderRadius: 'var(--radius-sm)',
-                                padding: '10px',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                              }}
-                            >
-                              <div>
-                                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
-                                  {s.title}
+                          {custSurveys.map((s) => {
+                            const linkedOrder = orders.find((o) => (o.siteSurveyIds && o.siteSurveyIds.includes(s.id)) || s.orderId === o.id);
+                            return (
+                              <div
+                                key={s.id}
+                                style={{
+                                  background: T.white,
+                                  border: `1px solid var(--border-subtle)`,
+                                  borderRadius: 'var(--radius-sm)',
+                                  padding: '10px',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                <div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 700, color: T.black }}>{s.title}</span>
+                                    {linkedOrder && (
+                                      <Link href="/orders?tab=orders" className="badge badge-primary" style={{ fontSize: '9px', textDecoration: 'none' }}>
+                                        <span>📦 {linkedOrder.orderNumber}</span>
+                                      </Link>
+                                    )}
+                                  </div>
+                                  <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
+                                    {s.widthMeters}m × {s.heightMeters}m ({((Number(s.widthMeters) || 0) * (Number(s.heightMeters) || 0)).toFixed(1)} m²)
+                                    {s.depthMeters ? ` • Depth: ${s.depthMeters}m` : ''} • Elev: {s.installationHeightMeters}m
+                                  </div>
+                                  <div style={{ fontSize: '10px', color: 'var(--cyan)', marginTop: '2px' }}>📍 {s.locationAddress}</div>
                                 </div>
-                                <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
-                                  {s.widthMeters}m × {s.heightMeters}m ({((Number(s.widthMeters) || 0) * (Number(s.heightMeters) || 0)).toFixed(1)} m²)
-                                  {s.depthMeters ? ` • Depth: ${s.depthMeters}m` : ''} • Elev: {s.installationHeightMeters}m
-                                </div>
-                                <div style={{ fontSize: '10px', color: 'var(--cyan)', marginTop: '2px' }}>
-                                  📍 {s.locationAddress}
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      handleOpenCustomerSurveyManager(currentCust);
+                                      handleStartEditSurvey(s);
+                                    }}
+                                    className="btn btn-secondary btn-sm"
+                                    style={{ padding: '4px 6px' }}
+                                  >
+                                    <Edit3 size={11} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteSurvey('customer', currentCust.id, s.id)}
+                                    className="btn btn-secondary btn-sm"
+                                    style={{ padding: '4px 6px', color: 'var(--rose)' }}
+                                  >
+                                    <Trash2 size={11} />
+                                  </button>
                                 </div>
                               </div>
-
-                              <div style={{ display: 'flex', gap: '6px' }}>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    handleOpenCustomerSurveyManager(currentCust);
-                                    handleStartEditSurvey(s);
-                                  }}
-                                  className="btn btn-secondary btn-sm"
-                                  style={{ padding: '4px 6px' }}
-                                  title="Edit Dimensions"
-                                >
-                                  <Edit3 size={11} />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteSurvey('customer', currentCust.id, s.id)}
-                                  className="btn btn-secondary btn-sm"
-                                  style={{ padding: '4px 6px', color: 'var(--rose)' }}
-                                  title="Remove Signboard"
-                                >
-                                  <Trash2 size={11} />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
 
-                    {/* Linked Orders */}
                     <div>
                       <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-dim)', marginBottom: '8px', textTransform: 'uppercase' }}>
                         Active Orders with this Client
@@ -3585,30 +2604,26 @@ function CrmContent() {
                         </div>
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          {orders
-                            .filter((o) => o.customerId === currentCust.id)
-                            .map((o) => (
-                              <div
-                                key={o.id}
-                                style={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  background: 'var(--bg-app)',
-                                  padding: '8px 12px',
-                                  borderRadius: 'var(--radius-sm)',
-                                  fontSize: '12px',
-                                }}
-                              >
-                                <div>
-                                  <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{o.orderNumber}: </span>
-                                  <span>{o.title}</span>
-                                </div>
-                                <span className="badge badge-cyan" style={{ fontSize: '10px' }}>
-                                  {o.status.toUpperCase()}
-                                </span>
+                          {orders.filter((o) => o.customerId === currentCust.id).map((o) => (
+                            <div
+                              key={o.id}
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                background: T.gray50,
+                                padding: '8px 12px',
+                                borderRadius: 'var(--radius-sm)',
+                                fontSize: '12px',
+                              }}
+                            >
+                              <div>
+                                <span style={{ fontWeight: 700, color: T.black }}>{o.orderNumber}: </span>
+                                <span>{o.title}</span>
                               </div>
-                            ))}
+                              <span className="badge badge-cyan" style={{ fontSize: '10px' }}>{o.status.toUpperCase()}</span>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
@@ -3630,21 +2645,16 @@ function CrmContent() {
         </div>
       )}
 
-      {/* MODAL 6: QUICK ADD SITE SURVEY MODAL (FROM TAB 3) */}
+      {/* ═══════════════ MODAL 6: QUICK ADD SURVEY ═══════════════ */}
       {showQuickAddSurveyModal && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '560px' }}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <PlusCircle size={20} color="var(--cyan)" />
-                <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)' }}>
-                  Add Site Survey & Signboard
-                </h3>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: T.black }}>Add Site Survey & Signboard</h3>
               </div>
-              <button
-                onClick={() => setShowQuickAddSurveyModal(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}
-              >
+              <button onClick={() => setShowQuickAddSurveyModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}>
                 <X size={20} />
               </button>
             </div>
@@ -3659,34 +2669,24 @@ function CrmContent() {
                     onChange={(e) => {
                       const newType = e.target.value as 'lead' | 'customer';
                       setQuickAddTargetType(newType);
-                      setQuickAddTargetId(newType === 'lead' ? (leads[0]?.id || '') : (customers[0]?.id || ''));
+                      setQuickAddTargetId(newType === 'lead' ? leads[0]?.id || '' : customers[0]?.id || '');
                     }}
                   >
                     <option value="lead">Pipeline Lead</option>
                     <option value="customer">Customer Directory</option>
                   </select>
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">
                     {quickAddTargetType === 'lead' ? 'Select Lead Deal *' : 'Select Customer Account *'}
                   </label>
-                  <select
-                    className="form-select"
-                    required
-                    value={quickAddTargetId}
-                    onChange={(e) => setQuickAddTargetId(e.target.value)}
-                  >
+                  <select className="form-select" required value={quickAddTargetId} onChange={(e) => setQuickAddTargetId(e.target.value)}>
                     {quickAddTargetType === 'lead'
                       ? leads.map((l) => (
-                          <option key={l.id} value={l.id}>
-                            {l.leadNumber} - {l.companyName}
-                          </option>
+                          <option key={l.id} value={l.id}>{l.leadNumber} - {l.companyName}</option>
                         ))
                       : customers.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.code} - {c.name}
-                          </option>
+                          <option key={c.id} value={c.id}>{c.code} - {c.name}</option>
                         ))}
                   </select>
                 </div>
@@ -3695,27 +2695,13 @@ function CrmContent() {
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
                 <div className="form-group">
                   <label className="form-label">Signboard Title *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Main Entrance Pylon, Rooftop 3D Logo"
-                    className="form-input"
-                    value={surveyForm.title}
-                    onChange={(e) => setSurveyForm({ ...surveyForm, title: e.target.value })}
-                  />
+                  <input type="text" required placeholder="e.g. Main Entrance Pylon, Rooftop 3D Logo" className="form-input" value={surveyForm.title} onChange={(e) => setSurveyForm({ ...surveyForm, title: e.target.value })} />
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">Signage Type</label>
-                  <select
-                    className="form-select"
-                    value={surveyForm.signageType || 'acrylic_3d'}
-                    onChange={(e) => setSurveyForm({ ...surveyForm, signageType: e.target.value as SignageType })}
-                  >
+                  <select className="form-select" value={surveyForm.signageType || 'acrylic_3d'} onChange={(e) => setSurveyForm({ ...surveyForm, signageType: e.target.value as SignageType })}>
                     {Object.entries(projectTypeLabels).map(([val, label]) => (
-                      <option key={val} value={val}>
-                        {label}
-                      </option>
+                      <option key={val} value={val}>{label}</option>
                     ))}
                   </select>
                 </div>
@@ -3723,128 +2709,57 @@ function CrmContent() {
 
               <div className="form-group">
                 <label className="form-label">Installation Location Address *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Bole Road, Next to Cathedral, Addis Ababa"
-                  className="form-input"
-                  value={surveyForm.locationAddress}
-                  onChange={(e) => setSurveyForm({ ...surveyForm, locationAddress: e.target.value })}
-                />
+                <input type="text" required placeholder="e.g. Bole Road, Next to Cathedral, Addis Ababa" className="form-input" value={surveyForm.locationAddress} onChange={(e) => setSurveyForm({ ...surveyForm, locationAddress: e.target.value })} />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
                 <div className="form-group">
                   <label className="form-label">Width (m) *</label>
-                  <input
-                    type="number"
-                    step="0.05"
-                    min="0.1"
-                    required
-                    className="form-input"
-                    value={surveyForm.widthMeters}
-                    onChange={(e) => setSurveyForm({ ...surveyForm, widthMeters: Number(e.target.value) })}
-                  />
+                  <input type="number" step="0.05" min="0.1" required className="form-input" value={surveyForm.widthMeters} onChange={(e) => setSurveyForm({ ...surveyForm, widthMeters: Number(e.target.value) })} />
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">Height (m) *</label>
-                  <input
-                    type="number"
-                    step="0.05"
-                    min="0.1"
-                    required
-                    className="form-input"
-                    value={surveyForm.heightMeters}
-                    onChange={(e) => setSurveyForm({ ...surveyForm, heightMeters: Number(e.target.value) })}
-                  />
+                  <input type="number" step="0.05" min="0.1" required className="form-input" value={surveyForm.heightMeters} onChange={(e) => setSurveyForm({ ...surveyForm, heightMeters: Number(e.target.value) })} />
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">Depth (m)</label>
-                  <input
-                    type="number"
-                    step="0.02"
-                    min="0"
-                    placeholder="0.15"
-                    className="form-input"
-                    value={surveyForm.depthMeters || 0}
-                    onChange={(e) => setSurveyForm({ ...surveyForm, depthMeters: Number(e.target.value) })}
-                  />
+                  <input type="number" step="0.02" min="0" placeholder="0.15" className="form-input" value={surveyForm.depthMeters || 0} onChange={(e) => setSurveyForm({ ...surveyForm, depthMeters: Number(e.target.value) })} />
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">Elevation (m)</label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    placeholder="3.5"
-                    className="form-input"
-                    value={surveyForm.installationHeightMeters}
-                    onChange={(e) => setSurveyForm({ ...surveyForm, installationHeightMeters: Number(e.target.value) })}
-                  />
+                  <input type="number" step="0.5" min="0" placeholder="3.5" className="form-input" value={surveyForm.installationHeightMeters} onChange={(e) => setSurveyForm({ ...surveyForm, installationHeightMeters: Number(e.target.value) })} />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
                   <label className="form-label">Environment</label>
-                  <select
-                    className="form-select"
-                    value={surveyForm.indoorOutdoor}
-                    onChange={(e) => setSurveyForm({ ...surveyForm, indoorOutdoor: e.target.value as 'indoor' | 'outdoor' })}
-                  >
+                  <select className="form-select" value={surveyForm.indoorOutdoor} onChange={(e) => setSurveyForm({ ...surveyForm, indoorOutdoor: e.target.value as 'indoor' | 'outdoor' })}>
                     <option value="outdoor">Outdoor (Weatherproof needed)</option>
                     <option value="indoor">Indoor (Retail / Office)</option>
                   </select>
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">Surveyor Name</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={surveyForm.surveyorName || 'Dawit Bekele'}
-                    onChange={(e) => setSurveyForm({ ...surveyForm, surveyorName: e.target.value })}
-                  />
+                  <input type="text" className="form-input" value={surveyForm.surveyorName || 'Dawit Bekele'} onChange={(e) => setSurveyForm({ ...surveyForm, surveyorName: e.target.value })} />
                 </div>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input
-                  type="checkbox"
-                  id="quickPower"
-                  checked={surveyForm.powerSourceAvailable}
-                  onChange={(e) => setSurveyForm({ ...surveyForm, powerSourceAvailable: e.target.checked })}
-                />
-                <label htmlFor="quickPower" style={{ fontSize: '13px', color: 'var(--text-main)', cursor: 'pointer' }}>
+                <input type="checkbox" id="quickPower" checked={surveyForm.powerSourceAvailable} onChange={(e) => setSurveyForm({ ...surveyForm, powerSourceAvailable: e.target.checked })} />
+                <label htmlFor="quickPower" style={{ fontSize: '13px', color: T.black, cursor: 'pointer' }}>
                   220V AC Power Line Available on Site (LED ready)
                 </label>
               </div>
 
               <div className="form-group">
                 <label className="form-label">Technician Notes & Scaffold Requirements</label>
-                <textarea
-                  className="form-textarea"
-                  rows={2}
-                  placeholder="Need 6m scaffolding, masonry anchors, IP67 silicon..."
-                  value={surveyForm.notes || ''}
-                  onChange={(e) => setSurveyForm({ ...surveyForm, notes: e.target.value })}
-                />
+                <textarea className="form-textarea" rows={2} placeholder="Need 6m scaffolding, masonry anchors, IP67 silicon..." value={surveyForm.notes || ''} onChange={(e) => setSurveyForm({ ...surveyForm, notes: e.target.value })} />
               </div>
 
               <div className="modal-footer" style={{ marginTop: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowQuickAddSurveyModal(false)}
-                  className="btn btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Save Signboard Survey
-                </button>
+                <button type="button" onClick={() => setShowQuickAddSurveyModal(false)} className="btn btn-secondary">Cancel</button>
+                <button type="submit" className="btn btn-primary">Save Signboard Survey</button>
               </div>
             </form>
           </div>

@@ -48,10 +48,10 @@ export default function FinanceHeader() {
     <header
       style={{
         height: '68px',
-        background: 'rgba(9, 19, 26, 0.92)',
+        background: 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(16, 185, 129, 0.2)',
+        borderBottom: '1px solid var(--border-light)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -66,33 +66,33 @@ export default function FinanceHeader() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div
             style={{
-              width: '34px',
-              height: '34px',
+              width: '36px',
+              height: '36px',
               borderRadius: 'var(--radius-sm)',
-              background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+              background: '#09090b',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#ffffff',
-              boxShadow: '0 2px 10px rgba(16, 185, 129, 0.3)',
+              color: '#facc15',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
             }}
           >
-            <TrendingUp size={18} />
+            <TrendingUp size={18} strokeWidth={2.5} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff' }}>
+              <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#09090b', letterSpacing: '-0.01em' }}>
                 Corporate Finance & P&L Desk
               </span>
               <span
                 style={{
                   fontSize: '0.65rem',
                   fontWeight: 700,
-                  color: '#10b981',
-                  background: 'rgba(16, 185, 129, 0.15)',
-                  padding: '2px 7px',
-                  borderRadius: '10px',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  color: '#854d0e',
+                  background: '#fef9c3',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  border: '1px solid #fde047',
                   letterSpacing: '0.04em',
                 }}
               >
@@ -102,17 +102,17 @@ export default function FinanceHeader() {
                 style={{
                   fontSize: '0.65rem',
                   fontWeight: 700,
-                  color: '#38bdf8',
-                  background: 'rgba(56, 189, 248, 0.12)',
-                  padding: '2px 7px',
-                  borderRadius: '10px',
-                  border: '1px solid rgba(56, 189, 248, 0.25)',
+                  color: '#09090b',
+                  background: '#f4f4f5',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  border: '1px solid var(--border-light)',
                 }}
               >
                 Audited Statements
               </span>
             </div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
               Dot Advert ERP • Executive P&L, Job Cost Rollup, Working Capital & MoR Filing
             </div>
           </div>
@@ -125,41 +125,41 @@ export default function FinanceHeader() {
           display: 'flex',
           alignItems: 'center',
           gap: '24px',
-          background: 'rgba(0, 0, 0, 0.25)',
-          padding: '6px 18px',
+          background: '#f8fafc',
+          padding: '6px 20px',
           borderRadius: '24px',
-          border: '1px solid rgba(255, 255, 255, 0.06)',
+          border: '1px solid var(--border-light)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Building2 size={14} color="#818cf8" />
+          <Building2 size={14} color="#71717a" />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)', lineHeight: 1 }}>Net Revenue</span>
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#ffffff', fontFamily: 'monospace' }}>
+            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', lineHeight: 1 }}>Net Revenue</span>
+            <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#09090b', fontFamily: 'monospace' }}>
               {formatETB(netRevenue)}
             </span>
           </div>
         </div>
 
-        <div style={{ width: '1px', height: '20px', background: 'rgba(255, 255, 255, 0.1)' }} />
+        <div style={{ width: '1px', height: '20px', background: 'var(--border-light)' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <PieChart size={14} color="#38bdf8" />
+          <PieChart size={14} color="#ca8a04" />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)', lineHeight: 1 }}>Gross Profit ({grossMarginPct.toFixed(0)}%)</span>
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#38bdf8', fontFamily: 'monospace' }}>
+            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', lineHeight: 1 }}>Gross Profit ({grossMarginPct.toFixed(0)}%)</span>
+            <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#ca8a04', fontFamily: 'monospace' }}>
               {formatETB(grossProfit)}
             </span>
           </div>
         </div>
 
-        <div style={{ width: '1px', height: '20px', background: 'rgba(255, 255, 255, 0.1)' }} />
+        <div style={{ width: '1px', height: '20px', background: 'var(--border-light)' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <TrendingUp size={14} color="#10b981" />
+          <TrendingUp size={14} color="#16a34a" />
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-dim)', lineHeight: 1 }}>Operating Income</span>
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#10b981', fontFamily: 'monospace' }}>
+            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', lineHeight: 1 }}>Operating Income</span>
+            <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#09090b', fontFamily: 'monospace' }}>
               {formatETB(operatingIncome)}
             </span>
           </div>
@@ -184,11 +184,11 @@ export default function FinanceHeader() {
               alignItems: 'center',
               gap: '6px',
               fontSize: '0.75rem',
-              color: '#10b981',
-              background: 'rgba(16, 185, 129, 0.15)',
+              color: '#16a34a',
+              background: '#f0fdf4',
               padding: '5px 10px',
               borderRadius: 'var(--radius-sm)',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
+              border: '1px solid #bbf7d0',
             }}
           >
             <CheckCircle2 size={13} />
@@ -202,8 +202,8 @@ export default function FinanceHeader() {
           className="btn btn-secondary btn-sm"
           style={{
             padding: '6px 10px',
-            color: 'var(--text-dim)',
-            border: '1px solid var(--border-subtle)',
+            color: 'var(--text-muted)',
+            border: '1px solid var(--border-light)',
           }}
         >
           <RotateCcw size={14} />
@@ -217,7 +217,7 @@ export default function FinanceHeader() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
+            background: 'rgba(0, 0, 0, 0.6)',
             backdropFilter: 'blur(4px)',
             display: 'flex',
             alignItems: 'center',
@@ -227,13 +227,13 @@ export default function FinanceHeader() {
         >
           <div
             style={{
-              background: '#09131a',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
+              background: '#ffffff',
+              border: '1px solid var(--border-light)',
               borderRadius: 'var(--radius-lg)',
               padding: '24px',
               maxWidth: '420px',
               width: '90%',
-              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
@@ -242,16 +242,16 @@ export default function FinanceHeader() {
                   width: '36px',
                   height: '36px',
                   borderRadius: '50%',
-                  background: 'rgba(239, 68, 68, 0.15)',
+                  background: 'rgba(239, 68, 68, 0.1)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#ef4444',
+                  color: '#dc2626',
                 }}
               >
                 <RotateCcw size={18} />
               </div>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff' }}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#09090b' }}>
                 Reset Finance Demo Data?
               </h3>
             </div>
@@ -268,7 +268,7 @@ export default function FinanceHeader() {
               <button
                 className="btn btn-primary btn-sm"
                 onClick={handleReset}
-                style={{ background: '#ef4444', borderColor: '#ef4444' }}
+                style={{ background: '#dc2626', borderColor: '#dc2626', color: '#ffffff' }}
               >
                 Confirm Reset
               </button>
