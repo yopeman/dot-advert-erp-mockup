@@ -1773,7 +1773,7 @@ function CrmContent() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateLead} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleCreateLead} style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div className="form-group">
                   <label className="form-label">Client / Company Name *</label>
@@ -1968,7 +1968,7 @@ function CrmContent() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateCustomer} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <form onSubmit={handleCreateCustomer} style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '16px' }}>
               <div className="form-group">
                 <label className="form-label">Company Legal Name *</label>
                 <input type="text" required placeholder="e.g. Commercial Bank of Ethiopia S.C." className="form-input" value={customerForm.name} onChange={(e) => setCustomerForm({ ...customerForm, name: e.target.value })} />
