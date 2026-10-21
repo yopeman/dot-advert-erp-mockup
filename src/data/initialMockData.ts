@@ -765,7 +765,26 @@ export const INITIAL_CUSTOMERS: Customer[] = [
     paymentTerms: '30 Days Government PO',
     isVatRegistered: false, // EXEMPT FROM 15% VAT
     contactPerson: 'Dr. Sisay Mengistu (Digital Economy Directorate)',
-    siteSurveys: [],
+    siteSurveys: [
+      {
+        id: 'srv-mint-1',
+        title: 'Main Auditorium Innovation Stage Backdrop & Podiums',
+        signageType: 'expo_booth',
+        locationAddress: 'MInT HQ Conference Hall, Churchill Road, Addis Ababa',
+        widthMeters: 12.0,
+        heightMeters: 4.0,
+        depthMeters: 0.1,
+        installationHeightMeters: 1.0,
+        powerSourceAvailable: true,
+        indoorOutdoor: 'indoor',
+        surveyDate: '2026-10-10',
+        surveyorName: 'Dawit Bekele',
+        status: 'completed',
+        customerId: 'cust-4',
+        orderId: 'ord-104',
+        notes: 'Indoor high-resolution tension fabric and acrylic lectern branding.',
+      },
+    ],
   },
 ];
 
@@ -1003,6 +1022,7 @@ export const INITIAL_ORDERS: CustomerOrder[] = [
     status: 'invoiced',
     priority: 'urgent',
     designProofId: 'des-1',
+    siteSurveyIds: ['srv-awash-1', 'srv-awash-2'], // 1-to-many: Awash Towers Pylon & Rooftop Sky Sign
     notes: 'Premium high-brightness 12V Samsung LED modules with acrylic front face.',
   },
   {
@@ -1027,6 +1047,7 @@ export const INITIAL_ORDERS: CustomerOrder[] = [
     status: 'in_production',
     priority: 'high',
     designProofId: 'des-2',
+    siteSurveyIds: ['srv-et-1'], // 1-to-many: Cargo Terminal 2 Overhead Wayfinding
     notes: 'Reflective grade vinyl on structural square tubes. In active production hall.',
   },
   {
@@ -1051,6 +1072,7 @@ export const INITIAL_ORDERS: CustomerOrder[] = [
     status: 'paid',
     priority: 'normal',
     designProofId: 'des-3',
+    siteSurveyIds: ['srv-ride-1'], // 1-to-many: Hybrid Fleet Vinyl Template
     notes: 'Delivered and fully paid via Telebirr payment integration.',
   },
   {
@@ -1075,6 +1097,7 @@ export const INITIAL_ORDERS: CustomerOrder[] = [
     status: 'in_production',
     priority: 'high',
     designProofId: 'des-4',
+    siteSurveyIds: ['srv-mint-1'], // 1-to-many: Stage Backdrop & Podiums
     notes: 'Exempt Sale (Non-VAT Directive). Customer provided official government tax exemption letter.',
   },
 ];

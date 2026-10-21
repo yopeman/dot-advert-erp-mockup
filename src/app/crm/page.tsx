@@ -7,6 +7,7 @@ import { useErp } from '@/context/ErpDataContext';
 import {
   Lead,
   Customer,
+  CustomerOrder,
   LeadStage,
   LeadSource,
   SignageType,
@@ -295,6 +296,7 @@ function CrmContent() {
     parentCode: string;
     lead?: Lead;
     customer?: Customer;
+    linkedOrders: CustomerOrder[];
   }
 
   const allDisplaySurveys = useMemo((): DisplaySurveyItem[] => {
@@ -302,29 +304,37 @@ function CrmContent() {
     leads.forEach((l) => {
       const surveys = getLeadSurveys(l);
       surveys.forEach((s) => {
+        const linkedOrders = orders.filter(
+          (o) => (o.siteSurveyIds && o.siteSurveyIds.includes(s.id)) || s.orderId === o.id
+        );
         list.push({
           survey: s,
           sourceType: 'lead',
           parentName: l.companyName,
           parentCode: l.leadNumber,
           lead: l,
+          linkedOrders,
         });
       });
     });
     customers.forEach((c) => {
       const surveys = getCustomerSurveys(c);
       surveys.forEach((s) => {
+        const linkedOrders = orders.filter(
+          (o) => (o.siteSurveyIds && o.siteSurveyIds.includes(s.id)) || s.orderId === o.id
+        );
         list.push({
           survey: s,
           sourceType: 'customer',
           parentName: c.name,
           parentCode: c.code,
           customer: c,
+          linkedOrders,
         });
       });
     });
     return list;
-  }, [leads, customers]);
+  }, [leads, customers, orders]);
 
   const filteredDisplaySurveys = useMemo(() => {
     return allDisplaySurveys.filter((item) => {
@@ -1979,6 +1989,25 @@ function CrmContent() {
                           <span className="badge badge-cyan" style={{ fontSize: '10px' }}>
                             {projectTypeLabels[signageTypeKey] || 'Signage'}
                           </span>
+                          {item.linkedOrders && item.linkedOrders.length > 0 && (
+                            item.linkedOrders.map((lo) => (
+                              <Link
+                                key={lo.id}
+                                href="/orders?tab=orders"
+                                className="badge badge-primary"
+                                style={{
+                                  fontSize: '10px',
+                                  textDecoration: 'none',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '3px',
+                                }}
+                                title={`Linked Order: ${lo.title}`}
+                              >
+                                <span>📦 {lo.orderNumber}</span>
+                              </Link>
+                            ))
+                          )}
                         </div>
                         <span style={{ fontSize: '11px', color: 'var(--text-dim)', fontWeight: 600 }}>
                           {item.parentCode}
@@ -3519,31 +3548,48 @@ function CrmContent() {
                         </div>
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {custSurveys.map((s) => (
-                            <div
-                              key={s.id}
-                              style={{
-                                background: 'var(--bg-app)',
-                                border: '1px solid var(--border-subtle)',
-                                borderRadius: 'var(--radius-sm)',
-                                padding: '10px',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                              }}
-                            >
-                              <div>
-                                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
-                                  {s.title}
+                          {custSurveys.map((s) => {
+                            const linkedOrder = orders.find(
+                              (o) => (o.siteSurveyIds && o.siteSurveyIds.includes(s.id)) || s.orderId === o.id
+                            );
+
+                            return (
+                              <div
+                                key={s.id}
+                                style={{
+                                  background: 'var(--bg-app)',
+                                  border: '1px solid var(--border-subtle)',
+                                  borderRadius: 'var(--radius-sm)',
+                                  padding: '10px',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                <div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
+                                      {s.title}
+                                    </span>
+                                    {linkedOrder && (
+                                      <Link
+                                        href="/orders?tab=orders"
+                                        className="badge badge-primary"
+                                        style={{ fontSize: '9px', textDecoration: 'none' }}
+                                        title={`Linked to production order ${linkedOrder.title}`}
+                                      >
+                                        <span>📦 {linkedOrder.orderNumber}</span>
+                                      </Link>
+                                    )}
+                                  </div>
+                                  <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
+                                    {s.widthMeters}m × {s.heightMeters}m ({((Number(s.widthMeters) || 0) * (Number(s.heightMeters) || 0)).toFixed(1)} m²)
+                                    {s.depthMeters ? ` • Depth: ${s.depthMeters}m` : ''} • Elev: {s.installationHeightMeters}m
+                                  </div>
+                                  <div style={{ fontSize: '10px', color: 'var(--cyan)', marginTop: '2px' }}>
+                                    📍 {s.locationAddress}
+                                  </div>
                                 </div>
-                                <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
-                                  {s.widthMeters}m × {s.heightMeters}m ({((Number(s.widthMeters) || 0) * (Number(s.heightMeters) || 0)).toFixed(1)} m²)
-                                  {s.depthMeters ? ` • Depth: ${s.depthMeters}m` : ''} • Elev: {s.installationHeightMeters}m
-                                </div>
-                                <div style={{ fontSize: '10px', color: 'var(--cyan)', marginTop: '2px' }}>
-                                  📍 {s.locationAddress}
-                                </div>
-                              </div>
 
                               <div style={{ display: 'flex', gap: '6px' }}>
                                 <button
@@ -3569,8 +3615,9 @@ function CrmContent() {
                                 </button>
                               </div>
                             </div>
-                          ))}
-                        </div>
+                          );
+                        })}
+                      </div>
                       )}
                     </div>
 
