@@ -35,10 +35,11 @@ function ReportSidebarContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const currentTab = searchParams.get('tab') || 'executive';
+  const rawTab = searchParams.get('tab') || 'executive';
+  const currentTab = rawTab === 'inventory' ? 'store_inventory' : rawTab === 'hr' ? 'hr_workforce' : rawTab;
   const currentDept = searchParams.get('dept') || 'all';
 
-  const { companyFinancials, orders, allOrderProfitability, wastages, currentRole, setCurrentRole } = useErp();
+  const { companyFinancials, orders, allOrderProfitability, wastages, items, employees, purchaseOrders, currentRole, setCurrentRole } = useErp();
 
   const netRevenue = companyFinancials.totalRevenueNet;
   const grossProfit = companyFinancials.grossProfit;
@@ -101,6 +102,22 @@ function ReportSidebarContent() {
       description: '5-part cost structure & margin distribution',
     },
     {
+      tabId: 'store_inventory',
+      label: 'Store & Inventory Purchasing',
+      icon: Boxes,
+      badge: `${items.length} SKUs • ${purchaseOrders.length} POs`,
+      badgeColor: '#f59e0b',
+      description: 'Warehouse valuation, stock issues, POs & vendors',
+    },
+    {
+      tabId: 'hr_workforce',
+      label: 'HR, Payroll & Workforce',
+      icon: Users,
+      badge: `${employees.length} Staff`,
+      badgeColor: '#10b981',
+      description: 'Headcount, Ethiopian payroll, overtime & Wase audit',
+    },
+    {
       tabId: 'wastage',
       label: 'Scrap & Defect Analytics',
       icon: Scissors,
@@ -127,6 +144,18 @@ function ReportSidebarContent() {
   ];
 
   const quickCrossModules = [
+    {
+      label: 'Store & Inventory Hub',
+      href: '/inventory',
+      icon: Boxes,
+      color: '#f59e0b',
+    },
+    {
+      label: 'HR & Workforce Hub',
+      href: '/hr',
+      icon: Users,
+      color: '#10b981',
+    },
     {
       label: 'Finance & P&L Statement',
       href: '/finance',

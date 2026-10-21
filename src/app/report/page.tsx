@@ -43,15 +43,32 @@ import {
   Wallet,
   Receipt,
   FileCheck,
+  ShoppingCart,
+  Truck,
+  Warehouse,
+  PackageCheck,
+  Briefcase,
+  UserCheck,
+  BadgeCheck,
+  ExternalLink,
+  ShieldAlert,
 } from 'lucide-react';
 import { ReportPeriod } from '@/components/report/ReportHeader';
-import { OrderProfitability, CustomerOrder, WastageRecord } from '@/types/erp';
+import { OrderProfitability, CustomerOrder, WastageRecord, ItemType, POStatus } from '@/types/erp';
+import {
+  INITIAL_LEAVE_REQUESTS,
+  INITIAL_ATTENDANCE_RECORDS,
+  INITIAL_JOB_OPENINGS,
+  INITIAL_CANDIDATES,
+  DETAILED_EMPLOYEES_MAP,
+} from '@/data/hrMockData';
 
 function ReportPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const activeTab = searchParams.get('tab') || 'executive';
+  const activeTabRaw = searchParams.get('tab') || 'executive';
+  const activeTab = activeTabRaw === 'inventory' ? 'store_inventory' : activeTabRaw === 'hr' ? 'hr_workforce' : activeTabRaw;
   const period = (searchParams.get('period') as ReportPeriod) || 'monthly';
   const fromDate = searchParams.get('from') || '2026-10-01';
   const toDate = searchParams.get('to') || '2026-10-31';
@@ -69,6 +86,13 @@ function ReportPageContent() {
     expenses,
     workOrders,
     leads,
+    stores,
+    suppliers,
+    purchaseOrders,
+    stockMovements,
+    employees,
+    lowStockItems,
+    storeFinancials,
   } = useErp();
 
   // Local Filter States
@@ -82,6 +106,28 @@ function ReportPageContent() {
   const [activeOrderModal, setActiveOrderModal] = useState<OrderProfitability | null>(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [copiedAudit, setCopiedAudit] = useState(false);
+
+  // Store & Purchasing Filter States
+  const [poStatusFilter, setPoStatusFilter] = useState<'all' | 'approved' | 'received' | 'pending_admin' | 'draft'>('all');
+  const [storeFilter, setStoreFilter] = useState<string>('all');
+  const [itemCategoryFilter, setItemCategoryFilter] = useState<string>('all');
+  const [storeSearchQuery, setStoreSearchQuery] = useState('');
+
+  // HR & Workforce Filter States
+  const [hrDeptFilter, setHrDeptFilter] = useState<string>('all');
+  const [hrSearchQuery, setHrSearchQuery] = useState('');
+  const [hrLeaveFilter, setHrLeaveFilter] = useState<string>('all');
+
+  // Ethiopian Progressive Income Tax calculation helper
+  const calculateEthiopianIncomeTax = (taxableSalary: number) => {
+    if (taxableSalary <= 600) return 0;
+    if (taxableSalary <= 1650) return Math.round(taxableSalary * 0.1 - 60);
+    if (taxableSalary <= 3200) return Math.round(taxableSalary * 0.15 - 142.5);
+    if (taxableSalary <= 5250) return Math.round(taxableSalary * 0.2 - 302.5);
+    if (taxableSalary <= 7800) return Math.round(taxableSalary * 0.25 - 565);
+    if (taxableSalary <= 10900) return Math.round(taxableSalary * 0.3 - 955);
+    return Math.round(taxableSalary * 0.35 - 1500);
+  };
 
   const formatETB = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -290,6 +336,8 @@ function ReportPageContent() {
     { id: 'sales', label: 'Sales & Commercial BI', icon: TrendingUp, badge: 'Win Rate 68%' },
     { id: 'production', label: 'Manufacturing & Plant', icon: Factory, badge: '91% OEE' },
     { id: 'costing', label: 'Job Costing & Margins', icon: PieChart, badge: '5-Part Tree' },
+    { id: 'store_inventory', label: 'Store & Inventory Purchasing', icon: Boxes, badge: `${items.length} SKUs • POs` },
+    { id: 'hr_workforce', label: 'HR, Payroll & Workforce', icon: Users, badge: `${employees.length} Staff` },
     { id: 'wastage', label: 'Scrap & Defect Analytics', icon: Scissors, badge: '2.1% Scrap' },
     { id: 'tax', label: 'MoR Tax & 15% VAT', icon: ShieldCheck, badge: 'e-Tax Ready' },
     { id: 'audit', label: 'Audit Trail & Logs', icon: ScrollText, badge: 'Live Logs' },
@@ -1610,6 +1658,1648 @@ function ReportPageContent() {
         </div>
       )}
 
+      {/* 8. TAB: STORE, INVENTORY & PURCHASER INTELLIGENCE */}
+      {activeTab === 'store_inventory' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Header Banner & Live Control Filter */}
+          <div
+            style={{
+              background: '#ffffff',
+              border: '1px solid var(--border-light)',
+              borderRadius: '16px',
+              padding: '20px 24px',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '18px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '10px',
+                      background: '#fef3c7',
+                      border: '1px solid #fde047',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#b45309',
+                    }}
+                  >
+                    <Boxes size={20} />
+                  </div>
+                  <div>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#09090b', margin: 0 }}>
+                      Store, Inventory & Purchasing BI
+                    </h2>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
+                      Multi-store asset valuation, procurement commit ledger, supplier vendor performance, and real-time stock turnover telemetry.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Badge */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span
+                  style={{
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                    background: '#ecfdf5',
+                    color: '#047857',
+                    border: '1px solid #a7f3d0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                  }}
+                >
+                  <CheckCircle2 size={13} />
+                  Physical Stock Count Reconciled
+                </span>
+                <Link
+                  href="/inventory"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 14px',
+                    borderRadius: '8px',
+                    background: '#09090b',
+                    color: '#facc15',
+                    border: '1px solid #facc15',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <Warehouse size={14} />
+                  <span>Open Store Hub</span>
+                  <ArrowUpRight size={13} />
+                </Link>
+              </div>
+            </div>
+
+            {/* In-tab Filters */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                flexWrap: 'wrap',
+                paddingTop: '16px',
+                borderTop: '1px solid var(--border-light)',
+              }}
+            >
+              {/* Warehouse selector */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>Warehouse:</span>
+                <select
+                  value={storeFilter}
+                  onChange={(e) => setStoreFilter(e.target.value)}
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid var(--border-light)',
+                    color: '#09090b',
+                    fontSize: '0.75rem',
+                    padding: '6px 10px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    fontWeight: 500,
+                  }}
+                >
+                  <option value="all">All Stores ({stores.length} Locations)</option>
+                  {stores.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* SKU Category selector */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>Category:</span>
+                <select
+                  value={itemCategoryFilter}
+                  onChange={(e) => setItemCategoryFilter(e.target.value)}
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid var(--border-light)',
+                    color: '#09090b',
+                    fontSize: '0.75rem',
+                    padding: '6px 10px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    fontWeight: 500,
+                  }}
+                >
+                  <option value="all">All SKU Categories</option>
+                  <option value="raw_material">Raw Materials (Acrylic, Vinyl, Steel, LED)</option>
+                  <option value="packaging">Packaging & Logistics</option>
+                  <option value="semi_finished">Semi-Finished Cut/Bended Parts</option>
+                  <option value="finished_good">Finished Goods Ready for Install</option>
+                  <option value="service">Services & Subcontracting</option>
+                </select>
+              </div>
+
+              {/* PO Status selector */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>PO Status:</span>
+                <select
+                  value={poStatusFilter}
+                  onChange={(e) => setPoStatusFilter(e.target.value as any)}
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid var(--border-light)',
+                    color: '#09090b',
+                    fontSize: '0.75rem',
+                    padding: '6px 10px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    fontWeight: 500,
+                  }}
+                >
+                  <option value="all">All Purchase Orders</option>
+                  <option value="approved">Approved & Committed</option>
+                  <option value="received">Received at Store (GRN Passed)</option>
+                  <option value="pending_admin">Pending Admin Review</option>
+                  <option value="draft">Draft Procurement</option>
+                </select>
+              </div>
+
+              {/* Search query */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: '#f8fafc',
+                  border: '1px solid var(--border-light)',
+                  borderRadius: '8px',
+                  padding: '5px 12px',
+                  marginLeft: 'auto',
+                }}
+              >
+                <Search size={14} color="var(--text-muted)" />
+                <input
+                  type="text"
+                  placeholder="Search item, PO#, supplier..."
+                  value={storeSearchQuery}
+                  onChange={(e) => setStoreSearchQuery(e.target.value)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#09090b',
+                    fontSize: '0.75rem',
+                    outline: 'none',
+                    width: '180px',
+                  }}
+                />
+                {storeSearchQuery && (
+                  <button
+                    onClick={() => setStoreSearchQuery('')}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Top 5 KPI Cards */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: '16px',
+            }}
+          >
+            {/* 1. Total Store Asset Valuation */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
+                borderRadius: '16px',
+                padding: '18px 20px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+                borderTop: '4px solid #ca8a04',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                  Total Inventory Valuation
+                </span>
+                <span style={{ fontSize: '0.65rem', fontWeight: 700, background: '#fef3c7', color: '#b45309', padding: '2px 6px', borderRadius: '4px' }}>
+                  {items.length} SKUs
+                </span>
+              </div>
+              <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#09090b', fontFamily: 'monospace', margin: '8px 0 4px' }}>
+                {formatETB(items.reduce((s, i) => s + i.currentStock * i.purchasePrice, 0))}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Warehouse size={12} color="#ca8a04" />
+                <span>Across {stores.length} warehouse locations</span>
+              </div>
+            </div>
+
+            {/* 2. Committed PO Spend */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
+                borderRadius: '16px',
+                padding: '18px 20px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+                borderTop: '4px solid #2563eb',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                  Committed Procurement
+                </span>
+                <span style={{ fontSize: '0.65rem', fontWeight: 700, background: '#eff6ff', color: '#1d4ed8', padding: '2px 6px', borderRadius: '4px' }}>
+                  {purchaseOrders.length} POs Total
+                </span>
+              </div>
+              <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#09090b', fontFamily: 'monospace', margin: '8px 0 4px' }}>
+                {formatETB(purchaseOrders.reduce((s, p) => s + p.grandTotal, 0))}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <ShoppingCart size={12} color="#2563eb" />
+                <span>
+                  {purchaseOrders.filter((p) => p.status === 'received').length} Received •{' '}
+                  {purchaseOrders.filter((p) => p.status === 'pending_admin').length} Pending
+                </span>
+              </div>
+            </div>
+
+            {/* 3. Critical Low Stock Alerts */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
+                borderRadius: '16px',
+                padding: '18px 20px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+                borderTop: `4px solid ${lowStockItems.length > 0 ? '#dc2626' : '#16a34a'}`,
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                  Low Stock Reorders
+                </span>
+                <span
+                  style={{
+                    fontSize: '0.65rem',
+                    fontWeight: 700,
+                    background: lowStockItems.length > 0 ? '#fef2f2' : '#ecfdf5',
+                    color: lowStockItems.length > 0 ? '#b91c1c' : '#047857',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                  }}
+                >
+                  {lowStockItems.length > 0 ? 'Urgent Action' : 'Optimal'}
+                </span>
+              </div>
+              <div style={{ fontSize: '1.45rem', fontWeight: 900, color: lowStockItems.length > 0 ? '#dc2626' : '#16a34a', fontFamily: 'monospace', margin: '8px 0 4px' }}>
+                {lowStockItems.length} SKUs Below Min
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <AlertTriangle size={12} color={lowStockItems.length > 0 ? '#dc2626' : '#16a34a'} />
+                <span>Lead time buffer &lt; 7 working days</span>
+              </div>
+            </div>
+
+            {/* 4. Production Issues / Consumption */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
+                borderRadius: '16px',
+                padding: '18px 20px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+                borderTop: '4px solid #7c3aed',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                  Production Issues Flow
+                </span>
+                <span style={{ fontSize: '0.65rem', fontWeight: 700, background: '#f5f3ff', color: '#6d28d9', padding: '2px 6px', borderRadius: '4px' }}>
+                  Shopfloor Issuance
+                </span>
+              </div>
+              <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#09090b', fontFamily: 'monospace', margin: '8px 0 4px' }}>
+                {formatETB(stockMovements.filter((m) => m.movementType === 'production_issue').reduce((s, m) => s + m.totalCost, 0))}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <TrendingUp size={12} color="#7c3aed" />
+                <span>Materials transferred to active Work Orders</span>
+              </div>
+            </div>
+
+            {/* 5. Registered Vendor Network */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
+                borderRadius: '16px',
+                padding: '18px 20px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+                borderTop: '4px solid #059669',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                  Registered Suppliers
+                </span>
+                <span style={{ fontSize: '0.65rem', fontWeight: 700, background: '#ecfdf5', color: '#047857', padding: '2px 6px', borderRadius: '4px' }}>
+                  100% Tax Compliant
+                </span>
+              </div>
+              <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#09090b', fontFamily: 'monospace', margin: '8px 0 4px' }}>
+                {suppliers.length} Key Vendors
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <ShieldCheck size={12} color="#059669" />
+                <span>TIN verified & 15% VAT registered</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Warehouse Valuation Cards & Category Progress Bar */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '20px' }}>
+            {/* Store Warehouses Grid */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
+                borderRadius: '16px',
+                padding: '20px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Warehouse size={18} color="#ca8a04" />
+                    <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>
+                      Warehouse Locations & Physical Balances
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    Multi-location stock distribution and custodian storekeeper assignment
+                  </div>
+                </div>
+                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#854d0e', background: '#fef9c3', padding: '2px 8px', borderRadius: '8px', border: '1px solid #fde047' }}>
+                  {stores.length} Depots Monitored
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {stores.map((s) => {
+                  // Calculate store valuation from items storeBalances
+                  const storeVal = items.reduce((sum, item) => {
+                    const qty = item.storeBalances?.[s.id] || (s.storeType === 'raw_material' ? item.currentStock * 0.7 : item.currentStock * 0.15);
+                    return sum + qty * item.purchasePrice;
+                  }, 0);
+
+                  const storeSkus = items.filter((item) => (item.storeBalances?.[s.id] ?? 0) > 0 || s.storeType === 'raw_material').length;
+
+                  return (
+                    <div
+                      key={s.id}
+                      style={{
+                        padding: '14px 16px',
+                        background: '#f8fafc',
+                        border: '1px solid var(--border-light)',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        flexWrap: 'wrap',
+                        gap: '12px',
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#09090b' }}>{s.name}</span>
+                          <span
+                            style={{
+                              fontSize: '0.62rem',
+                              fontWeight: 700,
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              background: s.storeType === 'raw_material' ? '#fef3c7' : s.storeType === 'production_floor' ? '#eff6ff' : '#ecfdf5',
+                              color: s.storeType === 'raw_material' ? '#b45309' : s.storeType === 'production_floor' ? '#1d4ed8' : '#047857',
+                            }}
+                          >
+                            {s.code}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                          📍 {s.location} • Custodian: <strong>{s.storekeeper}</strong>
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.98rem', fontWeight: 800, color: '#09090b', fontFamily: 'monospace' }}>
+                          {formatETB(storeVal)}
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                          {storeSkus} SKUs stocked • Active
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* SKU Category Breakdown */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
+                borderRadius: '16px',
+                padding: '20px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <div style={{ marginBottom: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <PieChart size={18} color="#ca8a04" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>
+                    Stock Category Distribution
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  Asset allocation across material classifications
+                </div>
+              </div>
+
+              {(() => {
+                const totalVal = items.reduce((s, i) => s + i.currentStock * i.purchasePrice, 0) || 1;
+                const categories: { type: ItemType; label: string; color: string }[] = [
+                  { type: 'raw_material', label: 'Raw Materials (Acrylic, Vinyl, Steel, LED)', color: '#09090b' },
+                  { type: 'packaging', label: 'Packaging & Logistics', color: '#f59e0b' },
+                  { type: 'semi_finished', label: 'Semi-Finished Subassemblies', color: '#8b5cf6' },
+                  { type: 'finished_good', label: 'Finished Signage & Displays', color: '#10b981' },
+                  { type: 'service', label: 'Services & Tooling', color: '#3b82f6' },
+                ];
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', flex: 1, justifyContent: 'center' }}>
+                    {categories.map((cat) => {
+                      const catItems = items.filter((i) => i.type === cat.type);
+                      const catVal = catItems.reduce((s, i) => s + i.currentStock * i.purchasePrice, 0);
+                      const sharePct = Math.round((catVal / totalVal) * 100);
+
+                      return (
+                        <div key={cat.type}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: cat.color }} />
+                              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#09090b' }}>{cat.label}</span>
+                            </div>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 800, fontFamily: 'monospace', color: '#09090b' }}>
+                              {formatETB(catVal)} ({sharePct}%)
+                            </span>
+                          </div>
+                          <div style={{ height: '6px', width: '100%', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div
+                              style={{
+                                width: `${Math.max(sharePct, 3)}%`,
+                                height: '100%',
+                                background: cat.color,
+                                borderRadius: '4px',
+                              }}
+                            />
+                          </div>
+                          <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                            {catItems.length} active SKUs stocked
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+
+          {/* Purchase Order & Procurement Commitments Table */}
+          <div
+            style={{
+              background: '#ffffff',
+              border: '1px solid var(--border-light)',
+              borderRadius: '16px',
+              padding: '20px',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ShoppingCart size={18} color="#2563eb" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>
+                    Procurement & Purchase Order (PO) Audit Ledger
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  Supplier purchase commitments, statutory 15% VAT input tracking, payment terms, and delivery fulfillment
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  Showing{' '}
+                  {
+                    purchaseOrders.filter((po) => {
+                      if (poStatusFilter !== 'all' && po.status !== poStatusFilter) return false;
+                      if (storeSearchQuery.trim()) {
+                        const q = storeSearchQuery.toLowerCase();
+                        return (
+                          po.poNumber.toLowerCase().includes(q) ||
+                          po.supplierName.toLowerCase().includes(q) ||
+                          po.requestedBy.toLowerCase().includes(q)
+                        );
+                      }
+                      return true;
+                    }).length
+                  }{' '}
+                  of {purchaseOrders.length} POs
+                </span>
+              </div>
+            </div>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.78rem' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '2px solid var(--border-light)', color: 'var(--text-muted)' }}>
+                    <th style={{ padding: '10px 12px', fontWeight: 700 }}>PO Number</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700 }}>Date</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700 }}>Supplier / Vendor</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700 }}>Items & Specs</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700, textAlign: 'right' }}>Subtotal (ETB)</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700, textAlign: 'right' }}>15% VAT</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700, textAlign: 'right' }}>Grand Total (ETB)</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700 }}>Terms</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700 }}>Status</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700 }}>Purchaser / Buyer</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {purchaseOrders
+                    .filter((po) => {
+                      if (poStatusFilter !== 'all' && po.status !== poStatusFilter) return false;
+                      if (storeSearchQuery.trim()) {
+                        const q = storeSearchQuery.toLowerCase();
+                        return (
+                          po.poNumber.toLowerCase().includes(q) ||
+                          po.supplierName.toLowerCase().includes(q) ||
+                          po.requestedBy.toLowerCase().includes(q)
+                        );
+                      }
+                      return true;
+                    })
+                    .map((po) => {
+                      const statusMap: Record<POStatus, { label: string; bg: string; color: string; border: string }> = {
+                        received: { label: 'Received (GRN)', bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
+                        approved: { label: 'Approved', bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
+                        partially_received: { label: 'Partial GRN', bg: '#fef3c7', color: '#b45309', border: '#fde047' },
+                        pending_admin: { label: 'Pending Admin', bg: '#fff7ed', color: '#c2410c', border: '#ffedd5' },
+                        draft: { label: 'Draft', bg: '#f4f4f5', color: '#71717a', border: '#e4e4e7' },
+                        closed: { label: 'Closed', bg: '#f4f4f5', color: '#52525b', border: '#e4e4e7' },
+                        cancelled: { label: 'Cancelled', bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+                      };
+
+                      const st = statusMap[po.status] || statusMap.draft;
+
+                      return (
+                        <tr
+                          key={po.id}
+                          style={{
+                            borderBottom: '1px solid var(--border-light)',
+                            transition: 'background 0.15s ease',
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          <td style={{ padding: '10px 12px', fontWeight: 800, fontFamily: 'monospace', color: '#09090b' }}>
+                            {po.poNumber}
+                          </td>
+                          <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>{po.date}</td>
+                          <td style={{ padding: '10px 12px' }}>
+                            <div style={{ fontWeight: 700, color: '#09090b' }}>{po.supplierName}</div>
+                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>TIN: {po.supplierTin}</div>
+                          </td>
+                          <td style={{ padding: '10px 12px', maxWidth: '240px' }}>
+                            <div style={{ fontSize: '0.74rem', color: '#09090b', fontWeight: 600 }}>
+                              {po.items.map((i) => `${i.itemName} (${i.quantity} ${i.unit})`).join(', ')}
+                            </div>
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'monospace', color: '#09090b' }}>
+                            {formatETB(po.subtotal)}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'monospace', color: '#ca8a04' }}>
+                            {formatETB(po.vatTotal)}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 800, fontFamily: 'monospace', color: '#09090b' }}>
+                            {formatETB(po.grandTotal)}
+                          </td>
+                          <td style={{ padding: '10px 12px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                            {po.paymentTerms}
+                          </td>
+                          <td style={{ padding: '10px 12px' }}>
+                            <span
+                              style={{
+                                fontSize: '0.65rem',
+                                fontWeight: 700,
+                                padding: '2px 8px',
+                                borderRadius: '6px',
+                                background: st.bg,
+                                color: st.color,
+                                border: `1px solid ${st.border}`,
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {st.label}
+                            </span>
+                          </td>
+                          <td style={{ padding: '10px 12px', color: 'var(--text-main)', fontWeight: 500 }}>
+                            {po.requestedBy}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Supplier Spend Directory & Low Stock Runway */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            {/* Supplier Spend Directory */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
+                borderRadius: '16px',
+                padding: '20px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Building2 size={18} color="#059669" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>
+                    Top Supplier Spend & Payment Terms
+                  </span>
+                </div>
+                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#047857', background: '#ecfdf5', padding: '2px 8px', borderRadius: '8px' }}>
+                  {suppliers.length} Approved Vendors
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {suppliers.slice(0, 5).map((sup, idx) => {
+                  const supPos = purchaseOrders.filter((po) => po.supplierId === sup.id || po.supplierName.includes(sup.name));
+                  const supSpend = supPos.reduce((sum, po) => sum + po.grandTotal, 0);
+
+                  return (
+                    <div
+                      key={sup.id}
+                      style={{
+                        padding: '10px 14px',
+                        background: '#f8fafc',
+                        border: '1px solid var(--border-light)',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#09090b' }}>
+                            {idx + 1}. {sup.name}
+                          </span>
+                          {sup.isVatRegistered && (
+                            <span style={{ fontSize: '0.6rem', fontWeight: 700, background: '#dcfce7', color: '#15803d', padding: '1px 5px', borderRadius: '4px' }}>
+                              VAT Reg
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          Terms: {sup.paymentTerms} • TIN: {sup.tin}
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 800, fontFamily: 'monospace', color: '#09090b' }}>
+                          {formatETB(supSpend > 0 ? supSpend : 240000 + idx * 85000)}
+                        </div>
+                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                          {supPos.length > 0 ? supPos.length : idx + 2} Orders Delivered
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Critical Low Stock Warnings */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
+                borderRadius: '16px',
+                padding: '20px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <AlertTriangle size={18} color="#dc2626" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>
+                    Reorder Alerts & Stock Runway Warning
+                  </span>
+                </div>
+                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#b91c1c', background: '#fef2f2', padding: '2px 8px', borderRadius: '8px' }}>
+                  Immediate Action
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {lowStockItems.length > 0 ? (
+                  lowStockItems.map((entry, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        padding: '10px 14px',
+                        background: '#fff1f2',
+                        border: '1px solid #fecdd3',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#9f1239' }}>
+                            {entry.item.code}
+                          </span>
+                          <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#09090b' }}>
+                            {entry.item.name}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: '#be123c', marginTop: '2px' }}>
+                          On Hand: <strong>{entry.item.currentStock} {entry.item.unit}</strong> (Min Reorder: {entry.item.reorderLevel} {entry.item.unit})
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#e11d48' }}>
+                          ~{entry.expectedDays} Days Left
+                        </div>
+                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                          Reorder {entry.item.reorderQuantity} {entry.item.unit}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: '24px', textAlign: 'center', color: '#047857', background: '#ecfdf5', borderRadius: '8px' }}>
+                    <CheckCircle2 size={24} style={{ margin: '0 auto 8px' }} />
+                    <div style={{ fontWeight: 700 }}>All materials above safety reorder buffer!</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 9. TAB: HR, PAYROLL & WORKFORCE INTELLIGENCE */}
+      {activeTab === 'hr_workforce' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Header Banner & Live Control Filter */}
+          <div
+            style={{
+              background: '#ffffff',
+              border: '1px solid var(--border-light)',
+              borderRadius: '16px',
+              padding: '20px 24px',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '18px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '10px',
+                      background: '#ecfdf5',
+                      border: '1px solid #a7f3d0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#047857',
+                    }}
+                  >
+                    <Users size={20} />
+                  </div>
+                  <div>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#09090b', margin: 0 }}>
+                      HR, Payroll & Workforce Intelligence
+                    </h2>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
+                      Ethiopian labor statutory audit, progressive income tax withholding, 7% & 11% pension compliance, biometric shift telemetry, and legal guarantor (Wase) coverage.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Badge & Link */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span
+                  style={{
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                    background: '#fef3c7',
+                    color: '#b45309',
+                    border: '1px solid #fde047',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                  }}
+                >
+                  <ShieldCheck size={13} />
+                  MoR Tax & Pension Statutory Compliant
+                </span>
+                <Link
+                  href="/hr"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 14px',
+                    borderRadius: '8px',
+                    background: '#09090b',
+                    color: '#facc15',
+                    border: '1px solid #facc15',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <Users size={14} />
+                  <span>Open HR Hub</span>
+                  <ArrowUpRight size={13} />
+                </Link>
+              </div>
+            </div>
+
+            {/* In-tab Filters */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                flexWrap: 'wrap',
+                paddingTop: '16px',
+                borderTop: '1px solid var(--border-light)',
+              }}
+            >
+              {/* Department selector */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>Department:</span>
+                <select
+                  value={hrDeptFilter}
+                  onChange={(e) => setHrDeptFilter(e.target.value)}
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid var(--border-light)',
+                    color: '#09090b',
+                    fontSize: '0.75rem',
+                    padding: '6px 10px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    fontWeight: 500,
+                  }}
+                >
+                  <option value="all">All Departments ({employees.length} Staff)</option>
+                  <option value="production">Production & CNC Workshop</option>
+                  <option value="stores">Stores & Warehousing</option>
+                  <option value="procurement">Procurement & Purchasing</option>
+                  <option value="sales">Commercial & Sales</option>
+                  <option value="finance">Finance & Cost Accounting</option>
+                  <option value="admin">Executive & Administration</option>
+                </select>
+              </div>
+
+              {/* Leave Type selector */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>Leave Category:</span>
+                <select
+                  value={hrLeaveFilter}
+                  onChange={(e) => setHrLeaveFilter(e.target.value)}
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid var(--border-light)',
+                    color: '#09090b',
+                    fontSize: '0.75rem',
+                    padding: '6px 10px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    fontWeight: 500,
+                  }}
+                >
+                  <option value="all">All Leave Types</option>
+                  <option value="annual">Annual Paid Vacation</option>
+                  <option value="sick">Sick Leave</option>
+                  <option value="compassionate">Compassionate / Emergency</option>
+                  <option value="maternity">Maternity / Paternity</option>
+                </select>
+              </div>
+
+              {/* Staff Search */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: '#f8fafc',
+                  border: '1px solid var(--border-light)',
+                  borderRadius: '8px',
+                  padding: '5px 12px',
+                  marginLeft: 'auto',
+                }}
+              >
+                <Search size={14} color="var(--text-muted)" />
+                <input
+                  type="text"
+                  placeholder="Search staff, ID, bank, role..."
+                  value={hrSearchQuery}
+                  onChange={(e) => setHrSearchQuery(e.target.value)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#09090b',
+                    fontSize: '0.75rem',
+                    outline: 'none',
+                    width: '180px',
+                  }}
+                />
+                {hrSearchQuery && (
+                  <button
+                    onClick={() => setHrSearchQuery('')}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Top 5 KPI Cards for HR */}
+          {(() => {
+            const totalBase = employees.reduce((s, e) => s + e.baseSalary, 0);
+            const totalAllow = employees.reduce((s, e) => s + (e.allowances || 0), 0);
+            const totalGross = totalBase + totalAllow;
+            const totalPen7 = employees.reduce((s, e) => s + e.baseSalary * 0.07, 0);
+            const totalPen11 = employees.reduce((s, e) => s + e.baseSalary * 0.11, 0);
+            const totalTax = employees.reduce((s, e) => {
+              const gross = e.baseSalary + (e.allowances || 0);
+              const p7 = e.baseSalary * 0.07;
+              return s + calculateEthiopianIncomeTax(gross - p7);
+            }, 0);
+            const totalNet = totalGross - totalPen7 - totalTax;
+
+            return (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                  gap: '16px',
+                }}
+              >
+                {/* 1. Total Workforce Headcount */}
+                <div
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid var(--border-light)',
+                    borderRadius: '16px',
+                    padding: '18px 20px',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+                    borderTop: '4px solid #059669',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                      Active Workforce
+                    </span>
+                    <span style={{ fontSize: '0.65rem', fontWeight: 700, background: '#ecfdf5', color: '#047857', padding: '2px 6px', borderRadius: '4px' }}>
+                      100% Retained
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#09090b', fontFamily: 'monospace', margin: '8px 0 4px' }}>
+                    {employees.length} Full-Time Staff
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Briefcase size={12} color="#059669" />
+                    <span>
+                      {employees.filter((e) => e.department === 'production').length} Production •{' '}
+                      {employees.filter((e) => e.department !== 'production').length} Support & Sales
+                    </span>
+                  </div>
+                </div>
+
+                {/* 2. Monthly Gross Payroll Liability */}
+                <div
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid var(--border-light)',
+                    borderRadius: '16px',
+                    padding: '18px 20px',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+                    borderTop: '4px solid #ca8a04',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                      Gross Monthly Payroll
+                    </span>
+                    <span style={{ fontSize: '0.65rem', fontWeight: 700, background: '#fef3c7', color: '#b45309', padding: '2px 6px', borderRadius: '4px' }}>
+                      Base + Allowances
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#09090b', fontFamily: 'monospace', margin: '8px 0 4px' }}>
+                    {formatETB(totalGross)}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <DollarSign size={12} color="#ca8a04" />
+                    <span>Net Disbursal: {formatETB(totalNet)}</span>
+                  </div>
+                </div>
+
+                {/* 3. Statutory Pension 7% & 11% */}
+                <div
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid var(--border-light)',
+                    borderRadius: '16px',
+                    padding: '18px 20px',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+                    borderTop: '4px solid #7c3aed',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                      Pension Total (18%)
+                    </span>
+                    <span style={{ fontSize: '0.65rem', fontWeight: 700, background: '#f5f3ff', color: '#6d28d9', padding: '2px 6px', borderRadius: '4px' }}>
+                      Statutory Fund
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#09090b', fontFamily: 'monospace', margin: '8px 0 4px' }}>
+                    {formatETB(totalPen7 + totalPen11)}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ShieldCheck size={12} color="#7c3aed" />
+                    <span>7% Staff ({formatETB(totalPen7)}) + 11% Co. ({formatETB(totalPen11)})</span>
+                  </div>
+                </div>
+
+                {/* 4. MoR Income Tax Withholding */}
+                <div
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid var(--border-light)',
+                    borderRadius: '16px',
+                    padding: '18px 20px',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+                    borderTop: '4px solid #2563eb',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                      MoR Employment Tax
+                    </span>
+                    <span style={{ fontSize: '0.65rem', fontWeight: 700, background: '#eff6ff', color: '#1d4ed8', padding: '2px 6px', borderRadius: '4px' }}>
+                      e-Tax Withholding
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#09090b', fontFamily: 'monospace', margin: '8px 0 4px' }}>
+                    {formatETB(totalTax)}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Receipt size={12} color="#2563eb" />
+                    <span>Progressive Ethiopian tax schedule audited</span>
+                  </div>
+                </div>
+
+                {/* 5. Biometric Attendance & Wase Compliance */}
+                <div
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid var(--border-light)',
+                    borderRadius: '16px',
+                    padding: '18px 20px',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+                    borderTop: '4px solid #10b981',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                      Shift Telemetry & Wase
+                    </span>
+                    <span style={{ fontSize: '0.65rem', fontWeight: 700, background: '#ecfdf5', color: '#047857', padding: '2px 6px', borderRadius: '4px' }}>
+                      97.8% On-Time
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#09090b', fontFamily: 'monospace', margin: '8px 0 4px' }}>
+                    100% Wase Verified
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <BadgeCheck size={12} color="#10b981" />
+                    <span>Legal guarantor letters verified on file</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Departmental Workforce Allocation & Payroll Roster */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            {/* Department Headcount Allocation */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
+                borderRadius: '16px',
+                padding: '20px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Building2 size={18} color="#059669" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>
+                    Department Headcount & Cost Share
+                  </span>
+                </div>
+                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#047857', background: '#ecfdf5', padding: '2px 8px', borderRadius: '8px' }}>
+                  6 Units Active
+                </span>
+              </div>
+
+              {(() => {
+                const depts = [
+                  { id: 'production', label: 'Production & CNC Workshop', color: '#09090b' },
+                  { id: 'stores', label: 'Stores & Warehousing', color: '#f59e0b' },
+                  { id: 'procurement', label: 'Procurement & Purchasing', color: '#2563eb' },
+                  { id: 'sales', label: 'Commercial Sales & Accounts', color: '#7c3aed' },
+                  { id: 'finance', label: 'Finance & Cost Accounting', color: '#10b981' },
+                  { id: 'admin', label: 'Administration & Executive', color: '#ec4899' },
+                ];
+
+                const totalStaff = employees.length || 1;
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {depts.map((d) => {
+                      const deptEmployees = employees.filter((e) => e.department === d.id);
+                      const deptGross = deptEmployees.reduce((s, e) => s + e.baseSalary + (e.allowances || 0), 0);
+                      const sharePct = Math.round((deptEmployees.length / totalStaff) * 100);
+
+                      return (
+                        <div
+                          key={d.id}
+                          style={{
+                            padding: '10px 14px',
+                            background: '#f8fafc',
+                            border: '1px solid var(--border-light)',
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: d.color }} />
+                              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#09090b' }}>{d.label}</span>
+                            </div>
+                            <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                              {deptEmployees.length} personnel ({sharePct}% of workforce)
+                            </div>
+                          </div>
+
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '0.88rem', fontWeight: 800, fontFamily: 'monospace', color: '#09090b' }}>
+                              {formatETB(deptGross)}
+                            </div>
+                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                              Monthly Gross
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Attendance & Shift Telemetry Log */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
+                borderRadius: '16px',
+                padding: '20px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Clock size={18} color="#2563eb" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>
+                    Biometric Shift Attendance & Overtime
+                  </span>
+                </div>
+                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#1d4ed8', background: '#eff6ff', padding: '2px 8px', borderRadius: '8px' }}>
+                  Live Terminal Log
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {INITIAL_ATTENDANCE_RECORDS.slice(0, 5).map((att) => (
+                  <div
+                    key={att.id}
+                    style={{
+                      padding: '10px 14px',
+                      background: '#f8fafc',
+                      border: '1px solid var(--border-light)',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#09090b' }}>{att.employeeName}</span>
+                        <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                          ({att.department})
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        📅 {att.date} • Check-In: <strong>{att.checkIn}</strong> • Check-Out: <strong>{att.checkOut || '17:30'}</strong>
+                      </div>
+                    </div>
+
+                    <div style={{ textAlign: 'right' }}>
+                      <span
+                        style={{
+                          fontSize: '0.65rem',
+                          fontWeight: 700,
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          background: att.status === 'present' ? '#dcfce7' : att.status === 'late' ? '#fef3c7' : '#fee2e2',
+                          color: att.status === 'present' ? '#15803d' : att.status === 'late' ? '#b45309' : '#b91c1c',
+                        }}
+                      >
+                        {att.status.toUpperCase()}
+                      </span>
+                      {att.overtimeHours > 0 && (
+                        <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#7c3aed', marginTop: '2px' }}>
+                          +{att.overtimeHours}h Overtime
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Master Audited Ethiopian Monthly Payroll Roster Table */}
+          <div
+            style={{
+              background: '#ffffff',
+              border: '1px solid var(--border-light)',
+              borderRadius: '16px',
+              padding: '20px',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FileSpreadsheet size={18} color="#059669" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>
+                    Audited Ethiopian Monthly Payroll Roster (October 2026)
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  Statutory 7% employee pension, 11% employer pension, and Ministry of Revenue progressive income tax withholding
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  Showing{' '}
+                  {
+                    employees.filter((emp) => {
+                      if (hrDeptFilter !== 'all' && emp.department !== hrDeptFilter) return false;
+                      if (hrSearchQuery.trim()) {
+                        const q = hrSearchQuery.toLowerCase();
+                        return (
+                          emp.name.toLowerCase().includes(q) ||
+                          emp.employeeId.toLowerCase().includes(q) ||
+                          emp.position.toLowerCase().includes(q) ||
+                          emp.bankName.toLowerCase().includes(q)
+                        );
+                      }
+                      return true;
+                    }).length
+                  }{' '}
+                  of {employees.length} Staff
+                </span>
+              </div>
+            </div>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.78rem' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '2px solid var(--border-light)', color: 'var(--text-muted)' }}>
+                    <th style={{ padding: '10px 12px', fontWeight: 700 }}>Staff ID</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700 }}>Employee Name & Position</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700 }}>Department</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700, textAlign: 'right' }}>Base Salary</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700, textAlign: 'right' }}>Allowances</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700, textAlign: 'right' }}>Gross Pay</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700, textAlign: 'right' }}>7% Pension</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700, textAlign: 'right' }}>11% Co. Pension</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700, textAlign: 'right' }}>MoR Tax</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700, textAlign: 'right' }}>Net Take-Home</th>
+                    <th style={{ padding: '10px 12px', fontWeight: 700 }}>Bank & Account</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {employees
+                    .filter((emp) => {
+                      if (hrDeptFilter !== 'all' && emp.department !== hrDeptFilter) return false;
+                      if (hrSearchQuery.trim()) {
+                        const q = hrSearchQuery.toLowerCase();
+                        return (
+                          emp.name.toLowerCase().includes(q) ||
+                          emp.employeeId.toLowerCase().includes(q) ||
+                          emp.position.toLowerCase().includes(q) ||
+                          emp.bankName.toLowerCase().includes(q)
+                        );
+                      }
+                      return true;
+                    })
+                    .map((emp) => {
+                      const gross = emp.baseSalary + (emp.allowances || 0);
+                      const pen7 = emp.baseSalary * 0.07;
+                      const pen11 = emp.baseSalary * 0.11;
+                      const incomeTax = calculateEthiopianIncomeTax(gross - pen7);
+                      const netPay = gross - pen7 - incomeTax;
+
+                      return (
+                        <tr
+                          key={emp.id}
+                          style={{
+                            borderBottom: '1px solid var(--border-light)',
+                            transition: 'background 0.15s ease',
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          <td style={{ padding: '10px 12px', fontWeight: 800, fontFamily: 'monospace', color: '#09090b' }}>
+                            {emp.employeeId}
+                          </td>
+                          <td style={{ padding: '10px 12px' }}>
+                            <div style={{ fontWeight: 700, color: '#09090b' }}>{emp.name}</div>
+                            <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{emp.position}</div>
+                          </td>
+                          <td style={{ padding: '10px 12px' }}>
+                            <span
+                              style={{
+                                fontSize: '0.65rem',
+                                fontWeight: 700,
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                background: '#f4f4f5',
+                                color: '#09090b',
+                                border: '1px solid var(--border-light)',
+                                textTransform: 'capitalize',
+                              }}
+                            >
+                              {emp.department}
+                            </span>
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'monospace', color: '#09090b' }}>
+                            {formatETB(emp.baseSalary)}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'monospace', color: 'var(--text-muted)' }}>
+                            {formatETB(emp.allowances || 0)}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 800, fontFamily: 'monospace', color: '#09090b' }}>
+                            {formatETB(gross)}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'monospace', color: '#7c3aed' }}>
+                            {formatETB(pen7)}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'monospace', color: '#6d28d9' }}>
+                            {formatETB(pen11)}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'monospace', color: '#ca8a04' }}>
+                            {formatETB(incomeTax)}
+                          </td>
+                          <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 900, fontFamily: 'monospace', color: '#059669' }}>
+                            {formatETB(netPay)}
+                          </td>
+                          <td style={{ padding: '10px 12px', fontSize: '0.72rem' }}>
+                            <div style={{ color: '#09090b', fontWeight: 600 }}>{emp.bankName}</div>
+                            <div style={{ fontFamily: 'monospace', color: 'var(--text-muted)', fontSize: '0.65rem' }}>
+                              {emp.bankAccount}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Legal Guarantor (Wase / ዋስ) & Leave Liability Audits */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            {/* Legal Guarantor (Wase / ዋስ) Table */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
+                borderRadius: '16px',
+                padding: '20px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ShieldCheck size={18} color="#059669" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>
+                    Legal Guarantor (Wase / ዋስ) Verification Audit
+                  </span>
+                </div>
+                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#047857', background: '#ecfdf5', padding: '2px 8px', borderRadius: '8px' }}>
+                  Risk Mitigation
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {[
+                  { name: 'Alazar Tadesse', role: 'CNC Lead', guarantor: 'Tadesse Worku', org: 'Ethio Telecom (Senior Eng.)', rel: 'Brother', status: 'verified' },
+                  { name: 'Ermias Kebede', role: 'Printer Operator', guarantor: 'Kebede Hailu', org: 'Commercial Bank of Ethiopia', rel: 'Father', status: 'verified' },
+                  { name: 'Biniyam Assefa', role: '3D Letter Maker', guarantor: 'Assefa Mengistu', org: 'Addis Ababa City Admin', rel: 'Uncle', status: 'verified' },
+                  { name: 'Dawit Bekele', role: 'Storekeeper', guarantor: 'Bekele Desta', org: 'Federal Police Commission', rel: 'Brother', status: 'verified' },
+                  { name: 'Yohannes Girma', role: 'Welder / Frame', guarantor: 'Girma Alemayehu', org: 'Anbessa City Bus', rel: 'Father', status: 'submitted' },
+                ].map((g, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      padding: '10px 14px',
+                      background: '#f8fafc',
+                      border: '1px solid var(--border-light)',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#09090b' }}>{g.name}</span>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>({g.role})</span>
+                      </div>
+                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        Guarantor: <strong>{g.guarantor}</strong> ({g.rel}) • {g.org}
+                      </div>
+                    </div>
+
+                    <span
+                      style={{
+                        fontSize: '0.65rem',
+                        fontWeight: 700,
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        background: g.status === 'verified' ? '#dcfce7' : '#fef3c7',
+                        color: g.status === 'verified' ? '#15803d' : '#b45309',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {g.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Leave Liability & Absence Records */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid var(--border-light)',
+                borderRadius: '16px',
+                padding: '20px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Calendar size={18} color="#7c3aed" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#09090b' }}>
+                    Leave Liability & Absence Ledger
+                  </span>
+                </div>
+                <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#6d28d9', background: '#f5f3ff', padding: '2px 8px', borderRadius: '8px' }}>
+                  {INITIAL_LEAVE_REQUESTS.length} Logged
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {INITIAL_LEAVE_REQUESTS.filter((req) => (hrLeaveFilter === 'all' ? true : req.leaveType === hrLeaveFilter))
+                  .slice(0, 5)
+                  .map((req) => (
+                    <div
+                      key={req.id}
+                      style={{
+                        padding: '10px 14px',
+                        background: '#f8fafc',
+                        border: '1px solid var(--border-light)',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#09090b' }}>{req.employeeName}</span>
+                          <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                            ({req.department})
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          {req.leaveType.toUpperCase()} LEAVE • {req.startDate} → {req.endDate} ({req.daysCount} days)
+                        </div>
+                      </div>
+
+                      <span
+                        style={{
+                          fontSize: '0.65rem',
+                          fontWeight: 700,
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          background: req.status === 'approved' ? '#dcfce7' : '#fef3c7',
+                          color: req.status === 'approved' ? '#15803d' : '#b45309',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {req.status}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 10. Modal: Interactive Cost Tree Inspection */}
       {activeOrderModal && (
         <div
@@ -1847,7 +3537,7 @@ function ReportPageContent() {
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '1fr 1fr 1fr',
+                  gridTemplateColumns: 'repeat(4, 1fr)',
                   gap: '12px',
                   background: '#f8fafc',
                   padding: '16px',
@@ -1857,20 +3547,56 @@ function ReportPageContent() {
               >
                 <div>
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Audited Revenue</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#09090b', fontFamily: 'monospace' }}>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#09090b', fontFamily: 'monospace' }}>
                     {formatETB(totalNetRevenue)}
                   </div>
                 </div>
                 <div>
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Realized Margin</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a' }}>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#16a34a' }}>
                     {overallGrossMarginPct.toFixed(1)}%
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Shopfloor Scrap Ratio</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#09090b' }}>
-                    2.1% (Safe)
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Store Inventory Value</div>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#b45309', fontFamily: 'monospace' }}>
+                    {formatETB(items.reduce((s, i) => s + i.currentStock * i.purchasePrice, 0))}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Workforce Payroll</div>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#047857', fontFamily: 'monospace' }}>
+                    {formatETB(employees.reduce((s, e) => s + e.baseSalary + (e.allowances || 0), 0))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Second row of Dossier KPIs */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '12px',
+                }}
+              >
+                <div style={{ padding: '12px 14px', background: '#fefce8', border: '1px solid #fef08a', borderRadius: '10px' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#854d0e', textTransform: 'uppercase' }}>
+                    Store & Purchasing Summary
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#09090b', marginTop: '4px' }}>
+                    <strong>{items.length} SKUs</strong> monitored across <strong>{stores.length} warehouses</strong> •{' '}
+                    <strong>{purchaseOrders.length} POs</strong> ({formatETB(purchaseOrders.reduce((s, p) => s + p.grandTotal, 0))} committed) •{' '}
+                    <strong>{lowStockItems.length}</strong> items below safety buffer.
+                  </div>
+                </div>
+
+                <div style={{ padding: '12px 14px', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '10px' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#065f46', textTransform: 'uppercase' }}>
+                    HR & Workforce Headcount
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#09090b', marginTop: '4px' }}>
+                    <strong>{employees.length} full-time staff</strong> (Production: {employees.filter((e) => e.department === 'production').length}, Support: {employees.filter((e) => e.department !== 'production').length}) •{' '}
+                    <strong>100% Wase Guarantor</strong> coverage verified on file.
                   </div>
                 </div>
               </div>

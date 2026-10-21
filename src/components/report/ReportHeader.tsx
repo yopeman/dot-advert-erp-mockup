@@ -33,9 +33,10 @@ export type ReportPeriod =
 export default function ReportHeader() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { companyFinancials, orders, allOrderProfitability, wastages, resetDemoData } = useErp();
+  const { companyFinancials, orders, allOrderProfitability, wastages, items, employees, purchaseOrders, resetDemoData } = useErp();
 
-  const currentTab = searchParams.get('tab') || 'executive';
+  const currentTabRaw = searchParams.get('tab') || 'executive';
+  const currentTab = currentTabRaw === 'inventory' ? 'store_inventory' : currentTabRaw === 'hr' ? 'hr_workforce' : currentTabRaw;
   const currentPeriod = (searchParams.get('period') as ReportPeriod) || 'monthly';
   const fromDate = searchParams.get('from') || '2026-10-01';
   const toDate = searchParams.get('to') || '2026-10-31';
@@ -57,6 +58,9 @@ export default function ReportHeader() {
   const grossProfit = companyFinancials.grossProfit;
   const grossMarginPct = netRevenue > 0 ? (grossProfit / netRevenue) * 100 : 0;
   const totalScrapCost = wastages.reduce((sum, w) => sum + w.totalCost, 0);
+  const totalInventoryValuation = items.reduce((sum, i) => sum + (i.currentStock * i.purchasePrice), 0);
+  const totalGrossPayroll = employees.reduce((sum, e) => sum + e.baseSalary + (e.allowances || 0), 0);
+  const totalPoSpend = purchaseOrders.reduce((sum, p) => sum + p.grandTotal, 0);
 
   const formatETB = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -105,12 +109,39 @@ export default function ReportHeader() {
     csv += `Gross Profit (ETB),${grossProfit}\n`;
     csv += `Gross Margin (%),${grossMarginPct.toFixed(1)}%\n`;
     csv += `Operating Profit EBITDA (ETB),${companyFinancials.operatingProfit}\n`;
-    csv += `Production Scrap Loss (ETB),${totalScrapCost}\n\n`;
+    csv += `Production Scrap Loss (ETB),${totalScrapCost}\n`;
+    csv += `Total Store Inventory Valuation (ETB),${totalInventoryValuation}\n`;
+    csv += `Committed PO Procurement Spend (ETB),${totalPoSpend}\n`;
+    csv += `Total Active Workforce Headcount,${employees.length}\n`;
+    csv += `Monthly Gross Payroll Commitment (ETB),${totalGrossPayroll}\n\n`;
 
     csv += '--- ORDERS & PROFITABILITY AUDIT ---\n';
     csv += 'Order Number,Customer Name,Agreed Revenue (ETB),Direct Material (ETB),Direct Labor (ETB),Machine Cost (ETB),Overhead (ETB),Wastage (ETB),Total Cost (ETB),Gross Profit (ETB),Margin (%)\n';
     allOrderProfitability.forEach((p) => {
       csv += `"${p.orderNumber}","${p.customerName}",${p.orderRevenue},${p.directMaterialCost},${p.directLaborCost},${p.machineCost},${p.allocatedOverheadCost},${p.wastageCost},${p.totalOrderCost},${p.grossProfit},${p.profitMarginPct.toFixed(1)}%\n`;
+    });
+
+    csv += '\n--- STORE INVENTORY & SKU VALUATION ---\n';
+    csv += 'Item Code,Item Name,Category,Unit,Current Stock,Reorder Level,Unit Purchase Price (ETB),Total Asset Value (ETB)\n';
+    items.forEach((item) => {
+      csv += `"${item.code}","${item.name}","${item.type}","${item.unit}",${item.currentStock},${item.reorderLevel},${item.purchasePrice},${item.currentStock * item.purchasePrice}\n`;
+    });
+
+    csv += '\n--- PROCUREMENT & PURCHASE ORDERS ---\n';
+    csv += 'PO Number,Supplier,Date,Grand Total (ETB),Status,Payment Terms,Requested By\n';
+    purchaseOrders.forEach((po) => {
+      csv += `"${po.poNumber}","${po.supplierName}","${po.date}",${po.grandTotal},"${po.status}","${po.paymentTerms}","${po.requestedBy}"\n`;
+    });
+
+    csv += '\n--- HR & WORKFORCE PAYROLL ROSTER ---\n';
+    csv += 'Employee ID,Full Name,Department,Position,Base Salary (ETB),Allowances (ETB),Gross Pay (ETB),7% Pension (ETB),11% Pension (ETB),Estimated Net Pay (ETB),Bank,Status\n';
+    employees.forEach((emp) => {
+      const gross = emp.baseSalary + (emp.allowances || 0);
+      const pen7 = emp.baseSalary * 0.07;
+      const pen11 = emp.baseSalary * 0.11;
+      const estTax = Math.max(0, (gross - pen7) * 0.15);
+      const net = gross - pen7 - estTax;
+      csv += `"${emp.employeeId}","${emp.name}","${emp.department}","${emp.position}",${emp.baseSalary},${emp.allowances || 0},${gross},${pen7.toFixed(0)},${pen11.toFixed(0)},${net.toFixed(0)},"${emp.bankName}","${emp.employmentStatus}"\n`;
     });
 
     csv += '\n--- PRODUCTION SCRAP & WASTAGE LOG ---\n';
@@ -140,6 +171,9 @@ Period: ${currentPeriod.toUpperCase()} (Ending October 2026)
 • Net Revenue: ${formatETB(netRevenue)}
 • Gross Profit: ${formatETB(grossProfit)} (${grossMarginPct.toFixed(1)}% Margin)
 • Operating Income (EBITDA): ${formatETB(companyFinancials.operatingProfit)}
+• Total Store Inventory Valuation: ${formatETB(totalInventoryValuation)} (${items.length} SKUs)
+• Procurement PO Commitments: ${formatETB(totalPoSpend)} (${purchaseOrders.length} POs)
+• Active Workforce: ${employees.length} Staff (Monthly Gross Payroll: ${formatETB(totalGrossPayroll)})
 • Production Scrap & Wastage: ${formatETB(totalScrapCost)} (2.1% of Raw Materials)
 • Active Work Orders: ${orders.length} orders analyzed
 • Currency: Ethiopian Birr (ETB)`;
