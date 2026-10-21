@@ -31,7 +31,7 @@ function FinanceSidebarContent() {
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab') || 'income_statement';
 
-  const { companyFinancials, allOrderProfitability, purchaseOrders, invoices, currentRole, setCurrentRole } = useErp();
+  const { companyFinancials, storeFinancials, allOrderProfitability, purchaseOrders, invoices, currentRole, setCurrentRole } = useErp();
 
   const netRevenue = companyFinancials.totalRevenueNet;
   const grossProfit = companyFinancials.grossProfit;
@@ -39,9 +39,10 @@ function FinanceSidebarContent() {
   const operatingProfit = companyFinancials.operatingProfit;
   const netMarginPct = netRevenue > 0 ? (operatingProfit / netRevenue) * 100 : 0;
 
-  const accountsPayable = purchaseOrders
-    .filter((p) => p.status === 'received' || p.status === 'approved')
-    .reduce((sum, p) => sum + p.grandTotal, 0);
+  const accountsPayable =
+    purchaseOrders
+      .filter((p) => p.status === 'received' || p.status === 'approved')
+      .reduce((sum, p) => sum + p.grandTotal, 0) - storeFinancials.supplierReturnValue;
 
   const formatETB = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -68,6 +69,14 @@ function FinanceSidebarContent() {
       href: '/finance?tab=profitability',
       icon: PieChart,
       badge: `${allOrderProfitability.length} Orders`,
+      badgeType: 'blue',
+    },
+    {
+      tabId: 'stores',
+      label: 'Store Ledger & Inventory',
+      href: '/finance?tab=stores',
+      icon: Layers,
+      badge: formatETB(storeFinancials.inventoryValuation),
       badgeType: 'blue',
     },
     {

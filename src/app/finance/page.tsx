@@ -42,10 +42,17 @@ function FinancePageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const activeTab =
-    (searchParams.get('tab') as 'income_statement' | 'profitability' | 'cashflow' | 'aging' | 'tax') || 'income_statement';
+    (searchParams.get('tab') as
+      | 'income_statement'
+      | 'profitability'
+      | 'stores'
+      | 'cashflow'
+      | 'aging'
+      | 'tax') || 'income_statement';
 
   const {
     companyFinancials,
+    storeFinancials,
     invoices,
     purchaseOrders,
     expenses,
@@ -105,9 +112,10 @@ function FinancePageContent() {
   const netCashFlow = totalInflows - totalCashOutflows;
 
   // Accounts Payable (AP) from approved purchase orders
-  const accountsPayable = purchaseOrders
-    .filter((p) => p.status === 'received' || p.status === 'approved')
-    .reduce((sum, p) => sum + p.grandTotal, 0);
+  const accountsPayable =
+    purchaseOrders
+      .filter((p) => p.status === 'received' || p.status === 'approved')
+      .reduce((sum, p) => sum + p.grandTotal, 0) - storeFinancials.supplierReturnValue;
   const accountsReceivable = invoices.reduce((sum, i) => sum + i.balanceDue, 0);
 
   // Filtered Order Profitability
@@ -268,6 +276,15 @@ function FinancePageContent() {
         </button>
 
         <button
+          onClick={() => setTab('stores')}
+          className={`tab-btn ${activeTab === 'stores' ? 'active' : ''}`}
+        >
+          <Boxes size={16} />
+          <span>Store Ledger & Inventory</span>
+          <span className="badge badge-emerald">{formatETB(storeFinancials.inventoryValuation)}</span>
+        </button>
+
+        <button
           onClick={() => setTab('cashflow')}
           className={`tab-btn ${activeTab === 'cashflow' ? 'active' : ''}`}
         >
@@ -323,6 +340,19 @@ function FinancePageContent() {
                   }}
                 >
                   ✓ Direct Job Wastage Factored in COGS
+                </span>
+                <span
+                  style={{
+                    fontSize: '0.72rem',
+                    color: Math.abs(storeFinancials.productionIssueValue - totalMaterialCost) < 1 ? '#0ea5e9' : '#b45309',
+                    background: Math.abs(storeFinancials.productionIssueValue - totalMaterialCost) < 1 ? '#f0f9ff' : '#fffbeb',
+                    padding: '4px 10px',
+                    borderRadius: '12px',
+                    border: `1px solid ${Math.abs(storeFinancials.productionIssueValue - totalMaterialCost) < 1 ? '#bae6fd' : '#fde68a'}`,
+                    fontWeight: 600,
+                  }}
+                >
+                  Store ledger: {formatETB(storeFinancials.productionIssueValue)} issued
                 </span>
               </div>
             </div>
@@ -411,6 +441,30 @@ function FinancePageContent() {
                     </td>
                     <td style={{ textAlign: 'right', color: '#b45309' }}>
                       {netRevenue > 0 ? ((totalWastageCost / netRevenue) * 100).toFixed(1) : 0}%
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ paddingLeft: '24px', color: '#b45309' }}>
+                      Store Shrinkage & Unallocated Wastage
+                    </td>
+                    <td style={{ color: '#b45309' }}>Stock Count & Store Ledger</td>
+                    <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#b45309' }}>
+                      {formatETB(
+                        storeFinancials.unallocatedWastageValue +
+                          storeFinancials.adjustmentLossValue -
+                          storeFinancials.adjustmentGainValue
+                      )}
+                    </td>
+                    <td style={{ textAlign: 'right', color: '#b45309' }}>
+                      {netRevenue > 0
+                        ? (((storeFinancials.unallocatedWastageValue +
+                            storeFinancials.adjustmentLossValue -
+                            storeFinancials.adjustmentGainValue) /
+                            netRevenue) *
+                            100
+                          ).toFixed(1)
+                        : 0}
+                      %
                     </td>
                   </tr>
                   <tr>
@@ -680,7 +734,249 @@ function FinancePageContent() {
       )}
 
       {/* ======================================================== */}
-      {/* TAB 3: CASH FLOW & TREASURY                              */}
+      {/* TAB 3: STORE LEDGER & INVENTORY FINANCE                  */}
+      {/* ======================================================== */}
+      {activeTab === 'stores' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+            <div className="card" style={{ borderLeft: '4px solid #0ea5e9' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#0ea5e9', textTransform: 'uppercase' }}>
+                  Inventory at Cost
+                </span>
+                <Boxes size={18} color="#0ea5e9" />
+              </div>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-main)', fontFamily: 'monospace' }}>
+                {formatETB(storeFinancials.inventoryValuation)}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '4px' }}>
+                {storeFinancials.storeValuations.length} stores • {storeFinancials.categoryValuations.length} categories
+              </div>
+            </div>
+
+            <div className="card" style={{ borderLeft: '4px solid #ca8a04' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#ca8a04', textTransform: 'uppercase' }}>
+                  Material Issued to Jobs
+                </span>
+                <DollarSign size={18} color="#ca8a04" />
+              </div>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-main)', fontFamily: 'monospace' }}>
+                {formatETB(storeFinancials.productionIssueValue + storeFinancials.salesIssueValue)}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '4px' }}>
+                Posted to WIP / COGS through the stock ledger
+              </div>
+            </div>
+
+            <div className="card" style={{ borderLeft: '4px solid #be123c' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#be123c', textTransform: 'uppercase' }}>
+                  Wastage & Shrinkage
+                </span>
+                <Trash2 size={18} color="#be123c" />
+              </div>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-main)', fontFamily: 'monospace' }}>
+                {formatETB(storeFinancials.wastageValue + storeFinancials.adjustmentLossValue)}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '4px' }}>
+                {formatETB(storeFinancials.unallocatedWastageValue)} unallocated to jobs
+              </div>
+            </div>
+
+            <div className="card" style={{ borderLeft: '4px solid #16a34a' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#16a34a', textTransform: 'uppercase' }}>
+                  Supplier Debit Notes
+                </span>
+                <ArrowDownRight size={18} color="#16a34a" />
+              </div>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-main)', fontFamily: 'monospace' }}>
+                {formatETB(storeFinancials.supplierReturnValue)}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '4px' }}>
+                Reduces supplier payables in the AP ledger
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <div>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                  Procurement Reconciliation
+                </h3>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                  Goods receipts posted in Stores are matched to purchase orders before they settle Accounts Payable.
+                </p>
+              </div>
+              <span className={`badge ${storeFinancials.unlinkedPurchaseReceipts === 0 ? 'badge-emerald' : 'badge-amber'}`}>
+                {storeFinancials.unlinkedPurchaseReceipts === 0 ? 'Fully Reconciled' : `${storeFinancials.unlinkedPurchaseReceipts} Unlinked GRNs`}
+              </span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+              <div style={{ padding: '12px', background: '#f8fafc', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>PO-backed receipts</div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 800, fontFamily: 'monospace', color: '#16a34a' }}>
+                  {formatETB(storeFinancials.linkedPurchaseReceiptValue)}
+                </div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>
+                  {storeFinancials.linkedPurchaseReceipts} GRNs settled to AP
+                </div>
+              </div>
+              <div style={{ padding: '12px', background: '#f8fafc', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Unreconciled receipts</div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 800, fontFamily: 'monospace', color: '#b45309' }}>
+                  {formatETB(storeFinancials.unlinkedPurchaseReceiptValue)}
+                </div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>
+                  {storeFinancials.unlinkedPurchaseReceipts} GRNs awaiting a PO match
+                </div>
+              </div>
+              <div style={{ padding: '12px', background: '#f8fafc', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Net supplier payable</div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 800, fontFamily: 'monospace', color: 'var(--text-main)' }}>
+                  {formatETB(accountsPayable)}
+                </div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>
+                  After {formatETB(storeFinancials.supplierReturnValue)} supplier debits
+                </div>
+              </div>
+              <div style={{ padding: '12px', background: '#f8fafc', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Inter-store transfers</div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 800, fontFamily: 'monospace', color: 'var(--text-main)' }}>
+                  {formatETB(storeFinancials.transferValue)}
+                </div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>Inventory-to-inventory, no P&L impact</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 1fr', gap: '20px', alignItems: 'start' }}>
+            <div className="card">
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '14px' }}>
+                Inventory Valuation by Store
+              </h3>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Store</th>
+                      <th>Type</th>
+                      <th style={{ textAlign: 'right' }}>SKUs</th>
+                      <th style={{ textAlign: 'right' }}>Units</th>
+                      <th style={{ textAlign: 'right' }}>Value (ETB)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {storeFinancials.storeValuations.map((store) => (
+                      <tr key={store.storeId}>
+                        <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>{store.storeName}</td>
+                        <td style={{ textTransform: 'capitalize', color: 'var(--text-dim)' }}>
+                          {store.storeType.replaceAll('_', ' ')}
+                        </td>
+                        <td style={{ textAlign: 'right' }}>{store.skuCount}</td>
+                        <td style={{ textAlign: 'right', fontFamily: 'monospace' }}>{store.totalUnits.toFixed(0)}</td>
+                        <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700 }}>
+                          {formatETB(store.totalValue)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="card">
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '14px' }}>
+                Inventory by Category
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {storeFinancials.categoryValuations.map((cat) => {
+                  const pct = storeFinancials.inventoryValuation > 0 ? (cat.totalValue / storeFinancials.inventoryValuation) * 100 : 0;
+                  return (
+                    <div key={cat.category}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: '4px' }}>
+                        <span style={{ textTransform: 'capitalize', color: 'var(--text-main)', fontWeight: 600 }}>
+                          {cat.category.replaceAll('_', ' ')}
+                        </span>
+                        <span style={{ fontFamily: 'monospace', color: 'var(--text-main)' }}>{formatETB(cat.totalValue)}</span>
+                      </div>
+                      <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '999px', overflow: 'hidden' }}>
+                        <div style={{ width: `${Math.min(100, pct)}%`, height: '100%', background: '#facc15' }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <div>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                  Store Journal — Finance Postings
+                </h3>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                  Every approved stock movement with its debit and credit account. Wastage, issues and receipts feed the P&L in real time.
+                </p>
+              </div>
+              <span className="badge badge-blue">{storeFinancials.recentPostings.length} Postings</span>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Movement</th>
+                    <th>Item / Store</th>
+                    <th>Debit Account</th>
+                    <th>Credit Account</th>
+                    <th style={{ textAlign: 'right' }}>Value (ETB)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {storeFinancials.recentPostings.map((posting) => (
+                    <tr key={posting.id}>
+                      <td style={{ fontSize: '0.78rem', color: 'var(--text-main)' }}>{posting.date}</td>
+                      <td>
+                        <div style={{ fontWeight: 600, color: 'var(--text-main)', textTransform: 'capitalize' }}>
+                          {posting.movementType.replaceAll('_', ' ')}
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>
+                          {posting.movementNumber}{posting.reference ? ` • ${posting.reference}` : ''}
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ color: 'var(--text-main)' }}>{posting.itemName}</div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>
+                          {posting.quantity} {posting.unit} • {posting.storeName}
+                        </div>
+                      </td>
+                      <td style={{ fontSize: '0.74rem', color: '#16a34a' }}>{posting.debitAccount}</td>
+                      <td style={{ fontSize: '0.74rem', color: '#dc2626' }}>{posting.creditAccount}</td>
+                      <td style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 700 }}>
+                        {formatETB(posting.value)}
+                      </td>
+                    </tr>
+                  ))}
+                  {storeFinancials.recentPostings.length === 0 && (
+                    <tr>
+                      <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-dim)', padding: '20px' }}>
+                        No store movements have been posted yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 4: CASH FLOW & TREASURY                              */}
       {/* ======================================================== */}
       {activeTab === 'cashflow' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

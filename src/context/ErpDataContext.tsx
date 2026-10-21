@@ -31,6 +31,8 @@ import {
   WorkOrderBomItem,
   ProformaInvoice,
   ProformaStatus,
+  StoreFinancials,
+  ItemType,
 } from '@/types/erp';
 import {
   INITIAL_ITEMS,
@@ -85,8 +87,9 @@ interface ErpContextType {
     movementType: MovementType;
     quantity: number;
     unitCost?: number;
-    referenceType?: 'PO' | 'WORK_ORDER' | 'INVOICE' | 'ADJUSTMENT' | 'WASTE';
+    referenceType?: 'PO' | 'WORK_ORDER' | 'INVOICE' | 'ADJUSTMENT' | 'WASTE' | 'SUPPLIER_RETURN';
     referenceNumber?: string;
+    counterparty?: string;
     notes?: string;
   }) => void;
 
@@ -175,6 +178,7 @@ interface ErpContextType {
     totalCollected: number;
     totalReceivables: number;
   };
+  storeFinancials: StoreFinancials;
 
   // Demo Control
   resetDemoData: () => void;
@@ -398,6 +402,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       unitCost,
       referenceType,
       referenceNumber,
+      counterparty,
       notes,
     }: {
       itemId: string;
@@ -406,8 +411,9 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       movementType: MovementType;
       quantity: number;
       unitCost?: number;
-      referenceType?: 'PO' | 'WORK_ORDER' | 'INVOICE' | 'ADJUSTMENT' | 'WASTE';
+      referenceType?: 'PO' | 'WORK_ORDER' | 'INVOICE' | 'ADJUSTMENT' | 'WASTE' | 'SUPPLIER_RETURN';
       referenceNumber?: string;
+      counterparty?: string;
       notes?: string;
     }) => {
       const item = items.find((i) => i.id === itemId);
@@ -434,11 +440,63 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         totalCost: quantity * cost,
         referenceType,
         referenceNumber,
+        counterparty,
         notes,
         createdBy: currentRole.replace('_', ' ').toUpperCase(),
       };
 
       setStockMovements((prev) => [newMovement, ...prev]);
+
+      // Finance link: a PO-backed goods receipt settles the payable in Finance.
+      if (movementType === 'purchase_receipt' && referenceType === 'PO' && referenceNumber) {
+        setPurchaseOrders((prev) =>
+          prev.map((po) =>
+            po.poNumber === referenceNumber && po.status !== 'received'
+              ? { ...po, status: 'received' as const }
+              : po
+          )
+        );
+      }
+
+      // Finance link: material issued from a store against a work order posts to that
+      // work order's BOM so the cost rolls into job costing and COGS automatically.
+      if ((movementType === 'production_issue' || movementType === 'sales_issue') && referenceNumber) {
+        const linkedWo = workOrders.find(
+          (wo) => wo.workOrderNumber === referenceNumber || wo.orderNumber === referenceNumber
+        );
+        if (linkedWo) {
+          setWorkOrders((prev) =>
+            prev.map((wo) => {
+              if (wo.id !== linkedWo.id) return wo;
+              const existing = wo.bomItems.find((b) => b.itemId === itemId);
+              const bomItems = existing
+                ? wo.bomItems.map((b) => {
+                    if (b.itemId !== itemId) return b;
+                    const issuedQty = (b.actualIssuedQty || 0) + quantity;
+                    return {
+                      ...b,
+                      actualIssuedQty: issuedQty,
+                      unitCost: cost,
+                      totalCost: issuedQty * cost,
+                    };
+                  })
+                : [
+                    ...wo.bomItems,
+                    {
+                      itemId,
+                      itemName: item.name,
+                      plannedQty: quantity,
+                      actualIssuedQty: quantity,
+                      unit: item.unit,
+                      unitCost: cost,
+                      totalCost: quantity * cost,
+                    },
+                  ];
+              return { ...wo, bomItems };
+            })
+          );
+        }
+      }
 
       // Update Item Stock and store balances
       setItems((prevItems) =>
@@ -493,7 +551,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         })
       );
     },
-    [items, stores, currentRole]
+    [items, stores, currentRole, workOrders]
   );
 
   // MUTATOR: Record Wastage
@@ -1488,6 +1546,137 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       );
   }, [items]);
 
+  // CALCULATION: Store ledger -> Finance bridge
+  const storeFinancials = useMemo<StoreFinancials>(() => {
+    const sumMovements = (predicate: (m: StockMovement) => boolean) =>
+      stockMovements.filter(predicate).reduce((sum, m) => sum + m.totalCost, 0);
+
+    const purchaseReceipts = stockMovements.filter((m) => m.movementType === 'purchase_receipt');
+    const linkedReceipts = purchaseReceipts.filter((m) => m.referenceType === 'PO');
+    const unlinkedReceipts = purchaseReceipts.filter((m) => m.referenceType !== 'PO');
+
+    const productionIssueValue = sumMovements((m) => m.movementType === 'production_issue');
+    const salesIssueValue = sumMovements((m) => m.movementType === 'sales_issue');
+    const wastageValue = wastages.reduce((sum, w) => sum + w.totalCost, 0);
+    const unallocatedWastageValue = wastages
+      .filter((w) => !w.orderId)
+      .reduce((sum, w) => sum + w.totalCost, 0);
+
+    const storeValuations = stores.map((store) => {
+      const storeItems = items
+        .map((item) => ({ item, qty: item.storeBalances?.[store.id] || 0 }))
+        .filter(({ qty }) => qty > 0);
+      return {
+        storeId: store.id,
+        storeName: store.name,
+        storeType: store.storeType,
+        skuCount: storeItems.length,
+        totalUnits: storeItems.reduce((sum, { qty }) => sum + qty, 0),
+        totalValue: storeItems.reduce((sum, { item, qty }) => sum + qty * item.purchasePrice, 0),
+      };
+    });
+
+    const categoryMap = new Map<ItemType, { skuCount: number; totalValue: number }>();
+    items.forEach((item) => {
+      const current = categoryMap.get(item.type) || { skuCount: 0, totalValue: 0 };
+      categoryMap.set(item.type, {
+        skuCount: current.skuCount + 1,
+        totalValue: current.totalValue + item.currentStock * item.purchasePrice,
+      });
+    });
+
+    const recentPostings = [...stockMovements]
+      .sort((a, b) => b.date.localeCompare(a.date) || b.movementNumber.localeCompare(a.movementNumber))
+      .slice(0, 60)
+      .map((m) => {
+        let debitAccount = 'Inventory — Raw Materials';
+        let creditAccount = 'Inventory — Raw Materials';
+        if (m.movementType === 'purchase_receipt') {
+          debitAccount = 'Inventory — Raw Materials';
+          creditAccount = m.referenceType === 'PO' ? 'Accounts Payable — Suppliers' : 'Unreconciled Goods Received';
+        } else if (m.movementType === 'production_issue') {
+          debitAccount = 'Work in Progress — Direct Materials';
+          creditAccount = 'Inventory — Raw Materials';
+        } else if (m.movementType === 'production_receipt') {
+          debitAccount = 'Inventory — Finished Goods';
+          creditAccount = 'Work in Progress — Direct Materials';
+        } else if (m.movementType === 'sales_issue') {
+          debitAccount = 'Cost of Goods Sold';
+          creditAccount = 'Inventory — Finished Goods';
+        } else if (m.movementType === 'wastage') {
+          debitAccount = 'Wastage & Shrinkage Expense';
+          creditAccount = 'Inventory — Raw Materials';
+        } else if (m.movementType === 'return') {
+          if (m.referenceType === 'SUPPLIER_RETURN') {
+            debitAccount = 'Accounts Payable — Suppliers';
+            creditAccount = 'Inventory — Raw Materials';
+          } else {
+            debitAccount = 'Inventory — Raw Materials';
+            creditAccount = 'Work in Progress — Direct Materials';
+          }
+        } else if (m.movementType === 'adjustment') {
+          if (m.toStoreId && !m.fromStoreId) {
+            debitAccount = 'Inventory — Raw Materials';
+            creditAccount = 'Stock Adjustment Gain';
+          } else {
+            debitAccount = 'Stock Adjustment Loss';
+            creditAccount = 'Inventory — Raw Materials';
+          }
+        } else if (m.movementType === 'transfer') {
+          debitAccount = `Inventory — ${m.toStoreName || 'Destination Store'}`;
+          creditAccount = `Inventory — ${m.fromStoreName || 'Source Store'}`;
+        }
+
+        return {
+          id: m.id,
+          date: m.date,
+          movementNumber: m.movementNumber,
+          movementType: m.movementType,
+          reference: m.referenceNumber,
+          itemName: m.itemName,
+          storeName: m.fromStoreName || m.toStoreName || 'Store ledger',
+          quantity: m.quantity,
+          unit: m.unit,
+          value: m.totalCost,
+          debitAccount,
+          creditAccount,
+          reconciled: m.movementType !== 'purchase_receipt' || m.referenceType === 'PO',
+        };
+      });
+
+    return {
+      inventoryValuation: items.reduce((sum, item) => sum + item.currentStock * item.purchasePrice, 0),
+      productionIssueValue,
+      salesIssueValue,
+      purchaseReceiptValue: purchaseReceipts.reduce((sum, m) => sum + m.totalCost, 0),
+      wastageValue,
+      unallocatedWastageValue,
+      adjustmentLossValue: sumMovements(
+        (m) => m.movementType === 'adjustment' && !!m.fromStoreId && !m.toStoreId
+      ),
+      adjustmentGainValue: sumMovements(
+        (m) => m.movementType === 'adjustment' && !!m.toStoreId && !m.fromStoreId
+      ),
+      supplierReturnValue: sumMovements(
+        (m) => m.movementType === 'return' && m.referenceType === 'SUPPLIER_RETURN'
+      ),
+      staffReturnValue: sumMovements(
+        (m) => m.movementType === 'return' && m.referenceType !== 'SUPPLIER_RETURN'
+      ),
+      transferValue: sumMovements((m) => m.movementType === 'transfer'),
+      storeValuations,
+      categoryValuations: Array.from(categoryMap.entries()).map(([category, value]) => ({
+        category,
+        ...value,
+      })),
+      recentPostings,
+      linkedPurchaseReceipts: linkedReceipts.length,
+      unlinkedPurchaseReceipts: unlinkedReceipts.length,
+      linkedPurchaseReceiptValue: linkedReceipts.reduce((sum, m) => sum + m.totalCost, 0),
+      unlinkedPurchaseReceiptValue: unlinkedReceipts.reduce((sum, m) => sum + m.totalCost, 0),
+    };
+  }, [items, stores, stockMovements, wastages]);
+
   // CALCULATION: Company-level Financials
   const companyFinancials = useMemo(() => {
     // Net Revenue from all invoices
@@ -1502,11 +1691,16 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     const totalInputVat = poVat + expVat;
     const netVatPayable = Math.max(0, totalOutputVat - totalInputVat);
 
-    // Cost of goods sold (COGS) from all orders
-    const cogs = allOrderProfitability.reduce(
-      (sum, p) => sum + (p.directMaterialCost + p.directLaborCost + p.machineCost + p.wastageCost),
-      0
-    );
+    // Cost of goods sold (COGS) from all orders, plus unallocated store wastage
+    // and stock-count shrinkage posted directly by the Stores module.
+    const cogs =
+      allOrderProfitability.reduce(
+        (sum, p) => sum + (p.directMaterialCost + p.directLaborCost + p.machineCost + p.wastageCost),
+        0
+      ) +
+      storeFinancials.unallocatedWastageValue +
+      storeFinancials.adjustmentLossValue -
+      storeFinancials.adjustmentGainValue;
     const grossProfit = totalRevenueNet - cogs;
 
     // General Period Expenses (excluding direct order expenses to avoid double counting)
@@ -1530,7 +1724,15 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       totalCollected,
       totalReceivables,
     };
-  }, [invoices, purchaseOrders, expenses, allOrderProfitability, collections, customers]);
+  }, [
+    invoices,
+    purchaseOrders,
+    expenses,
+    allOrderProfitability,
+    collections,
+    customers,
+    storeFinancials,
+  ]);
 
   return (
     <ErpContext.Provider
@@ -1600,6 +1802,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         allOrderProfitability,
         lowStockItems,
         companyFinancials,
+        storeFinancials,
         resetDemoData,
         isHydrated,
       }}

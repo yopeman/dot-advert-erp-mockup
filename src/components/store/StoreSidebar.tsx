@@ -23,6 +23,7 @@ import {
   ShoppingCart,
   Sparkles,
   Trash2,
+  TrendingUp,
   Users,
   Warehouse,
 } from 'lucide-react';
@@ -119,6 +120,7 @@ function StoreSidebarContent() {
   ];
 
   const crossNavItems = [
+    { label: 'Finance & P&L', href: '/finance?tab=stores', icon: TrendingUp },
     { label: 'HR & Workforce Hub', href: '/hr', icon: Users },
     { label: 'Procurement & POs', href: '/dashboard/procurement', icon: ShoppingCart },
     { label: 'Factory Work Orders', href: '/orders', icon: Cog },

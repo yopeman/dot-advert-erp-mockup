@@ -59,9 +59,10 @@ export interface StockMovement {
   unit: UnitOfMeasure;
   unitCost: number;
   totalCost: number;
-  referenceType?: 'PO' | 'WORK_ORDER' | 'INVOICE' | 'ADJUSTMENT' | 'WASTE';
+  referenceType?: 'PO' | 'WORK_ORDER' | 'INVOICE' | 'ADJUSTMENT' | 'WASTE' | 'SUPPLIER_RETURN';
   referenceId?: string;
   referenceNumber?: string;
+  counterparty?: string;
   notes?: string;
   createdBy: string;
 }
@@ -92,6 +93,58 @@ export interface WastageRecord {
   reportedBy: string;
   approvedBy?: string;
   notes?: string;
+}
+
+export interface StoreValuation {
+  storeId: string;
+  storeName: string;
+  storeType: Store['storeType'];
+  skuCount: number;
+  totalUnits: number;
+  totalValue: number;
+}
+
+export interface StoreCategoryValuation {
+  category: ItemType;
+  skuCount: number;
+  totalValue: number;
+}
+
+export interface StoreFinancialPosting {
+  id: string;
+  date: string;
+  movementNumber: string;
+  movementType: MovementType;
+  reference?: string;
+  itemName: string;
+  storeName: string;
+  quantity: number;
+  unit: UnitOfMeasure;
+  value: number;
+  debitAccount: string;
+  creditAccount: string;
+  reconciled: boolean;
+}
+
+export interface StoreFinancials {
+  inventoryValuation: number;
+  productionIssueValue: number;
+  salesIssueValue: number;
+  purchaseReceiptValue: number;
+  wastageValue: number;
+  unallocatedWastageValue: number;
+  adjustmentLossValue: number;
+  adjustmentGainValue: number;
+  supplierReturnValue: number;
+  staffReturnValue: number;
+  transferValue: number;
+  storeValuations: StoreValuation[];
+  categoryValuations: StoreCategoryValuation[];
+  recentPostings: StoreFinancialPosting[];
+  linkedPurchaseReceipts: number;
+  unlinkedPurchaseReceipts: number;
+  linkedPurchaseReceiptValue: number;
+  unlinkedPurchaseReceiptValue: number;
 }
 
 export interface Supplier {

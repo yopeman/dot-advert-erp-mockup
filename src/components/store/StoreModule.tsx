@@ -377,6 +377,7 @@ export default function StoreModule() {
     items,
     stores,
     orders,
+    workOrders,
     suppliers,
     purchaseOrders,
     stockMovements,
@@ -1171,8 +1172,9 @@ export default function StoreModule() {
           movementType: 'purchase_receipt',
           quantity: acceptedQty,
           unitCost,
-          referenceType: 'PO',
+          referenceType: request.referenceNumber ? 'PO' : 'ADJUSTMENT',
           referenceNumber: request.referenceNumber || request.requestNumber,
+          counterparty: request.supplierName,
           notes: `Admin-approved receipt ${request.requestNumber}. Accepted ${acceptedQty} ${item.unit}; rejected ${rejectedQty} ${item.unit}. Put-away bin ${request.binCode || 'unassigned'}. ${request.notes || ''}`,
         });
       }
@@ -1243,8 +1245,9 @@ export default function StoreModule() {
         movementType: 'return',
         quantity: request.quantity,
         unitCost,
-        referenceType: 'ADJUSTMENT',
+        referenceType: 'SUPPLIER_RETURN',
         referenceNumber: request.requestNumber,
+        counterparty: request.supplierName,
         notes: `Admin-approved supplier return ${request.requestNumber}. ${request.notes || ''}`,
       });
       const debitNoteNumber = `DN-2026-${request.requestNumber.split('-').pop()}`;
@@ -1485,8 +1488,8 @@ export default function StoreModule() {
       movementType: 'production_issue',
       quantity: request.quantity,
       unitCost: request.unitCost || item.purchasePrice,
-      referenceType: 'ADJUSTMENT',
-      referenceNumber: request.requestNumber,
+      referenceType: request.referenceNumber ? 'WORK_ORDER' : 'ADJUSTMENT',
+      referenceNumber: request.referenceNumber || request.requestNumber,
       notes: `Staff requisition ${request.requestNumber} issued to ${request.requestedBy} (${request.toStoreName || 'staff pickup'}).`,
     });
     setManuallyIssuedStaffRequestIds((prev) => [...prev, request.id]);
@@ -3897,8 +3900,18 @@ export default function StoreModule() {
                         <option value="">No linked PO</option>
                         {purchaseOrders.map((po) => <option key={po.id} value={po.poNumber}>{po.poNumber} — {po.supplierName}</option>)}
                       </select>
+                    ) : formType === 'material_issue' ? (
+                      <select className="hr-select" value={formReference} onChange={(e) => setFormReference(e.target.value)}>
+                        <option value="">Unallocated issue</option>
+                        {workOrders.map((wo) => <option key={wo.id} value={wo.workOrderNumber}>{wo.workOrderNumber} — {wo.customerName} ({wo.orderNumber})</option>)}
+                      </select>
+                    ) : formType === 'staff_requisition' ? (
+                      <select className="hr-select" value={formReference} onChange={(e) => setFormReference(e.target.value)}>
+                        <option value="">General requisition (no job)</option>
+                        {orders.map((order) => <option key={order.id} value={order.orderNumber}>{order.orderNumber} — {order.customerName}</option>)}
+                      </select>
                     ) : (
-                      <input className="hr-input" placeholder={formType === 'staff_requisition' ? 'e.g. Awash Bank install — needed by 3 PM' : 'Enter reference…'} value={formReference} onChange={(e) => setFormReference(e.target.value)} />
+                      <input className="hr-input" placeholder="Enter reference…" value={formReference} onChange={(e) => setFormReference(e.target.value)} />
                     )}
                   </div>
                   <div>
