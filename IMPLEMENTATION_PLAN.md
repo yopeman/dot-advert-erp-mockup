@@ -232,9 +232,9 @@ erDiagram
 - [ ] Enhance `/sales` to support Proforma generation, PDF preview, and conversion to Tax Invoice.
 
 ### Phase 3: Order Engine — Design Proofing & Production
-- [ ] Add Design stage (`Drafting`, `Proofing`, `Approved`) to customer order workflow in `/orders`.
-- [ ] Add design file mockup viewer and artwork approval checklist.
-- [ ] Work Order BOM simulator with real-time labor, material, machine, and scrap rollup.
+- [x] Add Design stages (`Drafting`, `Client Proofing`, `Revision Requested`, `Approved`) in `/dashboard/orders`.
+- [x] Add visual mockup viewer, technical fabrication parameters, and client revision audit trail.
+- [x] Multi-Item Work Order BOM engine with machine routing, QC sign-off, runtime hour logging, and scrap/wastage tracking.
 
 ### Phase 4: HR Attendance, Overtime & Labor Allocation
 - [ ] Enhance `/payroll` with dedicated Attendance & Overtime tabs.

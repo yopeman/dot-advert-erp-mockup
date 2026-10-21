@@ -13,25 +13,24 @@ import {
   Receipt,
   Wallet,
   Users,
-  UserCheck,
   PieChart,
   TrendingUp,
+  BarChart3,
 } from 'lucide-react';
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { lowStockItems, invoices, orders, leads } = useErp();
+  const { lowStockItems, invoices, orders } = useErp();
 
   const unpaidInvoices = invoices.filter((i) => i.paymentStatus !== 'paid');
   const activeOrders = orders.filter((o) => o.status === 'in_production' || o.status === 'pending');
-  const activeLeads = leads.filter((l) => l.stage !== 'lost' && l.stage !== 'won');
 
   const isHr = pathname?.startsWith('/hr') || pathname?.startsWith('/inventory');
 
   const navItems = [
     {
       label: 'Executive Overview',
-      href: '/',
+      href: '/dashboard',
       icon: LayoutDashboard,
     },
     {
@@ -43,28 +42,21 @@ export default function Sidebar() {
     },
     {
       label: 'Modules & Forms Hub',
-      href: '/modules',
+      href: '/',
       icon: LayoutGrid,
-      badge: '24 Hub',
+      badge: '8 Modules',
       badgeType: 'emerald',
     },
     {
-      label: 'CRM & Leads',
-      href: '/crm',
-      icon: UserCheck,
-      badge: activeLeads.length > 0 ? `${activeLeads.length} Leads` : undefined,
-      badgeType: 'primary',
-    },
-    {
       label: 'Inventory & Stores',
-      href: '/inventory',
+      href: '/dashboard/inventory',
       icon: Boxes,
       badge: lowStockItems.length > 0 ? `${lowStockItems.length} Low` : undefined,
       badgeType: 'amber',
     },
     {
       label: 'Procurement & POs',
-      href: '/procurement',
+      href: '/dashboard/procurement',
       icon: ShoppingCart,
     },
     {
@@ -83,7 +75,7 @@ export default function Sidebar() {
     },
     {
       label: 'Collections & Credit',
-      href: '/collections',
+      href: '/dashboard/collections',
       icon: Wallet,
     },
     {
@@ -95,13 +87,20 @@ export default function Sidebar() {
     },
     {
       label: 'Expenses & Overhead',
-      href: '/expenses',
+      href: '/dashboard/expenses',
       icon: PieChart,
     },
     {
       label: 'Finance & Profitability',
       href: '/finance',
       icon: TrendingUp,
+    },
+    {
+      label: 'Reports & Analytics',
+      href: '/report',
+      icon: BarChart3,
+      badge: 'BI Hub',
+      badgeType: 'cyan',
     },
   ];
 
@@ -185,10 +184,15 @@ export default function Sidebar() {
               item.href.includes('?') && typeof window !== 'undefined'
                 ? pathname + window.location.search === item.href
                 : false;
-            const isActive =
-              isTabMatch ||
-              (!item.href.includes('?') && pathname === item.href) ||
-              (item.href === '/modules' && (pathname === '/modules' || pathname === '/forms'));
+            const hasQuery = typeof window !== 'undefined' && Boolean(window.location.search);
+            const isPathActive = !item.href.includes('?') && (
+              item.href === '/'
+                ? (pathname === '/' || pathname === '/modules' || pathname === '/forms')
+                : (item.href === '/hr' && hasQuery)
+                ? false
+                : (pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href + '/')))
+            );
+            const isActive = isTabMatch || isPathActive;
 
             return (
               <Link

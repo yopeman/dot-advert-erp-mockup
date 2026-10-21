@@ -182,15 +182,22 @@ export type SignageType =
   | 'other';
 
 export interface SiteSurvey {
+  id: string;
+  title: string; // e.g. "Main Facade 3D Acrylic Lettering", "Rooftop Sky Sign", "Driveway Pylon"
+  signageType?: SignageType;
   locationAddress: string;
   widthMeters: number;
   heightMeters: number;
-  installationHeightMeters: number;
+  depthMeters?: number; // 3D letter or box depth in meters (e.g. 0.15 = 15cm)
+  installationHeightMeters: number; // ground clearance / elevation in meters
   powerSourceAvailable: boolean;
   indoorOutdoor: 'indoor' | 'outdoor';
   surveyDate?: string;
   surveyorName?: string;
   notes?: string;
+  status?: 'scheduled' | 'completed' | 'verified';
+  leadId?: string;
+  customerId?: string;
 }
 
 export interface Lead {
@@ -210,9 +217,15 @@ export interface Lead {
   probabilityPercent: number; // 10 - 100%
   expectedCloseDate: string;
   assignedTo: string;
+  siteSurveys?: SiteSurvey[];
+  /** @deprecated backwards compatibility for single survey */
   siteSurvey?: SiteSurvey;
   notes?: string;
   convertedCustomerId?: string;
+  lostReason?: string;
+  lostNotes?: string;
+  lostDate?: string;
+  competitorName?: string;
 }
 
 export interface Customer {
@@ -228,6 +241,8 @@ export interface Customer {
   outstandingBalance: number;
   paymentTerms: string;
   isVatRegistered: boolean;
+  contactPerson?: string;
+  siteSurveys?: SiteSurvey[];
 }
 
 export type OrderStatus = 'pending' | 'in_production' | 'delivered' | 'invoiced' | 'paid' | 'cancelled';
@@ -254,6 +269,48 @@ export interface CustomerOrder {
   status: OrderStatus;
   priority: 'low' | 'normal' | 'high' | 'urgent';
   notes?: string;
+  designProofId?: string;
+}
+
+export type DesignStatus =
+  | 'drafting'
+  | 'client_proofing'
+  | 'revision_requested'
+  | 'approved'
+  | 'rejected';
+
+export interface DesignRevision {
+  id: string;
+  versionNumber: number; // e.g. 1, 2, 3
+  date: string;
+  notes: string;
+  authorName: string;
+  status: DesignStatus;
+}
+
+export interface DesignProof {
+  id: string;
+  designNumber: string; // e.g. "DSG-2026-081"
+  customerOrderId: string;
+  orderNumber: string;
+  customerName: string;
+  title: string;
+  designerName: string;
+  status: DesignStatus;
+  widthMeters: number;
+  heightMeters: number;
+  depthCm?: number;
+  resolutionDpi: number; // e.g. 300 DPI
+  colorProfile: 'CMYK' | 'Pantone' | 'RGB';
+  materialSpec: string; // e.g. "3mm Cast Acrylic + 3M High-Tack Vinyl"
+  mockupUrl?: string; // Preview artwork thumbnail/graphic url or badge
+  clientContactPerson?: string;
+  clientFeedback?: string;
+  approvedDate?: string;
+  approvedBy?: string;
+  revisionCount: number;
+  revisions: DesignRevision[];
+  createdDate: string;
 }
 
 export interface WorkOrderBomItem {
@@ -278,12 +335,17 @@ export interface WorkOrder {
   scrapQty: number;
   startDate: string;
   endDate?: string;
-  status: 'scheduled' | 'in_progress' | 'completed' | 'on_hold';
+  status: 'scheduled' | 'in_progress' | 'quality_inspection' | 'completed' | 'on_hold';
   workCenterMachine: string;
   operatorNames: string[];
   machineHours: number;
   machineHourlyRate: number; // e.g., 650 ETB/hr
   bomItems: WorkOrderBomItem[];
+  designProofId?: string;
+  designNumber?: string;
+  qualityInspectionNotes?: string;
+  qualityInspector?: string;
+  targetWorkCenters?: string[];
 }
 
 export type InvoiceType = 'vat_15' | 'non_vat_exempt';
@@ -320,6 +382,29 @@ export interface Invoice {
   paymentStatus: InvoicePaymentStatus;
   paidAmount: number;
   balanceDue: number;
+  notes?: string;
+}
+
+export type ProformaStatus = 'draft' | 'sent' | 'accepted' | 'converted';
+
+export interface ProformaInvoice {
+  id: string;
+  proformaNumber: string;
+  date: string;
+  validUntil: string;
+  customerOrderId?: string;
+  orderNumber?: string;
+  customerId: string;
+  customerName: string;
+  customerTin: string;
+  customerAddress: string;
+  invoiceType: InvoiceType;
+  items: InvoiceItem[];
+  subtotalNet: number;
+  vatAmount: number;
+  grandTotal: number;
+  status: ProformaStatus;
+  convertedInvoiceId?: string;
   notes?: string;
 }
 
@@ -545,7 +630,10 @@ export type ExpenseCategory =
   | 'admin_salaries'
   | 'security'
   | 'office_supplies'
-  | 'order_direct_supplies';
+  | 'order_direct_supplies'
+  | 'crane_scaffolding_rental'
+  | 'installation_per_diem'
+  | 'permits_licensing';
 
 export interface Expense {
   id: string;
@@ -578,6 +666,7 @@ export interface OrderProfitability {
   machineCost: number;
   packagingCost: number;
   orderTransportCost: number;
+  orderDirectExpensesCost?: number;
   allocatedOverheadCost: number;
   wastageCost: number;
   totalOrderCost: number;

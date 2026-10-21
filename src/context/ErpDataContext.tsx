@@ -22,6 +22,14 @@ import {
   PaymentMethod,
   OrderStatus,
   Lead,
+  LeadStage,
+  SiteSurvey,
+  DesignProof,
+  DesignRevision,
+  DesignStatus,
+  WorkOrderBomItem,
+  ProformaInvoice,
+  ProformaStatus,
 } from '@/types/erp';
 import {
   INITIAL_ITEMS,
@@ -31,7 +39,9 @@ import {
   INITIAL_CUSTOMERS,
   INITIAL_ORDERS,
   INITIAL_WORK_ORDERS,
+  INITIAL_DESIGN_PROOFS,
   INITIAL_INVOICES,
+  INITIAL_PROFORMAS,
   INITIAL_COLLECTIONS,
   INITIAL_EMPLOYEES,
   INITIAL_EXPENSES,
@@ -51,7 +61,9 @@ interface ErpContextType {
   customers: Customer[];
   orders: CustomerOrder[];
   workOrders: WorkOrder[];
+  designProofs: DesignProof[];
   invoices: Invoice[];
+  proformas: ProformaInvoice[];
   collections: Collection[];
   employees: Employee[];
   expenses: Expense[];
@@ -88,17 +100,43 @@ interface ErpContextType {
   // CRM & Customer Actions
   createLead: (lead: Omit<Lead, 'id' | 'leadNumber' | 'date'>) => Lead;
   updateLead: (leadId: string, updates: Partial<Lead>) => void;
+  markLeadAsLost: (leadId: string, lostData: { reason: string; notes?: string; competitorName?: string; date?: string }) => void;
+  reopenLead: (leadId: string, targetStage?: LeadStage) => void;
   createCustomer: (customer: Omit<Customer, 'id' | 'code' | 'outstandingBalance'>) => Customer;
   updateCustomer: (customerId: string, updates: Partial<Customer>) => void;
   convertLeadToCustomer: (leadId: string, customerData?: Partial<Customer>) => Customer;
+
+  // Site Survey & Measurement Actions (Multiple per Lead/Customer)
+  addSiteSurveyToLead: (leadId: string, survey: Omit<SiteSurvey, 'id'>) => SiteSurvey;
+  updateLeadSiteSurvey: (leadId: string, surveyId: string, updates: Partial<SiteSurvey>) => void;
+  deleteLeadSiteSurvey: (leadId: string, surveyId: string) => void;
+  addSiteSurveyToCustomer: (customerId: string, survey: Omit<SiteSurvey, 'id'>) => SiteSurvey;
+  updateCustomerSiteSurvey: (customerId: string, surveyId: string, updates: Partial<SiteSurvey>) => void;
+  deleteCustomerSiteSurvey: (customerId: string, surveyId: string) => void;
 
   createPurchaseOrder: (po: Omit<PurchaseOrder, 'id' | 'poNumber' | 'date' | 'status'>) => void;
   receivePurchaseOrder: (poId: string, storeId: string) => void;
   createCustomerOrder: (order: Omit<CustomerOrder, 'id' | 'orderNumber' | 'date' | 'status'>) => CustomerOrder;
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
+
+  // Graphic Design & Artwork Proof Actions
+  createDesignProof: (proof: Omit<DesignProof, 'id' | 'designNumber' | 'createdDate' | 'revisions' | 'revisionCount'>) => DesignProof;
+  updateDesignProof: (designId: string, updates: Partial<DesignProof>) => void;
+  addDesignRevision: (designId: string, revision: { notes: string; authorName: string; status: DesignStatus }) => void;
+  approveDesignProof: (designId: string, approverName: string, notes?: string) => void;
+  requestDesignRevision: (designId: string, feedbackNotes: string) => void;
+
+  // Work Orders & Production BOM Actions
   createWorkOrder: (wo: Omit<WorkOrder, 'id' | 'workOrderNumber' | 'status' | 'actualGoodQty' | 'scrapQty'>) => void;
   updateWorkOrder: (woId: string, updates: Partial<WorkOrder>) => void;
+  advanceWorkOrderStatus: (woId: string, status: WorkOrder['status']) => void;
+  recordWorkOrderScrap: (woId: string, scrapData: { itemId: string; quantity: number; reason: WastageReason; notes?: string }) => void;
+  addBomItemToWorkOrder: (woId: string, item: Omit<WorkOrderBomItem, 'totalCost'>) => void;
+
   createInvoice: (inv: Omit<Invoice, 'id' | 'invoiceNumber' | 'date' | 'paidAmount' | 'balanceDue' | 'paymentStatus'>) => Invoice;
+  createProforma: (proforma: Omit<ProformaInvoice, 'id' | 'proformaNumber' | 'date' | 'status'>) => ProformaInvoice;
+  updateProformaStatus: (proformaId: string, status: ProformaStatus) => void;
+  convertProformaToInvoice: (proformaId: string) => Invoice | null;
   recordCollection: (params: {
     invoiceId: string;
     amountReceived: number;
@@ -147,7 +185,9 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
   const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
   const [orders, setOrders] = useState<CustomerOrder[]>(INITIAL_ORDERS);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>(INITIAL_WORK_ORDERS);
+  const [designProofs, setDesignProofs] = useState<DesignProof[]>(INITIAL_DESIGN_PROOFS);
   const [invoices, setInvoices] = useState<Invoice[]>(INITIAL_INVOICES);
+  const [proformas, setProformas] = useState<ProformaInvoice[]>(INITIAL_PROFORMAS);
   const [collections, setCollections] = useState<Collection[]>(INITIAL_COLLECTIONS);
   const [employees, setEmployees] = useState<Employee[]>(INITIAL_EMPLOYEES);
   const [expenses, setExpenses] = useState<Expense[]>(INITIAL_EXPENSES);
@@ -167,11 +207,40 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       setItems(getStored('items', INITIAL_ITEMS));
       setStores(getStored('stores', INITIAL_STORES));
       setSuppliers(getStored('suppliers', INITIAL_SUPPLIERS));
-      setLeads(getStored('leads', INITIAL_LEADS));
-      setCustomers(getStored('customers', INITIAL_CUSTOMERS));
+
+      const loadedLeads: Lead[] = getStored('leads', INITIAL_LEADS);
+      const normalizedLeads = loadedLeads.map((l) => {
+        if ((!l.siteSurveys || l.siteSurveys.length === 0) && l.siteSurvey) {
+          const s = l.siteSurvey;
+          return {
+            ...l,
+            siteSurveys: [
+              {
+                ...s,
+                id: s.id || `srv-${l.id}-1`,
+                title: s.title || `${l.companyName} Primary Signage`,
+                leadId: l.id,
+              },
+            ],
+          };
+        }
+        return l;
+      });
+      setLeads(normalizedLeads);
+
+      const loadedCustomers: Customer[] = getStored('customers', INITIAL_CUSTOMERS);
+      const normalizedCustomers = loadedCustomers.map((c) => {
+        if (!c.siteSurveys) {
+          return { ...c, siteSurveys: [] };
+        }
+        return c;
+      });
+      setCustomers(normalizedCustomers);
       setOrders(getStored('orders', INITIAL_ORDERS));
       setWorkOrders(getStored('workOrders', INITIAL_WORK_ORDERS));
+      setDesignProofs(getStored('designProofs', INITIAL_DESIGN_PROOFS));
       setInvoices(getStored('invoices', INITIAL_INVOICES));
+      setProformas(getStored('proformas', INITIAL_PROFORMAS));
       setCollections(getStored('collections', INITIAL_COLLECTIONS));
       setEmployees(getStored('employees', INITIAL_EMPLOYEES));
       setExpenses(getStored('expenses', INITIAL_EXPENSES));
@@ -229,8 +298,18 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isHydrated) return;
+    save('designProofs', designProofs);
+  }, [designProofs, isHydrated, save]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
     save('invoices', invoices);
   }, [invoices, isHydrated, save]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    save('proformas', proformas);
+  }, [proformas, isHydrated, save]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -272,7 +351,9 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     setCustomers(INITIAL_CUSTOMERS);
     setOrders(INITIAL_ORDERS);
     setWorkOrders(INITIAL_WORK_ORDERS);
+    setDesignProofs(INITIAL_DESIGN_PROOFS);
     setInvoices(INITIAL_INVOICES);
+    setProformas(INITIAL_PROFORMAS);
     setCollections(INITIAL_COLLECTIONS);
     setEmployees(INITIAL_EMPLOYEES);
     setExpenses(INITIAL_EXPENSES);
@@ -508,6 +589,50 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  // CRM: Mark Lead as Closed / Lost
+  const markLeadAsLost = useCallback(
+    (
+      leadId: string,
+      lostData: { reason: string; notes?: string; competitorName?: string; date?: string }
+    ) => {
+      setLeads((prev) =>
+        prev.map((lead) =>
+          lead.id === leadId
+            ? {
+                ...lead,
+                stage: 'lost',
+                probabilityPercent: 0,
+                lostReason: lostData.reason,
+                lostNotes: lostData.notes,
+                competitorName: lostData.competitorName,
+                lostDate: lostData.date || new Date().toISOString().split('T')[0],
+              }
+            : lead
+        )
+      );
+    },
+    []
+  );
+
+  // CRM: Reopen Lost Lead
+  const reopenLead = useCallback(
+    (leadId: string, targetStage?: LeadStage) => {
+      setLeads((prev) =>
+        prev.map((lead) =>
+          lead.id === leadId
+            ? {
+                ...lead,
+                stage: targetStage || 'negotiation',
+                probabilityPercent: 50,
+                lostDate: undefined,
+              }
+            : lead
+        )
+      );
+    },
+    []
+  );
+
   // CRM: Create Customer
   const createCustomer = useCallback(
     (custData: Omit<Customer, 'id' | 'code' | 'outstandingBalance'>): Customer => {
@@ -541,12 +666,33 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       if (!targetLead) throw new Error('Lead not found');
 
       const cleanCode = targetLead.companyName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase();
+      const newCustId = `cust-${Date.now()}`;
+
+      const leadSurveys = (targetLead.siteSurveys && targetLead.siteSurveys.length > 0)
+        ? targetLead.siteSurveys
+        : targetLead.siteSurvey
+        ? [{
+            ...targetLead.siteSurvey,
+            id: targetLead.siteSurvey.id || `srv-${newCustId}-1`,
+            title: targetLead.siteSurvey.title || `${targetLead.companyName} Primary Signage`,
+          }]
+        : [];
+
+      const customerSurveys: SiteSurvey[] = leadSurveys.map((s, idx) => ({
+        ...s,
+        id: s.id || `srv-${newCustId}-${idx + 1}`,
+        customerId: newCustId,
+        leadId: targetLead.id,
+      }));
+
+      const primaryAddress = customerSurveys[0]?.locationAddress || targetLead.siteSurvey?.locationAddress || `${targetLead.city}, Ethiopia`;
+
       const newCustomer: Customer = {
-        id: `cust-${Date.now()}`,
+        id: newCustId,
         code: `CUST-${cleanCode || 'NEW'}`,
         name: targetLead.companyName,
         tin: targetLead.tin || '0000000000',
-        address: targetLead.siteSurvey?.locationAddress || `${targetLead.city}, Ethiopia`,
+        address: primaryAddress,
         phone: targetLead.phone,
         email: targetLead.email || `info@${cleanCode.toLowerCase() || 'client'}.com`,
         customerType: 'business',
@@ -554,6 +700,8 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         outstandingBalance: 0,
         paymentTerms: '30 Days Net',
         isVatRegistered: true,
+        contactPerson: targetLead.contactPerson,
+        siteSurveys: customerSurveys,
         ...customerData,
       };
 
@@ -567,6 +715,121 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       return newCustomer;
     },
     [leads]
+  );
+
+  // CRM: Site Survey Mutators for Leads
+  const addSiteSurveyToLead = useCallback(
+    (leadId: string, surveyData: Omit<SiteSurvey, 'id'>): SiteSurvey => {
+      const newSurvey: SiteSurvey = {
+        ...surveyData,
+        id: `srv-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        leadId,
+      };
+      setLeads((prev) =>
+        prev.map((lead) => {
+          if (lead.id !== leadId) return lead;
+          const currentSurveys = lead.siteSurveys || (lead.siteSurvey ? [lead.siteSurvey] : []);
+          return {
+            ...lead,
+            siteSurveys: [...currentSurveys, newSurvey],
+            siteSurvey: currentSurveys.length === 0 ? newSurvey : lead.siteSurvey,
+          };
+        })
+      );
+      return newSurvey;
+    },
+    []
+  );
+
+  const updateLeadSiteSurvey = useCallback(
+    (leadId: string, surveyId: string, updates: Partial<SiteSurvey>) => {
+      setLeads((prev) =>
+        prev.map((lead) => {
+          if (lead.id !== leadId) return lead;
+          const currentSurveys = lead.siteSurveys || (lead.siteSurvey ? [lead.siteSurvey] : []);
+          const updated = currentSurveys.map((s) => (s.id === surveyId ? { ...s, ...updates } : s));
+          return {
+            ...lead,
+            siteSurveys: updated,
+            siteSurvey: updated[0] || undefined,
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const deleteLeadSiteSurvey = useCallback(
+    (leadId: string, surveyId: string) => {
+      setLeads((prev) =>
+        prev.map((lead) => {
+          if (lead.id !== leadId) return lead;
+          const currentSurveys = lead.siteSurveys || (lead.siteSurvey ? [lead.siteSurvey] : []);
+          const remaining = currentSurveys.filter((s) => s.id !== surveyId);
+          return {
+            ...lead,
+            siteSurveys: remaining,
+            siteSurvey: remaining[0] || undefined,
+          };
+        })
+      );
+    },
+    []
+  );
+
+  // CRM: Site Survey Mutators for Customers
+  const addSiteSurveyToCustomer = useCallback(
+    (customerId: string, surveyData: Omit<SiteSurvey, 'id'>): SiteSurvey => {
+      const newSurvey: SiteSurvey = {
+        ...surveyData,
+        id: `srv-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        customerId,
+      };
+      setCustomers((prev) =>
+        prev.map((cust) => {
+          if (cust.id !== customerId) return cust;
+          const current = cust.siteSurveys || [];
+          return {
+            ...cust,
+            siteSurveys: [...current, newSurvey],
+          };
+        })
+      );
+      return newSurvey;
+    },
+    []
+  );
+
+  const updateCustomerSiteSurvey = useCallback(
+    (customerId: string, surveyId: string, updates: Partial<SiteSurvey>) => {
+      setCustomers((prev) =>
+        prev.map((cust) => {
+          if (cust.id !== customerId) return cust;
+          const current = cust.siteSurveys || [];
+          return {
+            ...cust,
+            siteSurveys: current.map((s) => (s.id === surveyId ? { ...s, ...updates } : s)),
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const deleteCustomerSiteSurvey = useCallback(
+    (customerId: string, surveyId: string) => {
+      setCustomers((prev) =>
+        prev.map((cust) => {
+          if (cust.id !== customerId) return cust;
+          const current = cust.siteSurveys || [];
+          return {
+            ...cust,
+            siteSurveys: current.filter((s) => s.id !== surveyId),
+          };
+        })
+      );
+    },
+    []
   );
 
   // MUTATOR: Create Customer Order
@@ -590,6 +853,130 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status } : o)));
   }, []);
 
+  // MUTATOR: Graphic Design & Proofing Engine
+  const createDesignProof = useCallback(
+    (
+      proofData: Omit<DesignProof, 'id' | 'designNumber' | 'createdDate' | 'revisions' | 'revisionCount'>
+    ): DesignProof => {
+      const newProof: DesignProof = {
+        ...proofData,
+        id: `des-${Date.now()}`,
+        designNumber: `DSG-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+        createdDate: new Date().toISOString().split('T')[0],
+        revisionCount: 1,
+        revisions: [
+          {
+            id: `rev-${Date.now()}-1`,
+            versionNumber: 1,
+            date: new Date().toISOString().split('T')[0],
+            notes: 'Initial artwork & vector proof generated for client review.',
+            authorName: proofData.designerName,
+            status: proofData.status,
+          },
+        ],
+      };
+      setDesignProofs((prev) => [newProof, ...prev]);
+      if (proofData.customerOrderId) {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === proofData.customerOrderId ? { ...o, designProofId: newProof.id } : o))
+        );
+      }
+      return newProof;
+    },
+    []
+  );
+
+  const updateDesignProof = useCallback((designId: string, updates: Partial<DesignProof>) => {
+    setDesignProofs((prev) =>
+      prev.map((d) => (d.id === designId ? { ...d, ...updates } : d))
+    );
+  }, []);
+
+  const addDesignRevision = useCallback(
+    (
+      designId: string,
+      revision: { notes: string; authorName: string; status: DesignStatus }
+    ) => {
+      setDesignProofs((prev) =>
+        prev.map((d) => {
+          if (d.id !== designId) return d;
+          const nextVer = d.revisionCount + 1;
+          const newRev: DesignRevision = {
+            id: `rev-${Date.now()}-${nextVer}`,
+            versionNumber: nextVer,
+            date: new Date().toISOString().split('T')[0],
+            notes: revision.notes,
+            authorName: revision.authorName,
+            status: revision.status,
+          };
+          return {
+            ...d,
+            status: revision.status,
+            revisionCount: nextVer,
+            revisions: [newRev, ...d.revisions],
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const approveDesignProof = useCallback(
+    (designId: string, approverName: string, notes?: string) => {
+      setDesignProofs((prev) =>
+        prev.map((d) => {
+          if (d.id !== designId) return d;
+          const nextVer = d.revisionCount + 1;
+          const approvalRev: DesignRevision = {
+            id: `rev-${Date.now()}-${nextVer}`,
+            versionNumber: nextVer,
+            date: new Date().toISOString().split('T')[0],
+            notes: notes || 'Artwork & dimensions officially approved by client. Ready for print & fabrication.',
+            authorName: approverName,
+            status: 'approved',
+          };
+          return {
+            ...d,
+            status: 'approved',
+            approvedDate: new Date().toISOString().split('T')[0],
+            approvedBy: approverName,
+            clientFeedback: notes || d.clientFeedback,
+            revisionCount: nextVer,
+            revisions: [approvalRev, ...d.revisions],
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const requestDesignRevision = useCallback(
+    (designId: string, feedbackNotes: string) => {
+      setDesignProofs((prev) =>
+        prev.map((d) => {
+          if (d.id !== designId) return d;
+          const nextVer = d.revisionCount + 1;
+          const revRecord: DesignRevision = {
+            id: `rev-${Date.now()}-${nextVer}`,
+            versionNumber: nextVer,
+            date: new Date().toISOString().split('T')[0],
+            notes: feedbackNotes,
+            authorName: 'Client Revision Request',
+            status: 'revision_requested',
+          };
+          return {
+            ...d,
+            status: 'revision_requested',
+            clientFeedback: feedbackNotes,
+            revisionCount: nextVer,
+            revisions: [revRecord, ...d.revisions],
+          };
+        })
+      );
+    },
+    []
+  );
+
   // MUTATOR: Work Orders
   const createWorkOrder = useCallback(
     (woData: Omit<WorkOrder, 'id' | 'workOrderNumber' | 'status' | 'actualGoodQty' | 'scrapQty'>) => {
@@ -610,6 +997,77 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
   const updateWorkOrder = useCallback((woId: string, updates: Partial<WorkOrder>) => {
     setWorkOrders((prev) => prev.map((w) => (w.id === woId ? { ...w, ...updates } : w)));
   }, []);
+
+  const advanceWorkOrderStatus = useCallback(
+    (woId: string, nextStatus: WorkOrder['status']) => {
+      setWorkOrders((prev) =>
+        prev.map((wo) => {
+          if (wo.id !== woId) return wo;
+          const isDone = nextStatus === 'completed';
+          return {
+            ...wo,
+            status: nextStatus,
+            endDate: isDone ? new Date().toISOString().split('T')[0] : wo.endDate,
+            actualGoodQty: isDone && wo.actualGoodQty === 0 ? wo.plannedQty : wo.actualGoodQty,
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const recordWorkOrderScrap = useCallback(
+    (
+      woId: string,
+      scrapData: {
+        itemId: string;
+        quantity: number;
+        reason: WastageReason;
+        notes?: string;
+      }
+    ) => {
+      const wo = workOrders.find((w) => w.id === woId);
+      if (!wo) return;
+
+      // 1. Update WO scrap count
+      setWorkOrders((prev) =>
+        prev.map((w) =>
+          w.id === woId ? { ...w, scrapQty: w.scrapQty + scrapData.quantity } : w
+        )
+      );
+
+      // 2. Record wastage to ERP wastage log
+      recordWastage({
+        itemId: scrapData.itemId,
+        quantity: scrapData.quantity,
+        storeId: 'store-2', // Production floor
+        reason: scrapData.reason,
+        orderId: wo.customerOrderId,
+        notes: `Work Order ${wo.workOrderNumber}: ${scrapData.notes || 'Production scrap/wastage'}`,
+      });
+    },
+    [workOrders, recordWastage]
+  );
+
+  const addBomItemToWorkOrder = useCallback(
+    (woId: string, itemData: Omit<WorkOrderBomItem, 'totalCost'>) => {
+      setWorkOrders((prev) =>
+        prev.map((wo) => {
+          if (wo.id !== woId) return wo;
+          const totalCost = (itemData.actualIssuedQty || itemData.plannedQty) * itemData.unitCost;
+          const newItem: WorkOrderBomItem = {
+            ...itemData,
+            totalCost,
+          };
+          return {
+            ...wo,
+            bomItems: [...wo.bomItems, newItem],
+          };
+        })
+      );
+    },
+    []
+  );
 
   // MUTATOR: Create Invoice (with VAT or Non-VAT)
   const createInvoice = useCallback(
@@ -639,6 +1097,64 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       return newInvoice;
     },
     [updateOrderStatus]
+  );
+
+  // MUTATOR: Create Proforma
+  const createProforma = useCallback(
+    (data: Omit<ProformaInvoice, 'id' | 'proformaNumber' | 'date' | 'status'>) => {
+      const newProforma: ProformaInvoice = {
+        ...data,
+        id: `prof-${Date.now()}`,
+        proformaNumber: `PROF-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+        date: new Date().toISOString().split('T')[0],
+        status: 'sent',
+      };
+      setProformas((prev) => [newProforma, ...prev]);
+      return newProforma;
+    },
+    []
+  );
+
+  // MUTATOR: Update Proforma Status
+  const updateProformaStatus = useCallback((proformaId: string, status: ProformaStatus) => {
+    setProformas((prev) =>
+      prev.map((p) => (p.id === proformaId ? { ...p, status } : p))
+    );
+  }, []);
+
+  // MUTATOR: Convert Proforma to Official Tax Invoice
+  const convertProformaToInvoice = useCallback(
+    (proformaId: string) => {
+      const prof = proformas.find((p) => p.id === proformaId);
+      if (!prof) return null;
+
+      const newInv = createInvoice({
+        customerOrderId: prof.customerOrderId || `ord-ref-${Date.now()}`,
+        orderNumber: prof.orderNumber || `ORD-REF-${prof.proformaNumber}`,
+        customerId: prof.customerId,
+        customerName: prof.customerName,
+        customerTin: prof.customerTin,
+        customerAddress: prof.customerAddress,
+        invoiceType: prof.invoiceType,
+        dueDate: prof.validUntil || new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
+        items: prof.items,
+        subtotalNet: prof.subtotalNet,
+        vatAmount: prof.vatAmount,
+        grandTotal: prof.grandTotal,
+        notes: `Converted from Proforma ${prof.proformaNumber}. ${prof.notes || ''}`.trim(),
+      });
+
+      setProformas((prev) =>
+        prev.map((p) =>
+          p.id === proformaId
+            ? { ...p, status: 'converted', convertedInvoiceId: newInv.id }
+            : p
+        )
+      );
+
+      return newInv;
+    },
+    [proformas, createInvoice]
   );
 
   // MUTATOR: Record Collection (Telebirr, Chapa, CBE, Cash)
@@ -776,11 +1292,10 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         directLaborCost += wo.machineHours * 120 * numOps;
       });
 
-      // 3. Order-specific transport & site installation expenses
+      // 3. Order-specific direct expenses (transport, crane rental, permits, site installation, etc.)
       const linkedExpenses = expenses.filter((e) => e.orderId === orderId);
-      const orderTransportCost = linkedExpenses
-        .filter((e) => e.category === 'delivery_transport')
-        .reduce((sum, e) => sum + e.amountNet, 0);
+      const orderDirectExpensesCost = linkedExpenses.reduce((sum, e) => sum + e.amountNet, 0);
+      const orderTransportCost = orderDirectExpensesCost; // Kept for backwards compatibility
 
       // 4. Wastage cost attributed to this order
       const linkedWastage = wastages.filter((w) => w.orderId === orderId);
@@ -797,12 +1312,12 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         directLaborCost +
         machineCost +
         packagingCost +
-        orderTransportCost +
+        orderDirectExpensesCost +
         allocatedOverheadCost +
         wastageCost;
 
       // Profit calculations
-      const variableCosts = directMaterialCost + directLaborCost + machineCost + wastageCost;
+      const variableCosts = directMaterialCost + directLaborCost + machineCost + wastageCost + orderDirectExpensesCost;
       const grossProfit = orderRevenue - variableCosts;
       const orderProfit = orderRevenue - totalOrderCost;
       const profitMarginPct = orderRevenue > 0 ? (orderProfit / orderRevenue) * 100 : 0;
@@ -818,6 +1333,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         machineCost,
         packagingCost,
         orderTransportCost,
+        orderDirectExpensesCost,
         allocatedOverheadCost,
         wastageCost,
         totalOrderCost,
@@ -904,6 +1420,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         customers,
         orders,
         workOrders,
+        designProofs,
         invoices,
         collections,
         employees,
@@ -915,18 +1432,38 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         setCurrentRole,
         createLead,
         updateLead,
+        markLeadAsLost,
+        reopenLead,
         createCustomer,
         updateCustomer,
         convertLeadToCustomer,
+        addSiteSurveyToLead,
+        updateLeadSiteSurvey,
+        deleteLeadSiteSurvey,
+        addSiteSurveyToCustomer,
+        updateCustomerSiteSurvey,
+        deleteCustomerSiteSurvey,
         addStockMovement,
         recordWastage,
         createPurchaseOrder,
         receivePurchaseOrder,
         createCustomerOrder,
         updateOrderStatus,
+        createDesignProof,
+        updateDesignProof,
+        addDesignRevision,
+        approveDesignProof,
+        requestDesignRevision,
         createWorkOrder,
         updateWorkOrder,
+        advanceWorkOrderStatus,
+        recordWorkOrderScrap,
+        addBomItemToWorkOrder,
         createInvoice,
+        proformas,
+        createProforma,
+        updateProformaStatus,
+        convertProformaToInvoice,
         recordCollection,
         recordExpense,
         addEmployee,
