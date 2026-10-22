@@ -135,15 +135,6 @@ export default function OdooLightAppLauncherPage() {
         gradient: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)',
         shadowColor: 'rgba(99, 102, 241, 0.42)',
       },
-      {
-        id: 'dashboard',
-        name: 'Dashboard',
-        category: 'management',
-        icon: LayoutDashboard,
-        href: '/dashboard',
-        gradient: 'linear-gradient(135deg, #ec4899 0%, #be123c 100%)',
-        shadowColor: 'rgba(236, 72, 153, 0.42)',
-      },
     ],
     [
       lowStockItems.length,

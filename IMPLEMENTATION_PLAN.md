@@ -232,7 +232,7 @@ erDiagram
 - [ ] Enhance `/sales` to support Proforma generation, PDF preview, and conversion to Tax Invoice.
 
 ### Phase 3: Order Engine — Design Proofing & Production
-- [x] Add Design stages (`Drafting`, `Client Proofing`, `Revision Requested`, `Approved`) in `/dashboard/orders`.
+- [x] Add Design stages (`Drafting`, `Client Proofing`, `Revision Requested`, `Approved`) in `/orders`.
 - [x] Add visual mockup viewer, technical fabrication parameters, and client revision audit trail.
 - [x] Multi-Item Work Order BOM engine with machine routing, QC sign-off, runtime hour logging, and scrap/wastage tracking.
 

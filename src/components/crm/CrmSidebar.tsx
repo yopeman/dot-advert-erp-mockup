@@ -82,7 +82,7 @@ function CrmSidebarContent() {
     },
     {
       label: 'Payment Collections',
-      href: '/dashboard/collections',
+      href: '/sales',
       icon: Wallet,
     },
   ];
@@ -280,39 +280,6 @@ function CrmSidebarContent() {
             {activeLeads.length} Open Inquiries in Flight
           </div>
         </div>
-
-        {/* Return to Main ERP */}
-        <Link
-          href="/dashboard"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            padding: '10px',
-            borderRadius: 'var(--radius-md)',
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid #27272a',
-            color: '#ffffff',
-            fontSize: '12px',
-            fontWeight: 700,
-            textDecoration: 'none',
-            transition: 'all 0.15s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#facc15';
-            e.currentTarget.style.color = '#09090b';
-            e.currentTarget.style.borderColor = '#facc15';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-            e.currentTarget.style.color = '#ffffff';
-            e.currentTarget.style.borderColor = '#27272a';
-          }}
-        >
-          <ArrowLeft size={14} />
-          <span>Return to Main ERP</span>
-        </Link>
 
         {/* Modules Directory Link */}
         <Link

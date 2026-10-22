@@ -32,7 +32,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
       title: 'Procure & Receive Raw Materials',
       icon: ShoppingCart,
       color: '#6366f1',
-      moduleLink: '/dashboard/procurement',
+      moduleLink: '/inventory',
       moduleName: 'Procurement & POs',
       summary:
         'Purchase orders are raised for items like Glossy Vinyl and Acrylic Sheets from local suppliers with TIN tracking.',
@@ -112,7 +112,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
       title: 'Collect Payment (Telebirr / Bank Transfer)',
       icon: Wallet,
       color: '#06b6d4',
-      moduleLink: '/dashboard/collections',
+      moduleLink: '/sales',
       moduleName: 'Collections & Credit',
       summary:
         'Cash is collected through modern payment channels: Telebirr, Chapa, or CBE Bank Transfer.',
@@ -128,7 +128,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
       title: 'Unveil Exact Order Profitability',
       icon: TrendingUp,
       color: '#10b981',
-      moduleLink: '/dashboard/orders',
+      moduleLink: '/orders',
       moduleName: 'Order Profitability',
       summary:
         'The ultimate destination: Factory management sees exactly what this job made down to the cent.',

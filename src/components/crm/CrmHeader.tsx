@@ -159,22 +159,6 @@ export default function CrmHeader() {
           <span>Sales & Accounts Lead</span>
         </div>
 
-        {/* Return to Main ERP Dashboard */}
-        <Link
-          href="/dashboard"
-          className="btn btn-secondary btn-sm"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '7px 12px',
-          }}
-          title="Return to Executive ERP Dashboard"
-        >
-          <LayoutDashboard size={14} />
-          <span>Main ERP</span>
-        </Link>
-
         {/* Modules Directory Hub */}
         <Link
           href="/"

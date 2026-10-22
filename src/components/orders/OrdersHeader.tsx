@@ -158,15 +158,6 @@ export default function OrdersHeader() {
           <LayoutGrid size={13} />
           <span>Modules</span>
         </Link>
-
-        <Link
-          href="/dashboard"
-          className="btn btn-primary btn-sm"
-          style={{ fontSize: '0.75rem', padding: '6px 14px' }}
-        >
-          <LayoutDashboard size={13} />
-          <span>Dashboard</span>
-        </Link>
       </div>
 
       {/* Reset Confirmation Modal */}

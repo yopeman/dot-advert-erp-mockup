@@ -184,7 +184,7 @@ export default function SalesPage() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Link href="/dashboard/collections" className="btn btn-secondary btn-sm">
+          <Link href="/sales" className="btn btn-secondary btn-sm">
             <CreditCard size={14} />
             <span>Go to Collections</span>
           </Link>
