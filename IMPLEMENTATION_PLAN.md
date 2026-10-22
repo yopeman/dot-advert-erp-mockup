@@ -1,209 +1,258 @@
-# Dot Advert ERP — Frontend Interactive Mockup Implementation Plan
+# Dot Advert ERP — Refined 8-Module Implementation Plan
 
-An enterprise-grade, fully interactive, frontend-only mockup for **Dot Advert ERP** built using **Next.js (App Router)** and **TypeScript**, backed entirely by realistic pre-seeded mock data and reactive `localStorage` persistence.
-
----
-
-## 1. Architectural Strategy & Technical Stack
-
-### Core Technology Choices
-- **Framework**: [Next.js](https://nextjs.org/) (App Router, React 19 / Client Components for rich interactive state).
-- **Language**: TypeScript (strict typings for all ERP entities, calculations, and financial ledgers).
-- **Design & Styling**: Pure modern CSS / CSS Modules with custom design tokens (sleek dark/light enterprise aesthetic, glassmorphism cards, responsive layouts, data grids, and status badges).
-- **Icons**: Lucide React.
-- **Charts / Visualizations**: Lightweight Canvas/SVG charts or Chart.js/Recharts for order profitability waterfalls, revenue trends, and inventory distribution.
-- **State & Storage**: Browser `localStorage` abstraction layer with auto-hydration, initial seed data, and a one-click **"Reset Mock Data"** demo toggle.
-- **Zero Backend**: All business logic (VAT calculation, stock movements, credit limit validation, labor costing, order profit margins) runs client-side.
+An enterprise-grade, fully interactive, frontend-only mockup for **Dot Advert ERP** built using **Next.js (App Router)** and **TypeScript**, backed by realistic pre-seeded Ethiopian advertising & manufacturing demo data and reactive `localStorage` persistence.
 
 ---
 
-## 2. Mock Data Architecture & `localStorage` Schema
+## 1. Executive Summary & Architectural Shift
 
-The ERP will store all data in localized collections under a namespace key (`dot_advert_erp_v1_*`).
+The system is structured around **8 distinct operational modules** tailored specifically for advertising, large format printing, and custom signage manufacturing in Ethiopia (ETB currency, 15% VAT / Non-VAT dual compliance, Telebirr/CBE/Chapa collections, and statutory pension/overtime rules):
 
-### Data Entities & Schema Map
+```
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                      DOT ADVERT ERP — 8 CORE MODULES                          │
+├───────────────────────────────────────────────────────────────────────────────┤
+│ 1. CRM          : Lead Management, Customer Accounts, Site Measurements       │
+│ 2. Order        : Customer Orders, Graphic Design Proofing, Production BOM    │
+│ 3. Sales        : Proforma Invoices, Tax Invoices (15% VAT/Exempt), Receipts  │
+│ 4. HR           : Employee Roster, Daily Attendance, Overtime, Payroll        │
+│ 5. Inventory    : Stores & Warehouses, Purchasing (PO/GRN), Transfers, Scrap  │
+│ 6. Finance      : Income & Cash Flow, Operating Expenses, Net Margin, VAT     │
+│ 7. Report       : Comparisons, Visual Analytics, Export, Audit Log (Who/When) │
+│ 8. Dashboard    : Executive Cockpit & Unified Multi-Module Summary            │
+├───────────────────────────────────────────────────────────────────────────────┤
+│ ★ MODULES & FORMS DIRECTORY (/modules): Universal Interactive Card Hub        │
+└───────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. Detailed Module Specifications
+
+### Module 1: CRM (Lead & Customer Management)
+- **Leads Pipeline**:
+  - Lead sources (Walk-in, Referral, Tender, Social Media, Phone Inquiry).
+  - Pipeline stages: `New Lead` $\rightarrow$ `Site Survey / Measurement Needed` $\rightarrow$ `Quoted` $\rightarrow$ `Negotiation` $\rightarrow$ `Won` / `Lost`.
+  - Estimated budget, required delivery timeline, and client contact person.
+- **Customer Directory**:
+  - Company legal name, trade name, TIN number, VAT registration status.
+  - Credit limit, payment terms (Cash on Delivery, 15 Days, 30 Days), outstanding balance, and available credit safety check.
+- **Key Forms & Views**:
+  - `New Lead Modal`: Capture customer inquiry, dimensions, specs, and budget.
+  - `Customer Profile Card`: Contact details, ledger summary, lifetime order value.
+
+---
+
+### Module 2: Order (Customer Order, Design Proofing & Production)
+- **Customer Order**:
+  - Converted from won lead or approved Proforma.
+  - Delivery deadline, contracted amount (ETB), deposit received, project manager.
+- **Graphic Design & Proofing (Advertising Specific)**:
+  - Design status: `Drafting` $\rightarrow$ `Client Proofing` $\rightarrow$ `Revision Requested` $\rightarrow$ `Approved for Print/Fab`.
+  - Design file specs: Dimensions ($W \times H$ in meters/cm), material type, resolution, color profile (CMYK), mockup preview link.
+- **Production & Bill of Materials (BOM)**:
+  - Work Order tracking: `Queued` $\rightarrow$ `In Production` $\rightarrow$ `Quality Inspection` $\rightarrow$ `Completed` $\rightarrow$ `Delivered / Installed`.
+  - BOM item allocation: Direct materials consumed from inventory (vinyl, acrylic sheets, LED modules, metal framing).
+  - Machine routing: Large format printer, CNC router, laser cutter, welding, signage assembly.
+  - Machine hours and scrap/wastage tracking tagged to job ID.
+- **Key Forms & Views**:
+  - `Create Order Form`: Select customer, set deadline, attach initial specs.
+  - `Design Review Panel`: Upload mockup link, mark client approval, sign off dimensions.
+  - `Work Order & BOM Simulator`: Add material lines, log machine hours, record scrap.
+
+---
+
+### Module 3: Sales (Proforma, Tax Invoices & Collections)
+- **Proforma Invoices (Ethiopian Commercial Standard)**:
+  - Official quote document with validity period (e.g., 15 or 30 days).
+  - Itemized pricing, unit of measure, 15% VAT calculation or statutory tax exemption justification.
+  - One-click **"Convert Proforma to Customer Order & Tax Invoice"**.
+- **Commercial & Tax Invoicing**:
+  - Dual Mode:
+    - **15% VAT Invoice**: Subtotal + 15% VAT + Total, with seller and buyer TIN, printable invoice template, and QR code verification mock.
+    - **Non-VAT / Exempt Invoice**: Statutory exemption reason recorded (e.g. medical, educational, export, or under VAT threshold).
+- **Collections & Payment Receipts**:
+  - Payment methods: **Telebirr**, **CBE Bank Transfer**, **Awash Bank**, **Chapa**, **Cash**, and **Cheque**.
+  - Reconciles invoice payment status (`Unpaid`, `Partially Paid`, `Paid`) and instantly restores customer credit balance.
+- **Key Forms & Views**:
+  - `Generate Proforma Form`: Add items, set discount, pick VAT type.
+  - `Tax Invoice Printable View`: Clean printable preview with Ethiopian business header.
+  - `Record Payment Modal`: Select payment channel, transaction reference ID, and amount paid.
+
+---
+
+### Module 4: HR (Employee, Attendance, Overtime & Payroll)
+- **Employee Master**:
+  - Personal info, national ID/Kebele ID, position/department (Graphic Design, Machine Operator, Fabrication, Installation, Sales, Finance).
+  - Base salary / hourly wage, bank account details.
+- **Attendance & Overtime Tracking**:
+  - Daily clock-in/out status (Present, Absent, On Leave, Late).
+  - Overtime hours logging (Regular Overtime 1.25x, Weekend/Night 1.5x, Public Holiday 2.0x).
+  - **Direct Labor Allocation**: Operator hours logged here are directly allocated to specific customer work orders to calculate real job cost.
+- **Monthly Payroll Engine**:
+  - Gross salary = Base + Overtime + Allowances.
+  - Deductions: Ethiopian income tax brackets, Employee Pension (7%), Advances.
+  - Employer Pension (11%) contribution calculation.
+- **Key Forms & Views**:
+  - `Employee Registration Form`: Role, hourly rate, department.
+  - `Log Attendance & Overtime Modal`: Select worker, log hours, tag Work Order ID.
+  - `Monthly Payroll Run`: Automated payslip calculation and summary sheet.
+
+---
+
+### Module 5: Inventory (Store, Purchase, Store Transfer & Wastage)
+- **Stores & Warehouses**:
+  - Multi-warehouse separation: Main Warehouse, Raw Materials Store, Production Floor, Finished Goods Store.
+  - Stock levels with unit of measure (meters, sheets, kg, pcs, rolls).
+  - Automated Low-Stock warning rule:
+    $$\text{Days Remaining} = \frac{\text{Current Stock}}{\text{Average Daily Usage}}$$
+- **Purchase & Procurement (PO $\rightarrow$ GRN)**:
+  - Supplier directory with category (raw material, hardware, ink, equipment, transport).
+  - Purchase Orders: Draft, Approved, Partially Received, Received, Cancelled.
+  - Goods Receipt Note (GRN): Quality inspection, accepted vs rejected counts, batch/lot tracking.
+- **Stock Movements & Store Transfers**:
+  - Transfer materials between physical stores (e.g. Raw Material Store $\rightarrow$ Production Floor).
+  - Direct issuance to customer job orders.
+- **Wastage & Scrap Management**:
+  - Reason logging: Damaged, Expired, Production Scrap, Off-cut loss, Measurement Error.
+  - Wastage cost automatically added to order production cost.
+- **Key Forms & Views**:
+  - `Stock Movement / Transfer Modal`: Source store, destination store, item, qty.
+  - `New Purchase Order Form`: Supplier selection, item lines, payment terms.
+  - `Log Wastage Form`: Reason code, quantity, linked Work Order ID.
+
+---
+
+### Module 6: Finance (Income, Expense, Revenue, Profit & Margin)
+- **Revenue & Invoiced Sales**:
+  - Billed revenue (excluding VAT) vs collected cash flow.
+  - Accounts Receivable (AR) aging brackets: Current, 1-30 days, 31-60 days, 61-90+ days.
+- **Operating & Job-Linked Expenses**:
+  - Categorization: Fixed (Rent, Electricity, Security), Variable (Delivery fuel, custom hardware), Semi-variable.
+  - Order-linking: Tagging specific expenses directly to a customer work order.
+- **Job Profitability Engine (Real-Time Waterfall)**:
+  $$\text{Total Job Cost} = \text{Direct Materials} + \text{Direct Labor} + \text{Machine Cost} + \text{Wastage} + \text{Allocated Overhead}$$
+  $$\text{Net Margin \%} = \frac{\text{Net Invoiced Revenue} - \text{Total Job Cost}}{\text{Net Invoiced Revenue}} \times 100$$
+- **VAT Ledger (ERCA Tax Compliance)**:
+  - Output VAT collected from customer invoices.
+  - Input VAT paid on supplier purchase receipts.
+  - Net VAT Payable calculation.
+- **Key Forms & Views**:
+  - `Record Expense Form`: Category, Fixed vs Variable, Optional Order ID tag.
+  - `P&L Financial Statement`: Real-time Income Statement breakdown.
+
+---
+
+### Module 7: Report (Comparison, Charts, Export, Audit Log "Who, What, When")
+- **Comparative Analytics**:
+  - Month-over-month revenue vs target.
+  - Quoted estimated cost vs actual production cost variance.
+  - Scrap rate by machine and operator.
+- **Visual Charts & Graphs**:
+  - Revenue trends, order status breakdown, inventory valuation per warehouse.
+- **Export Center**:
+  - One-click export to CSV / Excel and printable PDF financial summaries.
+- **Audit Trail & Activity Log ("Who, What and When")**:
+  - Immutable activity history recording:
+    - *Timestamp* (When)
+    - *User / Staff* (Who)
+    - *Action Type* (What: Created PO, Approved Design, Issued Stock, Recorded Payment)
+    - *Module & Entity Reference* (Which Document)
+    - *Details & Value Impact*
+- **Key Forms & Views**:
+  - `Audit Log Viewer`: Filterable by date, staff, module, and action type.
+  - `Export Hub`: Formats for accounting and management review.
+
+---
+
+### Module 8: Dashboard (Unified Multi-Module Summary)
+- High-level executive overview consolidating:
+  - 4 Key Metrics: Total Revenue, Direct Cost of Goods Sold, Gross Profit, Net Profit Margin %.
+  - Live Operational Widgets: Active Work Orders, Due Invoices, Low Stock Alerts, Today's Collections.
+  - Quick action shortcuts to primary forms in each module.
+
+---
+
+## 3. The Central Module & Cards Directory (`/modules`)
+
+To address the requirement for a unified, comprehensive card-based index page where users can browse, search, and launch all modules and forms from a single location:
+
+### Features of the Card Directory:
+1. **Interactive Search & Category Filters**:
+   - Filter cards instantly by category (`All`, `CRM`, `Order`, `Sales`, `HR`, `Inventory`, `Finance`, `Report`, `Dashboard`).
+   - Real-time text search across all module titles, features, and form actions.
+2. **Comprehensive Card Layout for Each Operational Unit**:
+   - Visual icon and color-coded status badge.
+   - Module name, sub-category, and detailed description of the workflows supported.
+   - Primary direct navigation link to the main screen.
+   - Secondary quick-action links directly to key forms (e.g. *+ New Lead*, *+ Create Proforma*, *+ Log Stock Movement*, *+ Record Expense*).
+   - Live badge indicators showing real data state (e.g. *3 Active Leads*, *2 Overdue Invoices*, *3 Low Stock*).
+3. **Accessibility**:
+   - Accessible via `/modules` and `/forms`.
+   - Prominently pinned in the navigation sidebar and top header bar.
+
+---
+
+## 4. Mock Data Architecture & Entity Relationship
 
 ```mermaid
 erDiagram
-    SUPPLIER ||--o{ PURCHASE_ORDER : supplies
-    PURCHASE_ORDER ||--o{ GOODS_RECEIPT : yields
-    ITEM ||--o{ STOCK_MOVEMENT : tracks
-    ITEM ||--o{ BOM_ITEM : specifies
-    CUSTOMER ||--o{ CUSTOMER_ORDER : places
-    CUSTOMER_ORDER ||--o{ WORK_ORDER : triggers
-    CUSTOMER_ORDER ||--o{ INVOICE : billed_by
-    INVOICE ||--o{ COLLECTION : paid_by
-    WORK_ORDER ||--o{ WASTAGE_LOG : generates
+    LEAD ||--o| CUSTOMER : converts_to
+    CUSTOMER ||--o{ PROFORMA : receives
+    PROFORMA ||--o| CUSTOMER_ORDER : converts_to
+    CUSTOMER_ORDER ||--|| DESIGN_JOB : requires
+    CUSTOMER_ORDER ||--o{ WORK_ORDER : produces
+    WORK_ORDER ||--o{ BOM_CONSUMPTION : consumes
     WORK_ORDER ||--o{ TIME_LOG : incurs
-    EXPENSE ||--o{ WORK_ORDER : allocated_to
-```
-
-1. **Items & Stores**:
-   - `items`: Code, Name, Amharic Name, Type (`raw`, `packaging`, `finished`, `semi-finished`), Unit, Purchase Price, Selling Price, VAT Type (`standard 15%`, `exempt`, `zero-rated`), Min Reorder Level, Safety Stock.
-   - `stores`: Main Store, Raw Materials Warehouse, Finished Goods Store, Production Floor.
-   - `stock_movements`: Immutable log of receipts, production issues, transfers, returns, adjustments, and wastage.
-
-2. **Procurement**:
-   - `suppliers`: Name, TIN, Payment Terms, Bank Details, Category, VAT Registered status.
-   - `purchase_orders`: PO Number, Supplier, Items, Unit Prices, Tax, Status (`draft`, `approved`, `received`, `cancelled`).
-   - `goods_receipts`: Inspection report, Batch/Lot #, Accepted/Rejected Qty, Store destination.
-
-3. **Production & Orders (The Centerpiece)**:
-   - `customer_orders`: Client, Description (e.g. *Awash Bank Pylon Signs*), Agreed Price, Due Date, Status.
-   - `work_orders`: BOM Version, Planned vs Actual Qty, Scrap Qty, Machine Hours logged, Status.
-   - `order_costs`: Direct Materials + Direct Labor + Machine Rate + Order-specific Transport + Allocated Fixed Overhead + Wastage = **Total Order Cost**.
-   - `order_profitability`: Net Revenue (excluding VAT) − Total Order Cost = **Net Order Profit** & **Margin %**.
-
-4. **Sales & Billing**:
-   - `customers`: Name, TIN, Credit Limit, Payment Terms, Available Credit balance.
-   - `invoices`: Dual mode:
-     - **VAT Invoice**: Subtotal + 15% VAT + Total, QR code mock, TIN numbers.
-     - **Non-VAT / Exempt Invoice**: Reason specified (exempt product / non-VAT customer).
-   - `collections`: Payment records with method (`Telebirr`, `Chapa`, `Cash`, `CBE Bank Transfer`, `Cheque`), transaction ref, and customer credit ledger update.
-
-5. **Payroll & Cost Allocation**:
-   - `employees`: Name, Role, Hourly/Monthly Base, Overtime rate, Cost Center (`Direct Production`, `Factory Overhead`, `Admin`).
-   - `payroll_runs`: Base + Overtime + Allowances − Income Tax − Pension (11% employer, 7% employee) = Net Pay. Direct hours allocate cost to specific work orders.
-
-6. **Expenses**:
-   - `expenses`: Category (`Rent`, `Electricity`, `Fuel`, `Machine Maintenance`, `Delivery Transport`), Type (`Fixed`, `Variable`, `Semi-Variable`), Allocation rule (Direct Order ID or General Period Expense).
-
----
-
-## 3. Implementation Phases
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ PHASE 1: Scaffolding, Design System & LocalStorage Seed Engine             │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ PHASE 2: Store, Inventory & Procurement Modules (Movements & Wastage)      │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ PHASE 3: The Order Engine & Cost Breakdown (Direct, Labor, Machine, Scrap) │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ PHASE 4: Commercial Suite: Sales, Dual Invoicing (15% VAT/Exempt) & Pay    │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ PHASE 5: Payroll, Overhead Expenses & Cost Allocation Engine                │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ PHASE 6: Executive Finance Dashboard, Reports & "The Golden Demo" Story     │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-### Phase 1: Scaffolding, Design System & Mock Storage Engine
-- Set up Next.js application with TypeScript and modern CSS variables.
-- Build the **Global Navigation & Layout**: Collapsible sidebar, top bar with breadcrumbs, quick notification tray, and a persistent **"Demo Data: [Reset / Seed Realistic Data]"** toolbar.
-- Build the **Local Storage Database Provider**: React Context that initialises pre-populated, realistic Ethiopian business demo data (e.g., *Ethio Telecom Expo Booth*, *Awash Bank Acrylic Signage*, *BGI Billboard Skins*).
-- Build shared UI components: Metric stat cards, searchable data tables, filter pills, modal drawers, status badges, and currency formatters (`ETB`).
-
-### Phase 2: Inventory, Stores & Procurement
-- **Store & Inventory Dashboard**:
-  - Item catalog with low-stock badges.
-  - Multi-warehouse inventory matrix (Main Warehouse, Production Floor, Raw Materials).
-  - Dynamic Low-Stock Alert widget calculating:
-    $$\text{Days Remaining} = \frac{\text{Current Stock}}{\text{Average Daily Usage}}$$
-- **Stock Movement Ledger**:
-  - Interactive modal to record goods receipt, transfer, or issue with instant inventory update.
-- **Wastage Management Center**:
-  - Log wastage with reason dropdown (*Damaged, Expired, Production Scrap, Theft, Measurement Error*), cost calculation, and order tagging.
-- **Procurement Flow**:
-  - Purchase Request $\rightarrow$ Purchase Order $\rightarrow$ Goods Receipt $\rightarrow$ Supplier Bill.
-
-### Phase 3: The Order Engine & Order Profitability (Core Value)
-- **Order Management & Job Cards**:
-  - Customer order list with progress badges (*Queued, In Production, QA, Completed, Delivered*).
-  - Order Detail View with real-time financial summary:
-    - Net Invoiced Amount (excluding VAT).
-    - Material Costs (from inventory issue log).
-    - Direct Labor Costs (from operator hours logged).
-    - Machine Hours Cost ($\text{Hours} \times \text{Machine Hourly Rate}$).
-    - Wastage Cost incurred for this job.
-    - Allocated Overhead.
-    - **Gross Profit & Net Margin (%)** with visual color-coded indicator (Green: $> 35\%$, Amber: $15\text{--}35\%$, Red: $< 15\%$).
-- **Interactive Work Order & BOM Simulator**:
-  - Allow users to click "Issue Materials to Order" or "Log Scrap" and watch the order cost and profit dynamically recalculate.
-
-### Phase 4: Sales, Dual Invoicing & Collections
-- **Sales Orders & Customer Credit Protection**:
-  - Customer list showing credit limit, outstanding invoices, and available credit:
-    $$\text{Available Credit} = \text{Credit Limit} - \text{Outstanding Balance}$$
-  - Warning/block trigger when creating an order for an over-limit customer.
-- **Dual Invoicing Engine**:
-  - Toggle between **15% VAT Invoice** (calculating Subtotal, 15% VAT, and Grand Total) and **Non-VAT / Exempt Invoice** with statutory exemption reason.
-  - Printable / PDF-style modal preview with Ethiopian tax formatting, TIN numbers, and payment details.
-- **Cash & Digital Collections Modal**:
-  - Collect payments linked to invoices via **Telebirr**, **Chapa**, **Bank Transfer (CBE / Awash)**, or **Cash**.
-  - Auto-updates invoice status (*Paid, Partially Paid, Overdue*) and customer credit availability.
-
-### Phase 5: Payroll & Expense Cost Allocation
-- **Payroll Manager**:
-  - Employee list with wage configuration.
-  - Monthly payroll generator with attendance, overtime, 11% employer pension, 7% employee pension, and income tax brackets.
-  - Labor allocation tab: Assign hours to work orders (Direct Labor) vs general admin.
-- **Expense Ledger**:
-  - Categorized into Fixed (rent, security), Variable (order delivery fuel, extra materials), and Semi-variable.
-  - Order-linking selector: Directly attach expenses to specific customer jobs.
-
-### Phase 6: Financial Reports & "The Golden Demo" Walkthrough
-- **Executive Finance Dashboard**:
-  - Total Net Revenue, COGS, Gross Profit, Operating Expenses, Net Income.
-  - VAT Statement: Output VAT collected vs Input VAT paid = Net VAT Payable.
-  - AP / AR Aging charts (Current, 30 days, 60 days, 90+ days).
-- **The "Golden Demo Story" Guided Tour**:
-  - A built-in interactive scenario walkthrough banner that guides the evaluator step-by-step through the end-to-end journey:
-    1. *Step 1*: Check Raw Material in Store.
-    2. *Step 2*: Open Customer Work Order (e.g. *Awash Bank Signboard*).
-    3. *Step 3*: Issue 20m Vinyl + Log 2m Waste.
-    4. *Step 4*: Complete Production & Mark Delivered.
-    5. *Step 5*: Generate 15% VAT Invoice.
-    6. *Step 6*: Collect payment via Telebirr.
-    7. *Step 7*: Inspect final Order Profitability card showing true net profit.
-
----
-
-## 4. Deliverable Directory Structure
-
-```
-dot-advert-erp-mockup/
-├── requirment.md                  # Business requirements
-├── IMPLEMENTATION_PLAN.md         # This implementation blueprint
-├── package.json                   # Next.js, React, Lucide, Canvas/Chart utilities
-├── tsconfig.json
-├── next.config.ts
-├── public/
-│   └── logo.svg                   # Dot Advert ERP branding
-└── src/
-    ├── app/
-    │   ├── layout.tsx             # Root layout with Sidebar and Header
-    │   ├── page.tsx               # Executive Dashboard & Key KPIs
-    │   ├── inventory/             # Stock, Stores, Low Stock Alerts, Wastage
-    │   ├── procurement/           # Suppliers, POs, Goods Receipts
-    │   ├── orders/                # Orders, Work Orders, Order Profitability Center
-    │   │   └── [id]/              # Detailed Job Costing & Profit Waterfall
-    │   ├── sales/                 # Customers, Invoices (VAT & Non-VAT), Collections
-    │   ├── payroll/               # Employees, Pay slips, Direct Labor Allocation
-    │   ├── expenses/              # Fixed, Variable & Order-linked Expenses
-    │   └── finance/               # Income statement, VAT Ledger, AP/AR Aging
-    ├── components/
-    │   ├── ui/                    # Modals, Tables, Stat Cards, Badges, Tabs
-    │   ├── layout/                # Sidebar, Header, Breadcrumbs, DemoToolbar
-    │   ├── orders/                # ProfitabilityBreakdownCard, CostRollupChart
-    │   ├── invoices/              # InvoiceDocumentPreview (VAT / Non-VAT)
-    │   └── demo/                  # GoldenStoryStepper (Guided interactive walkthrough)
-    ├── context/
-    │   └── ErpDataContext.tsx     # Reactive localStorage state provider & CRUD actions
-    ├── data/
-    │   └── initialMockData.ts     # Realistic pre-seeded manufacturing demo data
-    └── types/
-        └── erp.ts                 # Full TypeScript interfaces for all ERP entities
+    WORK_ORDER ||--o{ WASTAGE_LOG : records
+    CUSTOMER_ORDER ||--o{ INVOICE : billed_as
+    INVOICE ||--o{ COLLECTION : settled_by
+    SUPPLIER ||--o{ PURCHASE_ORDER : fulfills
+    PURCHASE_ORDER ||--o{ GOODS_RECEIPT : delivers
+    ITEM ||--o{ STOCK_MOVEMENT : changes
+    EMPLOYEE ||--o{ ATTENDANCE : logs
+    EMPLOYEE ||--o{ TIME_LOG : works
+    AUDIT_EVENT }|--|| EMPLOYEE : performed_by
 ```
 
 ---
 
-## 5. Verification & Acceptance Criteria
-- [x] **Zero Backend Dependency**: App builds and runs completely statically or locally via `npm run dev`.
-- [x] **Data Persistence**: Refreshing the browser preserves newly created orders, stock changes, invoices, and payments in `localStorage`.
-- [x] **Data Reset**: Clicking "Reset Demo" restores pristine factory demo datasets instantly.
-- [x] **Dual Invoicing Integrity**: VAT invoices apply exactly 15% to net taxable amount; Non-VAT invoices record valid statutory exemption reason.
-- [x] **Order Profitability Accuracy**:
-  $$\text{Net Margin \%} = \frac{\text{Net Invoice Amount} - \text{Total Allocated Job Cost}}{\text{Net Invoice Amount}} \times 100$$
-- [x] **Ethiopian Payment Options**: Seamless collection modal featuring Telebirr, Chapa, and Bank Transfers.
-- [x] **Golden Story Validation**: Ability to complete the 7-step demo story without any missing links.
+## 5. Implementation Roadmap & Milestones
+
+### Phase 1: Planning, Schema & Card Directory (Current Milestone)
+- [x] Align on 8 core modules matching real-world advertising manufacturing.
+- [x] Update `IMPLEMENTATION_PLAN.md` with complete module definitions.
+- [x] Build the **Unified Module & Cards Directory** at `/modules` with search, category filtering, live badges, and direct links.
+- [x] Update `Sidebar.tsx` and `Header.tsx` to expose the Module Hub.
+
+### Phase 2: CRM & Sales Proforma Pipeline
+- [ ] Add `Lead` and `Proforma` types to `src/types/erp.ts`.
+- [ ] Add mock leads and proformas in `src/data/initialMockData.ts`.
+- [ ] Build `/crm` page with Lead Kanban / List and "Convert to Customer & Proforma".
+- [ ] Enhance `/sales` to support Proforma generation, PDF preview, and conversion to Tax Invoice.
+
+### Phase 3: Order Engine — Design Proofing & Production
+- [x] Add Design stages (`Drafting`, `Client Proofing`, `Revision Requested`, `Approved`) in `/dashboard/orders`.
+- [x] Add visual mockup viewer, technical fabrication parameters, and client revision audit trail.
+- [x] Multi-Item Work Order BOM engine with machine routing, QC sign-off, runtime hour logging, and scrap/wastage tracking.
+
+### Phase 4: HR Attendance, Overtime & Labor Allocation
+- [ ] Enhance `/payroll` with dedicated Attendance & Overtime tabs.
+- [ ] Enable direct linking of overtime hours to specific customer work order numbers.
+
+### Phase 5: Inventory Transfers & Purchasing
+- [ ] Enhance `/inventory` with a dedicated "Store Transfers" tab.
+- [ ] Integrate Purchasing and Supplier POs into seamless store receipts.
+
+### Phase 6: Finance & Audit Trail Reports
+- [ ] Add the "Who, What, When" **Audit Trail & Activity Log** component in `/reports`.
+- [ ] Add printable/exportable report summaries (CSV/Print views).
+- [ ] Refresh Executive Dashboard KPIs with the unified 8-module summary.
+
+---
+
+## 6. Verification & Acceptance Criteria
+- [x] Complete alignment between `IMPLEMENTATION_PLAN.md` and user-approved 8-module architecture.
+- [x] A single, comprehensive **Module & Cards Directory** page (`/modules` & `/forms`) linking to all 8 modules and 24+ operational forms.
+- [x] High visual quality adhering to design tokens (dark aesthetic, vibrant category accents, micro-animations, glassmorphism cards).
+- [x] TypeScript builds cleanly with zero errors.

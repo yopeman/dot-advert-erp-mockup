@@ -59,9 +59,10 @@ export interface StockMovement {
   unit: UnitOfMeasure;
   unitCost: number;
   totalCost: number;
-  referenceType?: 'PO' | 'WORK_ORDER' | 'INVOICE' | 'ADJUSTMENT' | 'WASTE';
+  referenceType?: 'PO' | 'WORK_ORDER' | 'INVOICE' | 'ADJUSTMENT' | 'WASTE' | 'SUPPLIER_RETURN';
   referenceId?: string;
   referenceNumber?: string;
+  counterparty?: string;
   notes?: string;
   createdBy: string;
 }
@@ -94,6 +95,58 @@ export interface WastageRecord {
   notes?: string;
 }
 
+export interface StoreValuation {
+  storeId: string;
+  storeName: string;
+  storeType: Store['storeType'];
+  skuCount: number;
+  totalUnits: number;
+  totalValue: number;
+}
+
+export interface StoreCategoryValuation {
+  category: ItemType;
+  skuCount: number;
+  totalValue: number;
+}
+
+export interface StoreFinancialPosting {
+  id: string;
+  date: string;
+  movementNumber: string;
+  movementType: MovementType;
+  reference?: string;
+  itemName: string;
+  storeName: string;
+  quantity: number;
+  unit: UnitOfMeasure;
+  value: number;
+  debitAccount: string;
+  creditAccount: string;
+  reconciled: boolean;
+}
+
+export interface StoreFinancials {
+  inventoryValuation: number;
+  productionIssueValue: number;
+  salesIssueValue: number;
+  purchaseReceiptValue: number;
+  wastageValue: number;
+  unallocatedWastageValue: number;
+  adjustmentLossValue: number;
+  adjustmentGainValue: number;
+  supplierReturnValue: number;
+  staffReturnValue: number;
+  transferValue: number;
+  storeValuations: StoreValuation[];
+  categoryValuations: StoreCategoryValuation[];
+  recentPostings: StoreFinancialPosting[];
+  linkedPurchaseReceipts: number;
+  unlinkedPurchaseReceipts: number;
+  linkedPurchaseReceiptValue: number;
+  unlinkedPurchaseReceiptValue: number;
+}
+
 export interface Supplier {
   id: string;
   code: string;
@@ -109,17 +162,29 @@ export interface Supplier {
   isVatRegistered: boolean;
 }
 
-export type POStatus = 'draft' | 'approved' | 'partially_received' | 'received' | 'closed' | 'cancelled';
+export type POStatus =
+  | 'draft'
+  | 'pending_admin'
+  | 'approved'
+  | 'partially_received'
+  | 'received'
+  | 'closed'
+  | 'cancelled';
 
 export interface PurchaseOrderItem {
   itemId: string;
+  itemCode?: string;
   itemName: string;
+  category?: string;
+  specifications?: string;
+  isNewItem?: boolean;
   quantity: number;
   unit: UnitOfMeasure;
   unitPrice: number;
   vatRate: number;
   vatAmount: number;
   totalAmount: number;
+  targetStoreId?: string;
 }
 
 export interface PurchaseOrder {
@@ -129,6 +194,7 @@ export interface PurchaseOrder {
   supplierId: string;
   supplierName: string;
   supplierTin: string;
+  isNewSupplier?: boolean;
   items: PurchaseOrderItem[];
   subtotal: number;
   vatTotal: number;
@@ -136,8 +202,13 @@ export interface PurchaseOrder {
   expectedDeliveryDate: string;
   status: POStatus;
   requestedBy: string;
+  requestedByRole?: string;
   approvedBy?: string;
+  approvedAt?: string;
+  approvalNotes?: string;
   paymentTerms: string;
+  targetStoreId?: string;
+  targetStoreName?: string;
   notes?: string;
 }
 
@@ -169,6 +240,66 @@ export interface GoodsReceipt {
   notes?: string;
 }
 
+export type LeadStage = 'new' | 'site_visit' | 'quoted' | 'negotiation' | 'won' | 'lost';
+export type LeadSource = 'walk_in' | 'phone_inquiry' | 'referral' | 'tender' | 'social_media' | 'field_sales';
+export type SignageType =
+  | 'acrylic_3d'
+  | 'billboard_skin'
+  | 'pylon_sign'
+  | 'neon_led'
+  | 'vehicle_branding'
+  | 'expo_booth'
+  | 'indoor_pos'
+  | 'other';
+
+export interface SiteSurvey {
+  id: string;
+  title: string; // e.g. "Main Facade 3D Acrylic Lettering", "Rooftop Sky Sign", "Driveway Pylon"
+  signageType?: SignageType;
+  locationAddress: string;
+  widthMeters: number;
+  heightMeters: number;
+  depthMeters?: number; // 3D letter or box depth in meters (e.g. 0.15 = 15cm)
+  installationHeightMeters: number; // ground clearance / elevation in meters
+  powerSourceAvailable: boolean;
+  indoorOutdoor: 'indoor' | 'outdoor';
+  surveyDate?: string;
+  surveyorName?: string;
+  notes?: string;
+  status?: 'scheduled' | 'completed' | 'verified';
+  leadId?: string;
+  customerId?: string;
+  orderId?: string;
+}
+
+export interface Lead {
+  id: string;
+  leadNumber: string;
+  date: string;
+  companyName: string;
+  contactPerson: string;
+  phone: string;
+  email?: string;
+  tin?: string;
+  city: string;
+  stage: LeadStage;
+  source: LeadSource;
+  projectType: SignageType;
+  estimatedBudget: number; // in ETB
+  probabilityPercent: number; // 10 - 100%
+  expectedCloseDate: string;
+  assignedTo: string;
+  siteSurveys?: SiteSurvey[];
+  /** @deprecated backwards compatibility for single survey */
+  siteSurvey?: SiteSurvey;
+  notes?: string;
+  convertedCustomerId?: string;
+  lostReason?: string;
+  lostNotes?: string;
+  lostDate?: string;
+  competitorName?: string;
+}
+
 export interface Customer {
   id: string;
   code: string;
@@ -182,6 +313,8 @@ export interface Customer {
   outstandingBalance: number;
   paymentTerms: string;
   isVatRegistered: boolean;
+  contactPerson?: string;
+  siteSurveys?: SiteSurvey[];
 }
 
 export type OrderStatus = 'pending' | 'in_production' | 'delivered' | 'invoiced' | 'paid' | 'cancelled';
@@ -208,6 +341,49 @@ export interface CustomerOrder {
   status: OrderStatus;
   priority: 'low' | 'normal' | 'high' | 'urgent';
   notes?: string;
+  designProofId?: string;
+  siteSurveyIds?: string[]; // 1-to-many: Linked site surveys for this order
+}
+
+export type DesignStatus =
+  | 'drafting'
+  | 'client_proofing'
+  | 'revision_requested'
+  | 'approved'
+  | 'rejected';
+
+export interface DesignRevision {
+  id: string;
+  versionNumber: number; // e.g. 1, 2, 3
+  date: string;
+  notes: string;
+  authorName: string;
+  status: DesignStatus;
+}
+
+export interface DesignProof {
+  id: string;
+  designNumber: string; // e.g. "DSG-2026-081"
+  customerOrderId: string;
+  orderNumber: string;
+  customerName: string;
+  title: string;
+  designerName: string;
+  status: DesignStatus;
+  widthMeters: number;
+  heightMeters: number;
+  depthCm?: number;
+  resolutionDpi: number; // e.g. 300 DPI
+  colorProfile: 'CMYK' | 'Pantone' | 'RGB';
+  materialSpec: string; // e.g. "3mm Cast Acrylic + 3M High-Tack Vinyl"
+  mockupUrl?: string; // Preview artwork thumbnail/graphic url or badge
+  clientContactPerson?: string;
+  clientFeedback?: string;
+  approvedDate?: string;
+  approvedBy?: string;
+  revisionCount: number;
+  revisions: DesignRevision[];
+  createdDate: string;
 }
 
 export interface WorkOrderBomItem {
@@ -232,12 +408,17 @@ export interface WorkOrder {
   scrapQty: number;
   startDate: string;
   endDate?: string;
-  status: 'scheduled' | 'in_progress' | 'completed' | 'on_hold';
+  status: 'scheduled' | 'in_progress' | 'quality_inspection' | 'completed' | 'on_hold';
   workCenterMachine: string;
   operatorNames: string[];
   machineHours: number;
   machineHourlyRate: number; // e.g., 650 ETB/hr
   bomItems: WorkOrderBomItem[];
+  designProofId?: string;
+  designNumber?: string;
+  qualityInspectionNotes?: string;
+  qualityInspector?: string;
+  targetWorkCenters?: string[];
 }
 
 export type InvoiceType = 'vat_15' | 'non_vat_exempt';
@@ -277,6 +458,29 @@ export interface Invoice {
   notes?: string;
 }
 
+export type ProformaStatus = 'draft' | 'sent' | 'accepted' | 'converted';
+
+export interface ProformaInvoice {
+  id: string;
+  proformaNumber: string;
+  date: string;
+  validUntil: string;
+  customerOrderId?: string;
+  orderNumber?: string;
+  customerId: string;
+  customerName: string;
+  customerTin: string;
+  customerAddress: string;
+  invoiceType: InvoiceType;
+  items: InvoiceItem[];
+  subtotalNet: number;
+  vatAmount: number;
+  grandTotal: number;
+  status: ProformaStatus;
+  convertedInvoiceId?: string;
+  notes?: string;
+}
+
 export type PaymentMethod = 'telebirr' | 'chapa' | 'bank_transfer' | 'cash' | 'cheque';
 
 export interface Collection {
@@ -295,6 +499,36 @@ export interface Collection {
   notes?: string;
 }
 
+export interface EmployeeGuarantor {
+  fullName: string;
+  relationship: string;
+  organization: string;
+  jobTitle?: string;
+  phone: string;
+  kebeleId?: string;
+  guaranteeAmount?: number;
+  letterStatus: 'verified' | 'submitted' | 'pending';
+  notes?: string;
+}
+
+export interface EmployeeEmergencyContact {
+  fullName: string;
+  relationship: string;
+  phone: string;
+  alternativePhone?: string;
+  citySubCity?: string;
+}
+
+export interface EmployeeDocument {
+  id: string;
+  name: string;
+  category: 'identity' | 'contract' | 'warranty' | 'education' | 'medical' | 'police_clearance';
+  fileUrl?: string;
+  uploadDate: string;
+  verified: boolean;
+  notes?: string;
+}
+
 export interface Employee {
   id: string;
   employeeId: string;
@@ -310,6 +544,32 @@ export interface Employee {
   pensionNumber: string;
   employmentStatus: 'active' | 'on_leave' | 'terminated';
   startDate: string;
+
+  // Detailed Onboarding & Profile Attributes
+  dateOfBirth?: string;
+  gender?: 'male' | 'female';
+  maritalStatus?: 'single' | 'married' | 'divorced';
+  nationalIdNumber?: string;
+  kebeleCity?: string;
+  phone?: string;
+  email?: string;
+
+  // Contract Details
+  contractType?: 'permanent' | 'fixed_term' | 'probation_45_days' | 'apprentice';
+  contractEndDate?: string;
+  probationEndDate?: string;
+  noticePeriodDays?: number;
+  workShift?: 'standard_day' | 'evening_shift' | 'night_shift' | 'flexible';
+  dutyStation?: string;
+
+  // Warranty / Legal Guarantor (Wase / ዋስ)
+  guarantor?: EmployeeGuarantor;
+
+  // Emergency Contact
+  emergencyContact?: EmployeeEmergencyContact;
+
+  // Verified Onboarding Documents
+  documents?: EmployeeDocument[];
 }
 
 export interface PayrollEntry {
@@ -333,6 +593,106 @@ export interface PayrollEntry {
   allocatedOrderNumber?: string;
 }
 
+export type LeaveType = 'annual' | 'sick' | 'maternity' | 'paternity' | 'compassionate' | 'unpaid';
+export type LeaveStatus = 'pending' | 'approved' | 'rejected';
+
+export interface LeaveRequest {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  department: string;
+  leaveType: LeaveType;
+  startDate: string;
+  endDate: string;
+  daysCount: number;
+  reason: string;
+  status: LeaveStatus;
+  appliedDate: string;
+  approvedBy?: string;
+}
+
+export type AttendanceStatus = 'present' | 'late' | 'absent' | 'on_leave' | 'half_day';
+
+export interface AttendanceRecord {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  department: string;
+  date: string;
+  checkIn: string; // e.g. "08:02"
+  checkOut?: string; // e.g. "17:15"
+  status: AttendanceStatus;
+  overtimeHours: number;
+  notes?: string;
+  checkInPhoto?: string;
+  checkOutPhoto?: string;
+  photoVerified?: boolean;
+  terminalLocation?: string;
+}
+
+export type RecruitmentStage = 'sourcing' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected';
+
+export interface JobOpening {
+  id: string;
+  title: string;
+  department: string;
+  type: 'full_time' | 'contract' | 'shift_work';
+  openPositions: number;
+  location: string;
+  experienceLevel: string;
+  salaryRange: string;
+  status: 'active' | 'closed' | 'draft';
+  postedDate: string;
+  deadline: string;
+  applicantsCount: number;
+  description: string;
+  urgency?: 'urgent' | 'normal' | 'high';
+  requirements?: string[];
+  responsibilities?: string[];
+  skillsKeywords?: string[];
+  benefits?: string[];
+}
+
+export interface InterviewSchedule {
+  id: string;
+  candidateId: string;
+  candidateName: string;
+  jobTitle: string;
+  date: string; // "2026-10-24"
+  time: string; // "10:30"
+  durationMinutes: number; // 45
+  interviewType: 'practical_shopfloor_test' | 'technical_face_to_face' | 'hr_screening' | 'remote_call';
+  interviewers: string[];
+  locationOrLink: string;
+  status: 'scheduled' | 'completed' | 'cancelled' | 'rescheduled';
+  scoreRating?: number; // 1 to 5
+  evaluationNotes?: string;
+  preparationChecklist?: string[];
+}
+
+export interface Candidate {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  fullName: string;
+  phone: string;
+  email: string;
+  experienceYears: number;
+  currentEmployer?: string;
+  expectedSalary: number;
+  stage: RecruitmentStage;
+  appliedDate: string;
+  rating: number; // 1 to 5
+  notes?: string;
+  resumeSummary?: string;
+  portfolioUrl?: string;
+  skills?: string[];
+  educationLevel?: string;
+  interviewDate?: string;
+  interviewStatus?: string;
+  interviews?: InterviewSchedule[];
+}
+
 export type ExpenseCostType = 'fixed' | 'variable' | 'semi_variable';
 export type ExpenseCategory =
   | 'workshop_rent'
@@ -343,7 +703,10 @@ export type ExpenseCategory =
   | 'admin_salaries'
   | 'security'
   | 'office_supplies'
-  | 'order_direct_supplies';
+  | 'order_direct_supplies'
+  | 'crane_scaffolding_rental'
+  | 'installation_per_diem'
+  | 'permits_licensing';
 
 export interface Expense {
   id: string;
@@ -376,6 +739,7 @@ export interface OrderProfitability {
   machineCost: number;
   packagingCost: number;
   orderTransportCost: number;
+  orderDirectExpensesCost?: number;
   allocatedOverheadCost: number;
   wastageCost: number;
   totalOrderCost: number;
@@ -387,6 +751,10 @@ export interface OrderProfitability {
 
 export type ErpRole =
   | 'general_manager'
+  | 'super_admin'
+  | 'admin'
+  | 'hr_manager'
+  | 'employee'
   | 'storekeeper'
   | 'procurement_officer'
   | 'production_supervisor'
@@ -394,3 +762,4 @@ export type ErpRole =
   | 'sales_rep'
   | 'accountant_cashier'
   | 'hr_officer';
+

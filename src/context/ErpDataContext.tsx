@@ -8,6 +8,7 @@ import {
   WastageRecord,
   Supplier,
   PurchaseOrder,
+  POStatus,
   Customer,
   CustomerOrder,
   WorkOrder,
@@ -21,16 +22,29 @@ import {
   WastageReason,
   PaymentMethod,
   OrderStatus,
-  InvoiceType,
+  Lead,
+  LeadStage,
+  SiteSurvey,
+  DesignProof,
+  DesignRevision,
+  DesignStatus,
+  WorkOrderBomItem,
+  ProformaInvoice,
+  ProformaStatus,
+  StoreFinancials,
+  ItemType,
 } from '@/types/erp';
 import {
   INITIAL_ITEMS,
   INITIAL_STORES,
   INITIAL_SUPPLIERS,
+  INITIAL_LEADS,
   INITIAL_CUSTOMERS,
   INITIAL_ORDERS,
   INITIAL_WORK_ORDERS,
+  INITIAL_DESIGN_PROOFS,
   INITIAL_INVOICES,
+  INITIAL_PROFORMAS,
   INITIAL_COLLECTIONS,
   INITIAL_EMPLOYEES,
   INITIAL_EXPENSES,
@@ -46,10 +60,13 @@ interface ErpContextType {
   items: Item[];
   stores: Store[];
   suppliers: Supplier[];
+  leads: Lead[];
   customers: Customer[];
   orders: CustomerOrder[];
   workOrders: WorkOrder[];
+  designProofs: DesignProof[];
   invoices: Invoice[];
+  proformas: ProformaInvoice[];
   collections: Collection[];
   employees: Employee[];
   expenses: Expense[];
@@ -62,6 +79,7 @@ interface ErpContextType {
   setCurrentRole: (role: ErpRole) => void;
 
   // Actions
+  addItem: (itemData: Omit<Item, 'id'>) => Item;
   addStockMovement: (params: {
     itemId: string;
     fromStoreId?: string;
@@ -69,8 +87,9 @@ interface ErpContextType {
     movementType: MovementType;
     quantity: number;
     unitCost?: number;
-    referenceType?: 'PO' | 'WORK_ORDER' | 'INVOICE' | 'ADJUSTMENT' | 'WASTE';
+    referenceType?: 'PO' | 'WORK_ORDER' | 'INVOICE' | 'ADJUSTMENT' | 'WASTE' | 'SUPPLIER_RETURN';
     referenceNumber?: string;
+    counterparty?: string;
     notes?: string;
   }) => void;
 
@@ -83,13 +102,53 @@ interface ErpContextType {
     notes?: string;
   }) => void;
 
-  createPurchaseOrder: (po: Omit<PurchaseOrder, 'id' | 'poNumber' | 'date' | 'status'>) => void;
+  // CRM & Customer Actions
+  createLead: (lead: Omit<Lead, 'id' | 'leadNumber' | 'date'>) => Lead;
+  updateLead: (leadId: string, updates: Partial<Lead>) => void;
+  markLeadAsLost: (leadId: string, lostData: { reason: string; notes?: string; competitorName?: string; date?: string }) => void;
+  reopenLead: (leadId: string, targetStage?: LeadStage) => void;
+  createCustomer: (customer: Omit<Customer, 'id' | 'code' | 'outstandingBalance'>) => Customer;
+  updateCustomer: (customerId: string, updates: Partial<Customer>) => void;
+  convertLeadToCustomer: (leadId: string, customerData?: Partial<Customer>) => Customer;
+
+  // Site Survey & Measurement Actions (Multiple per Lead/Customer)
+  addSiteSurveyToLead: (leadId: string, survey: Omit<SiteSurvey, 'id'>) => SiteSurvey;
+  updateLeadSiteSurvey: (leadId: string, surveyId: string, updates: Partial<SiteSurvey>) => void;
+  deleteLeadSiteSurvey: (leadId: string, surveyId: string) => void;
+  addSiteSurveyToCustomer: (customerId: string, survey: Omit<SiteSurvey, 'id'>) => SiteSurvey;
+  updateCustomerSiteSurvey: (customerId: string, surveyId: string, updates: Partial<SiteSurvey>) => void;
+  deleteCustomerSiteSurvey: (customerId: string, surveyId: string) => void;
+
+  // Suppliers
+  addSupplier: (supplierData: Omit<Supplier, 'id' | 'code'> & { code?: string }) => Supplier;
+  updateSupplier: (supplierId: string, updates: Partial<Supplier>) => void;
+
+  createPurchaseOrder: (po: Omit<PurchaseOrder, 'id' | 'poNumber' | 'date' | 'status'> & { status?: POStatus }) => PurchaseOrder;
   receivePurchaseOrder: (poId: string, storeId: string) => void;
+  approvePurchaseOrder: (poId: string, approvedBy: string, approvalNotes?: string) => void;
+  updatePurchaseOrderStatus: (poId: string, status: POStatus) => void;
   createCustomerOrder: (order: Omit<CustomerOrder, 'id' | 'orderNumber' | 'date' | 'status'>) => CustomerOrder;
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
+  updateOrderSurveys: (orderId: string, siteSurveyIds: string[]) => void;
+
+  // Graphic Design & Artwork Proof Actions
+  createDesignProof: (proof: Omit<DesignProof, 'id' | 'designNumber' | 'createdDate' | 'revisions' | 'revisionCount'>) => DesignProof;
+  updateDesignProof: (designId: string, updates: Partial<DesignProof>) => void;
+  addDesignRevision: (designId: string, revision: { notes: string; authorName: string; status: DesignStatus }) => void;
+  approveDesignProof: (designId: string, approverName: string, notes?: string) => void;
+  requestDesignRevision: (designId: string, feedbackNotes: string) => void;
+
+  // Work Orders & Production BOM Actions
   createWorkOrder: (wo: Omit<WorkOrder, 'id' | 'workOrderNumber' | 'status' | 'actualGoodQty' | 'scrapQty'>) => void;
   updateWorkOrder: (woId: string, updates: Partial<WorkOrder>) => void;
+  advanceWorkOrderStatus: (woId: string, status: WorkOrder['status']) => void;
+  recordWorkOrderScrap: (woId: string, scrapData: { itemId: string; quantity: number; reason: WastageReason; notes?: string }) => void;
+  addBomItemToWorkOrder: (woId: string, item: Omit<WorkOrderBomItem, 'totalCost'>) => void;
+
   createInvoice: (inv: Omit<Invoice, 'id' | 'invoiceNumber' | 'date' | 'paidAmount' | 'balanceDue' | 'paymentStatus'>) => Invoice;
+  createProforma: (proforma: Omit<ProformaInvoice, 'id' | 'proformaNumber' | 'date' | 'status'>) => ProformaInvoice;
+  updateProformaStatus: (proformaId: string, status: ProformaStatus) => void;
+  convertProformaToInvoice: (proformaId: string) => Invoice | null;
   recordCollection: (params: {
     invoiceId: string;
     amountReceived: number;
@@ -98,6 +157,8 @@ interface ErpContextType {
     notes?: string;
   }) => void;
   recordExpense: (expense: Omit<Expense, 'id' | 'expenseNumber' | 'date' | 'status'>) => void;
+  addEmployee: (employee: Omit<Employee, 'id'>) => Employee;
+  updateEmployee: (empId: string, updates: Partial<Employee>) => void;
 
   // Order Profitability Engine
   calculateOrderProfitability: (orderId: string) => OrderProfitability | null;
@@ -117,6 +178,7 @@ interface ErpContextType {
     totalCollected: number;
     totalReceivables: number;
   };
+  storeFinancials: StoreFinancials;
 
   // Demo Control
   resetDemoData: () => void;
@@ -132,10 +194,13 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<Item[]>(INITIAL_ITEMS);
   const [stores, setStores] = useState<Store[]>(INITIAL_STORES);
   const [suppliers, setSuppliers] = useState<Supplier[]>(INITIAL_SUPPLIERS);
+  const [leads, setLeads] = useState<Lead[]>(INITIAL_LEADS);
   const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
   const [orders, setOrders] = useState<CustomerOrder[]>(INITIAL_ORDERS);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>(INITIAL_WORK_ORDERS);
+  const [designProofs, setDesignProofs] = useState<DesignProof[]>(INITIAL_DESIGN_PROOFS);
   const [invoices, setInvoices] = useState<Invoice[]>(INITIAL_INVOICES);
+  const [proformas, setProformas] = useState<ProformaInvoice[]>(INITIAL_PROFORMAS);
   const [collections, setCollections] = useState<Collection[]>(INITIAL_COLLECTIONS);
   const [employees, setEmployees] = useState<Employee[]>(INITIAL_EMPLOYEES);
   const [expenses, setExpenses] = useState<Expense[]>(INITIAL_EXPENSES);
@@ -155,10 +220,40 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       setItems(getStored('items', INITIAL_ITEMS));
       setStores(getStored('stores', INITIAL_STORES));
       setSuppliers(getStored('suppliers', INITIAL_SUPPLIERS));
-      setCustomers(getStored('customers', INITIAL_CUSTOMERS));
+
+      const loadedLeads: Lead[] = getStored('leads', INITIAL_LEADS);
+      const normalizedLeads = loadedLeads.map((l) => {
+        if ((!l.siteSurveys || l.siteSurveys.length === 0) && l.siteSurvey) {
+          const s = l.siteSurvey;
+          return {
+            ...l,
+            siteSurveys: [
+              {
+                ...s,
+                id: s.id || `srv-${l.id}-1`,
+                title: s.title || `${l.companyName} Primary Signage`,
+                leadId: l.id,
+              },
+            ],
+          };
+        }
+        return l;
+      });
+      setLeads(normalizedLeads);
+
+      const loadedCustomers: Customer[] = getStored('customers', INITIAL_CUSTOMERS);
+      const normalizedCustomers = loadedCustomers.map((c) => {
+        if (!c.siteSurveys) {
+          return { ...c, siteSurveys: [] };
+        }
+        return c;
+      });
+      setCustomers(normalizedCustomers);
       setOrders(getStored('orders', INITIAL_ORDERS));
       setWorkOrders(getStored('workOrders', INITIAL_WORK_ORDERS));
+      setDesignProofs(getStored('designProofs', INITIAL_DESIGN_PROOFS));
       setInvoices(getStored('invoices', INITIAL_INVOICES));
+      setProformas(getStored('proformas', INITIAL_PROFORMAS));
       setCollections(getStored('collections', INITIAL_COLLECTIONS));
       setEmployees(getStored('employees', INITIAL_EMPLOYEES));
       setExpenses(getStored('expenses', INITIAL_EXPENSES));
@@ -196,6 +291,16 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isHydrated) return;
+    save('suppliers', suppliers);
+  }, [suppliers, isHydrated, save]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    save('leads', leads);
+  }, [leads, isHydrated, save]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
     save('customers', customers);
   }, [customers, isHydrated, save]);
 
@@ -211,8 +316,18 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isHydrated) return;
+    save('designProofs', designProofs);
+  }, [designProofs, isHydrated, save]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
     save('invoices', invoices);
   }, [invoices, isHydrated, save]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    save('proformas', proformas);
+  }, [proformas, isHydrated, save]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -250,10 +365,13 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     setItems(INITIAL_ITEMS);
     setStores(INITIAL_STORES);
     setSuppliers(INITIAL_SUPPLIERS);
+    setLeads(INITIAL_LEADS);
     setCustomers(INITIAL_CUSTOMERS);
     setOrders(INITIAL_ORDERS);
     setWorkOrders(INITIAL_WORK_ORDERS);
+    setDesignProofs(INITIAL_DESIGN_PROOFS);
     setInvoices(INITIAL_INVOICES);
+    setProformas(INITIAL_PROFORMAS);
     setCollections(INITIAL_COLLECTIONS);
     setEmployees(INITIAL_EMPLOYEES);
     setExpenses(INITIAL_EXPENSES);
@@ -261,6 +379,16 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     setPurchaseOrders(INITIAL_PURCHASE_ORDERS);
     setStockMovements(INITIAL_STOCK_MOVEMENTS);
     setCurrentRole('general_manager');
+  }, []);
+
+  // MUTATOR: Add Item (SKU onboarding)
+  const addItem = useCallback((itemData: Omit<Item, 'id'>) => {
+    const newItem: Item = {
+      ...itemData,
+      id: `item-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
+    };
+    setItems((prev) => [newItem, ...prev]);
+    return newItem;
   }, []);
 
   // MUTATOR: Add Stock Movement
@@ -274,6 +402,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       unitCost,
       referenceType,
       referenceNumber,
+      counterparty,
       notes,
     }: {
       itemId: string;
@@ -282,8 +411,9 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       movementType: MovementType;
       quantity: number;
       unitCost?: number;
-      referenceType?: 'PO' | 'WORK_ORDER' | 'INVOICE' | 'ADJUSTMENT' | 'WASTE';
+      referenceType?: 'PO' | 'WORK_ORDER' | 'INVOICE' | 'ADJUSTMENT' | 'WASTE' | 'SUPPLIER_RETURN';
       referenceNumber?: string;
+      counterparty?: string;
       notes?: string;
     }) => {
       const item = items.find((i) => i.id === itemId);
@@ -310,11 +440,63 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         totalCost: quantity * cost,
         referenceType,
         referenceNumber,
+        counterparty,
         notes,
         createdBy: currentRole.replace('_', ' ').toUpperCase(),
       };
 
       setStockMovements((prev) => [newMovement, ...prev]);
+
+      // Finance link: a PO-backed goods receipt settles the payable in Finance.
+      if (movementType === 'purchase_receipt' && referenceType === 'PO' && referenceNumber) {
+        setPurchaseOrders((prev) =>
+          prev.map((po) =>
+            po.poNumber === referenceNumber && po.status !== 'received'
+              ? { ...po, status: 'received' as const }
+              : po
+          )
+        );
+      }
+
+      // Finance link: material issued from a store against a work order posts to that
+      // work order's BOM so the cost rolls into job costing and COGS automatically.
+      if ((movementType === 'production_issue' || movementType === 'sales_issue') && referenceNumber) {
+        const linkedWo = workOrders.find(
+          (wo) => wo.workOrderNumber === referenceNumber || wo.orderNumber === referenceNumber
+        );
+        if (linkedWo) {
+          setWorkOrders((prev) =>
+            prev.map((wo) => {
+              if (wo.id !== linkedWo.id) return wo;
+              const existing = wo.bomItems.find((b) => b.itemId === itemId);
+              const bomItems = existing
+                ? wo.bomItems.map((b) => {
+                    if (b.itemId !== itemId) return b;
+                    const issuedQty = (b.actualIssuedQty || 0) + quantity;
+                    return {
+                      ...b,
+                      actualIssuedQty: issuedQty,
+                      unitCost: cost,
+                      totalCost: issuedQty * cost,
+                    };
+                  })
+                : [
+                    ...wo.bomItems,
+                    {
+                      itemId,
+                      itemName: item.name,
+                      plannedQty: quantity,
+                      actualIssuedQty: quantity,
+                      unit: item.unit,
+                      unitCost: cost,
+                      totalCost: quantity * cost,
+                    },
+                  ];
+              return { ...wo, bomItems };
+            })
+          );
+        }
+      }
 
       // Update Item Stock and store balances
       setItems((prevItems) =>
@@ -336,6 +518,22 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
             if (fromStoreId) {
               newBalances[fromStoreId] = Math.max(0, (newBalances[fromStoreId] || 0) - quantity);
             }
+          } else if (movementType === 'return') {
+            if (toStoreId) {
+              newCurrentStock += quantity;
+              newBalances[toStoreId] = (newBalances[toStoreId] || 0) + quantity;
+            } else if (fromStoreId) {
+              newCurrentStock = Math.max(0, newCurrentStock - quantity);
+              newBalances[fromStoreId] = Math.max(0, (newBalances[fromStoreId] || 0) - quantity);
+            }
+          } else if (movementType === 'adjustment') {
+            if (toStoreId) {
+              newCurrentStock += quantity;
+              newBalances[toStoreId] = (newBalances[toStoreId] || 0) + quantity;
+            } else if (fromStoreId) {
+              newCurrentStock = Math.max(0, newCurrentStock - quantity);
+              newBalances[fromStoreId] = Math.max(0, (newBalances[fromStoreId] || 0) - quantity);
+            }
           } else if (movementType === 'transfer') {
             if (fromStoreId) {
               newBalances[fromStoreId] = Math.max(0, (newBalances[fromStoreId] || 0) - quantity);
@@ -353,7 +551,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         })
       );
     },
-    [items, stores, currentRole]
+    [items, stores, currentRole, workOrders]
   );
 
   // MUTATOR: Record Wastage
@@ -414,37 +612,113 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     [items, stores, orders, currentRole, addStockMovement]
   );
 
-  // MUTATOR: Create Purchase Order
+  // MUTATOR: Add Supplier
+  const addSupplier = useCallback(
+    (supplierData: Omit<Supplier, 'id' | 'code'> & { code?: string }): Supplier => {
+      const code = supplierData.code || `SUP-${String(suppliers.length + 1).padStart(3, '0')}`;
+      const newSupplier: Supplier = {
+        ...supplierData,
+        id: `sup-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
+        code,
+      };
+      setSuppliers((prev) => [newSupplier, ...prev]);
+      return newSupplier;
+    },
+    [suppliers.length]
+  );
+
+  // MUTATOR: Update Supplier
+  const updateSupplier = useCallback((supplierId: string, updates: Partial<Supplier>) => {
+    setSuppliers((prev) => prev.map((s) => (s.id === supplierId ? { ...s, ...updates } : s)));
+  }, []);
+
+  // MUTATOR: Create Purchase Order (Requires Admin Approval by default unless admin creates it)
   const createPurchaseOrder = useCallback(
-    (poData: Omit<PurchaseOrder, 'id' | 'poNumber' | 'date' | 'status'>) => {
+    (poData: Omit<PurchaseOrder, 'id' | 'poNumber' | 'date' | 'status'> & { status?: POStatus }): PurchaseOrder => {
+      const isAdminRole = currentRole === 'admin' || currentRole === 'super_admin' || currentRole === 'general_manager';
+      const initialStatus: POStatus = poData.status || (isAdminRole ? 'approved' : 'pending_admin');
+
       const newPO: PurchaseOrder = {
         ...poData,
         id: `po-${Date.now()}`,
         poNumber: `PO-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
         date: new Date().toISOString().split('T')[0],
-        status: 'approved',
+        status: initialStatus,
+        approvedBy: initialStatus === 'approved' ? (poData.approvedBy || 'General Manager (Auto-Approved)') : undefined,
+        approvedAt: initialStatus === 'approved' ? new Date().toISOString() : undefined,
       };
+
       setPurchaseOrders((prev) => [newPO, ...prev]);
+      return newPO;
     },
-    []
+    [currentRole]
   );
 
-  // MUTATOR: Receive Goods Receipt from PO
+  // MUTATOR: Admin Approval for Purchase Order
+  const approvePurchaseOrder = useCallback((poId: string, approvedBy: string, approvalNotes?: string) => {
+    setPurchaseOrders((prev) =>
+      prev.map((po) =>
+        po.id === poId
+          ? {
+              ...po,
+              status: 'approved' as const,
+              approvedBy,
+              approvedAt: new Date().toISOString(),
+              approvalNotes,
+            }
+          : po
+      )
+    );
+  }, []);
+
+  // MUTATOR: Receive Goods Receipt from PO & Connect Directly to Store Stock
   const receivePurchaseOrder = useCallback(
     (poId: string, targetStoreId: string) => {
       const po = purchaseOrders.find((p) => p.id === poId);
       if (!po || po.status === 'received') return;
 
-      po.items.forEach((item) => {
+      const targetStore = stores.find((s) => s.id === targetStoreId) || stores[0];
+
+      po.items.forEach((poItem) => {
+        // Direct Store Connection: If item does not exist yet (e.g. newly onboarded item on PO), register it in items catalog!
+        setItems((currentItems) => {
+          const itemExists = currentItems.some(
+            (i) => i.id === poItem.itemId || (i.name && i.name.toLowerCase() === poItem.itemName.toLowerCase())
+          );
+          if (!itemExists) {
+            const newItem: Item = {
+              id: poItem.itemId || `item-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
+              code: poItem.itemCode || `SKU-${Math.floor(1000 + Math.random() * 9000)}`,
+              name: poItem.itemName,
+              type: (poItem.category as Item['type']) || 'raw_material',
+              unit: poItem.unit,
+              purchasePrice: poItem.unitPrice,
+              sellingPrice: Math.round(poItem.unitPrice * 1.35),
+              vatRate: poItem.vatRate ?? 0.15,
+              vatType: poItem.vatRate === 0 ? 'exempt' : 'standard_15',
+              reorderLevel: 10,
+              reorderQuantity: Math.max(poItem.quantity, 20),
+              currentStock: 0,
+              averageDailyUsage: 1,
+              preferredSupplierId: po.supplierId,
+              preferredSupplierName: po.supplierName,
+              storeBalances: {},
+            };
+            return [newItem, ...currentItems];
+          }
+          return currentItems;
+        });
+
+        // Add verified stock movement directly into target warehouse
         addStockMovement({
-          itemId: item.itemId,
-          toStoreId: targetStoreId,
+          itemId: poItem.itemId,
+          toStoreId: targetStore.id,
           movementType: 'purchase_receipt',
-          quantity: item.quantity,
-          unitCost: item.unitPrice,
+          quantity: poItem.quantity,
+          unitCost: poItem.unitPrice,
           referenceType: 'PO',
           referenceNumber: po.poNumber,
-          notes: `Goods received from supplier: ${po.supplierName}`,
+          notes: `Goods received from supplier: ${po.supplierName}${poItem.specifications ? ` [Specs: ${poItem.specifications}]` : ''}`,
         });
       });
 
@@ -452,7 +726,282 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         prev.map((p) => (p.id === poId ? { ...p, status: 'received' as const } : p))
       );
     },
-    [purchaseOrders, addStockMovement]
+    [purchaseOrders, stores, addStockMovement]
+  );
+
+  // MUTATOR: Update Purchase Order Status
+  const updatePurchaseOrderStatus = useCallback((poId: string, status: POStatus) => {
+    setPurchaseOrders((prev) =>
+      prev.map((p) => (p.id === poId ? { ...p, status } : p))
+    );
+  }, []);
+
+  // CRM: Create Lead
+  const createLead = useCallback(
+    (leadData: Omit<Lead, 'id' | 'leadNumber' | 'date'>): Lead => {
+      const newLead: Lead = {
+        ...leadData,
+        id: `lead-${Date.now()}`,
+        leadNumber: `LEAD-${new Date().getFullYear()}-${String(leads.length + 81).padStart(3, '0')}`,
+        date: new Date().toISOString().split('T')[0],
+      };
+      setLeads((prev) => [newLead, ...prev]);
+      return newLead;
+    },
+    [leads.length]
+  );
+
+  // CRM: Update Lead
+  const updateLead = useCallback(
+    (leadId: string, updates: Partial<Lead>) => {
+      setLeads((prev) =>
+        prev.map((lead) => (lead.id === leadId ? { ...lead, ...updates } : lead))
+      );
+    },
+    []
+  );
+
+  // CRM: Mark Lead as Closed / Lost
+  const markLeadAsLost = useCallback(
+    (
+      leadId: string,
+      lostData: { reason: string; notes?: string; competitorName?: string; date?: string }
+    ) => {
+      setLeads((prev) =>
+        prev.map((lead) =>
+          lead.id === leadId
+            ? {
+                ...lead,
+                stage: 'lost',
+                probabilityPercent: 0,
+                lostReason: lostData.reason,
+                lostNotes: lostData.notes,
+                competitorName: lostData.competitorName,
+                lostDate: lostData.date || new Date().toISOString().split('T')[0],
+              }
+            : lead
+        )
+      );
+    },
+    []
+  );
+
+  // CRM: Reopen Lost Lead
+  const reopenLead = useCallback(
+    (leadId: string, targetStage?: LeadStage) => {
+      setLeads((prev) =>
+        prev.map((lead) =>
+          lead.id === leadId
+            ? {
+                ...lead,
+                stage: targetStage || 'negotiation',
+                probabilityPercent: 50,
+                lostDate: undefined,
+              }
+            : lead
+        )
+      );
+    },
+    []
+  );
+
+  // CRM: Create Customer
+  const createCustomer = useCallback(
+    (custData: Omit<Customer, 'id' | 'code' | 'outstandingBalance'>): Customer => {
+      const cleanCode = custData.name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase();
+      const newCust: Customer = {
+        ...custData,
+        id: `cust-${Date.now()}`,
+        code: `CUST-${cleanCode || 'NEW'}`,
+        outstandingBalance: 0,
+      };
+      setCustomers((prev) => [newCust, ...prev]);
+      return newCust;
+    },
+    []
+  );
+
+  // CRM: Update Customer
+  const updateCustomer = useCallback(
+    (customerId: string, updates: Partial<Customer>) => {
+      setCustomers((prev) =>
+        prev.map((cust) => (cust.id === customerId ? { ...cust, ...updates } : cust))
+      );
+    },
+    []
+  );
+
+  // CRM: Convert Lead to Customer
+  const convertLeadToCustomer = useCallback(
+    (leadId: string, customerData?: Partial<Customer>): Customer => {
+      const targetLead = leads.find((l) => l.id === leadId);
+      if (!targetLead) throw new Error('Lead not found');
+
+      const cleanCode = targetLead.companyName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase();
+      const newCustId = `cust-${Date.now()}`;
+
+      const leadSurveys = (targetLead.siteSurveys && targetLead.siteSurveys.length > 0)
+        ? targetLead.siteSurveys
+        : targetLead.siteSurvey
+        ? [{
+            ...targetLead.siteSurvey,
+            id: targetLead.siteSurvey.id || `srv-${newCustId}-1`,
+            title: targetLead.siteSurvey.title || `${targetLead.companyName} Primary Signage`,
+          }]
+        : [];
+
+      const customerSurveys: SiteSurvey[] = leadSurveys.map((s, idx) => ({
+        ...s,
+        id: s.id || `srv-${newCustId}-${idx + 1}`,
+        customerId: newCustId,
+        leadId: targetLead.id,
+      }));
+
+      const primaryAddress = customerSurveys[0]?.locationAddress || targetLead.siteSurvey?.locationAddress || `${targetLead.city}, Ethiopia`;
+
+      const newCustomer: Customer = {
+        id: newCustId,
+        code: `CUST-${cleanCode || 'NEW'}`,
+        name: targetLead.companyName,
+        tin: targetLead.tin || '0000000000',
+        address: primaryAddress,
+        phone: targetLead.phone,
+        email: targetLead.email || `info@${cleanCode.toLowerCase() || 'client'}.com`,
+        customerType: 'business',
+        creditLimit: Math.max(targetLead.estimatedBudget * 1.2, 200000),
+        outstandingBalance: 0,
+        paymentTerms: '30 Days Net',
+        isVatRegistered: true,
+        contactPerson: targetLead.contactPerson,
+        siteSurveys: customerSurveys,
+        ...customerData,
+      };
+
+      setCustomers((prev) => [newCustomer, ...prev]);
+      setLeads((prev) =>
+        prev.map((l) =>
+          l.id === leadId ? { ...l, stage: 'won', convertedCustomerId: newCustomer.id } : l
+        )
+      );
+
+      return newCustomer;
+    },
+    [leads]
+  );
+
+  // CRM: Site Survey Mutators for Leads
+  const addSiteSurveyToLead = useCallback(
+    (leadId: string, surveyData: Omit<SiteSurvey, 'id'>): SiteSurvey => {
+      const newSurvey: SiteSurvey = {
+        ...surveyData,
+        id: `srv-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        leadId,
+      };
+      setLeads((prev) =>
+        prev.map((lead) => {
+          if (lead.id !== leadId) return lead;
+          const currentSurveys = lead.siteSurveys || (lead.siteSurvey ? [lead.siteSurvey] : []);
+          return {
+            ...lead,
+            siteSurveys: [...currentSurveys, newSurvey],
+            siteSurvey: currentSurveys.length === 0 ? newSurvey : lead.siteSurvey,
+          };
+        })
+      );
+      return newSurvey;
+    },
+    []
+  );
+
+  const updateLeadSiteSurvey = useCallback(
+    (leadId: string, surveyId: string, updates: Partial<SiteSurvey>) => {
+      setLeads((prev) =>
+        prev.map((lead) => {
+          if (lead.id !== leadId) return lead;
+          const currentSurveys = lead.siteSurveys || (lead.siteSurvey ? [lead.siteSurvey] : []);
+          const updated = currentSurveys.map((s) => (s.id === surveyId ? { ...s, ...updates } : s));
+          return {
+            ...lead,
+            siteSurveys: updated,
+            siteSurvey: updated[0] || undefined,
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const deleteLeadSiteSurvey = useCallback(
+    (leadId: string, surveyId: string) => {
+      setLeads((prev) =>
+        prev.map((lead) => {
+          if (lead.id !== leadId) return lead;
+          const currentSurveys = lead.siteSurveys || (lead.siteSurvey ? [lead.siteSurvey] : []);
+          const remaining = currentSurveys.filter((s) => s.id !== surveyId);
+          return {
+            ...lead,
+            siteSurveys: remaining,
+            siteSurvey: remaining[0] || undefined,
+          };
+        })
+      );
+    },
+    []
+  );
+
+  // CRM: Site Survey Mutators for Customers
+  const addSiteSurveyToCustomer = useCallback(
+    (customerId: string, surveyData: Omit<SiteSurvey, 'id'>): SiteSurvey => {
+      const newSurvey: SiteSurvey = {
+        ...surveyData,
+        id: `srv-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        customerId,
+      };
+      setCustomers((prev) =>
+        prev.map((cust) => {
+          if (cust.id !== customerId) return cust;
+          const current = cust.siteSurveys || [];
+          return {
+            ...cust,
+            siteSurveys: [...current, newSurvey],
+          };
+        })
+      );
+      return newSurvey;
+    },
+    []
+  );
+
+  const updateCustomerSiteSurvey = useCallback(
+    (customerId: string, surveyId: string, updates: Partial<SiteSurvey>) => {
+      setCustomers((prev) =>
+        prev.map((cust) => {
+          if (cust.id !== customerId) return cust;
+          const current = cust.siteSurveys || [];
+          return {
+            ...cust,
+            siteSurveys: current.map((s) => (s.id === surveyId ? { ...s, ...updates } : s)),
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const deleteCustomerSiteSurvey = useCallback(
+    (customerId: string, surveyId: string) => {
+      setCustomers((prev) =>
+        prev.map((cust) => {
+          if (cust.id !== customerId) return cust;
+          const current = cust.siteSurveys || [];
+          return {
+            ...cust,
+            siteSurveys: current.filter((s) => s.id !== surveyId),
+          };
+        })
+      );
+    },
+    []
   );
 
   // MUTATOR: Create Customer Order
@@ -464,6 +1013,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         orderNumber: `ORD-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
         date: new Date().toISOString().split('T')[0],
         status: 'pending',
+        siteSurveyIds: orderData.siteSurveyIds || [],
       };
       setOrders((prev) => [newOrder, ...prev]);
       return newOrder;
@@ -475,6 +1025,137 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
   const updateOrderStatus = useCallback((orderId: string, status: OrderStatus) => {
     setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status } : o)));
   }, []);
+
+  // MUTATOR: Update / Link Site Surveys for Order (1-to-many)
+  const updateOrderSurveys = useCallback((orderId: string, siteSurveyIds: string[]) => {
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, siteSurveyIds } : o))
+    );
+  }, []);
+
+  // MUTATOR: Graphic Design & Proofing Engine
+  const createDesignProof = useCallback(
+    (
+      proofData: Omit<DesignProof, 'id' | 'designNumber' | 'createdDate' | 'revisions' | 'revisionCount'>
+    ): DesignProof => {
+      const newProof: DesignProof = {
+        ...proofData,
+        id: `des-${Date.now()}`,
+        designNumber: `DSG-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+        createdDate: new Date().toISOString().split('T')[0],
+        revisionCount: 1,
+        revisions: [
+          {
+            id: `rev-${Date.now()}-1`,
+            versionNumber: 1,
+            date: new Date().toISOString().split('T')[0],
+            notes: 'Initial artwork & vector proof generated for client review.',
+            authorName: proofData.designerName,
+            status: proofData.status,
+          },
+        ],
+      };
+      setDesignProofs((prev) => [newProof, ...prev]);
+      if (proofData.customerOrderId) {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === proofData.customerOrderId ? { ...o, designProofId: newProof.id } : o))
+        );
+      }
+      return newProof;
+    },
+    []
+  );
+
+  const updateDesignProof = useCallback((designId: string, updates: Partial<DesignProof>) => {
+    setDesignProofs((prev) =>
+      prev.map((d) => (d.id === designId ? { ...d, ...updates } : d))
+    );
+  }, []);
+
+  const addDesignRevision = useCallback(
+    (
+      designId: string,
+      revision: { notes: string; authorName: string; status: DesignStatus }
+    ) => {
+      setDesignProofs((prev) =>
+        prev.map((d) => {
+          if (d.id !== designId) return d;
+          const nextVer = d.revisionCount + 1;
+          const newRev: DesignRevision = {
+            id: `rev-${Date.now()}-${nextVer}`,
+            versionNumber: nextVer,
+            date: new Date().toISOString().split('T')[0],
+            notes: revision.notes,
+            authorName: revision.authorName,
+            status: revision.status,
+          };
+          return {
+            ...d,
+            status: revision.status,
+            revisionCount: nextVer,
+            revisions: [newRev, ...d.revisions],
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const approveDesignProof = useCallback(
+    (designId: string, approverName: string, notes?: string) => {
+      setDesignProofs((prev) =>
+        prev.map((d) => {
+          if (d.id !== designId) return d;
+          const nextVer = d.revisionCount + 1;
+          const approvalRev: DesignRevision = {
+            id: `rev-${Date.now()}-${nextVer}`,
+            versionNumber: nextVer,
+            date: new Date().toISOString().split('T')[0],
+            notes: notes || 'Artwork & dimensions officially approved by client. Ready for print & fabrication.',
+            authorName: approverName,
+            status: 'approved',
+          };
+          return {
+            ...d,
+            status: 'approved',
+            approvedDate: new Date().toISOString().split('T')[0],
+            approvedBy: approverName,
+            clientFeedback: notes || d.clientFeedback,
+            revisionCount: nextVer,
+            revisions: [approvalRev, ...d.revisions],
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const requestDesignRevision = useCallback(
+    (designId: string, feedbackNotes: string) => {
+      setDesignProofs((prev) =>
+        prev.map((d) => {
+          if (d.id !== designId) return d;
+          const nextVer = d.revisionCount + 1;
+          const revRecord: DesignRevision = {
+            id: `rev-${Date.now()}-${nextVer}`,
+            versionNumber: nextVer,
+            date: new Date().toISOString().split('T')[0],
+            notes: feedbackNotes,
+            authorName: 'Client Revision Request',
+            status: 'revision_requested',
+          };
+          return {
+            ...d,
+            status: 'revision_requested',
+            clientFeedback: feedbackNotes,
+            revisionCount: nextVer,
+            revisions: [revRecord, ...d.revisions],
+          };
+        })
+      );
+    },
+    []
+  );
 
   // MUTATOR: Work Orders
   const createWorkOrder = useCallback(
@@ -496,6 +1177,77 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
   const updateWorkOrder = useCallback((woId: string, updates: Partial<WorkOrder>) => {
     setWorkOrders((prev) => prev.map((w) => (w.id === woId ? { ...w, ...updates } : w)));
   }, []);
+
+  const advanceWorkOrderStatus = useCallback(
+    (woId: string, nextStatus: WorkOrder['status']) => {
+      setWorkOrders((prev) =>
+        prev.map((wo) => {
+          if (wo.id !== woId) return wo;
+          const isDone = nextStatus === 'completed';
+          return {
+            ...wo,
+            status: nextStatus,
+            endDate: isDone ? new Date().toISOString().split('T')[0] : wo.endDate,
+            actualGoodQty: isDone && wo.actualGoodQty === 0 ? wo.plannedQty : wo.actualGoodQty,
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const recordWorkOrderScrap = useCallback(
+    (
+      woId: string,
+      scrapData: {
+        itemId: string;
+        quantity: number;
+        reason: WastageReason;
+        notes?: string;
+      }
+    ) => {
+      const wo = workOrders.find((w) => w.id === woId);
+      if (!wo) return;
+
+      // 1. Update WO scrap count
+      setWorkOrders((prev) =>
+        prev.map((w) =>
+          w.id === woId ? { ...w, scrapQty: w.scrapQty + scrapData.quantity } : w
+        )
+      );
+
+      // 2. Record wastage to ERP wastage log
+      recordWastage({
+        itemId: scrapData.itemId,
+        quantity: scrapData.quantity,
+        storeId: 'store-2', // Production floor
+        reason: scrapData.reason,
+        orderId: wo.customerOrderId,
+        notes: `Work Order ${wo.workOrderNumber}: ${scrapData.notes || 'Production scrap/wastage'}`,
+      });
+    },
+    [workOrders, recordWastage]
+  );
+
+  const addBomItemToWorkOrder = useCallback(
+    (woId: string, itemData: Omit<WorkOrderBomItem, 'totalCost'>) => {
+      setWorkOrders((prev) =>
+        prev.map((wo) => {
+          if (wo.id !== woId) return wo;
+          const totalCost = (itemData.actualIssuedQty || itemData.plannedQty) * itemData.unitCost;
+          const newItem: WorkOrderBomItem = {
+            ...itemData,
+            totalCost,
+          };
+          return {
+            ...wo,
+            bomItems: [...wo.bomItems, newItem],
+          };
+        })
+      );
+    },
+    []
+  );
 
   // MUTATOR: Create Invoice (with VAT or Non-VAT)
   const createInvoice = useCallback(
@@ -525,6 +1277,64 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       return newInvoice;
     },
     [updateOrderStatus]
+  );
+
+  // MUTATOR: Create Proforma
+  const createProforma = useCallback(
+    (data: Omit<ProformaInvoice, 'id' | 'proformaNumber' | 'date' | 'status'>) => {
+      const newProforma: ProformaInvoice = {
+        ...data,
+        id: `prof-${Date.now()}`,
+        proformaNumber: `PROF-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+        date: new Date().toISOString().split('T')[0],
+        status: 'sent',
+      };
+      setProformas((prev) => [newProforma, ...prev]);
+      return newProforma;
+    },
+    []
+  );
+
+  // MUTATOR: Update Proforma Status
+  const updateProformaStatus = useCallback((proformaId: string, status: ProformaStatus) => {
+    setProformas((prev) =>
+      prev.map((p) => (p.id === proformaId ? { ...p, status } : p))
+    );
+  }, []);
+
+  // MUTATOR: Convert Proforma to Official Tax Invoice
+  const convertProformaToInvoice = useCallback(
+    (proformaId: string) => {
+      const prof = proformas.find((p) => p.id === proformaId);
+      if (!prof) return null;
+
+      const newInv = createInvoice({
+        customerOrderId: prof.customerOrderId || `ord-ref-${Date.now()}`,
+        orderNumber: prof.orderNumber || `ORD-REF-${prof.proformaNumber}`,
+        customerId: prof.customerId,
+        customerName: prof.customerName,
+        customerTin: prof.customerTin,
+        customerAddress: prof.customerAddress,
+        invoiceType: prof.invoiceType,
+        dueDate: prof.validUntil || new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
+        items: prof.items,
+        subtotalNet: prof.subtotalNet,
+        vatAmount: prof.vatAmount,
+        grandTotal: prof.grandTotal,
+        notes: `Converted from Proforma ${prof.proformaNumber}. ${prof.notes || ''}`.trim(),
+      });
+
+      setProformas((prev) =>
+        prev.map((p) =>
+          p.id === proformaId
+            ? { ...p, status: 'converted', convertedInvoiceId: newInv.id }
+            : p
+        )
+      );
+
+      return newInv;
+    },
+    [proformas, createInvoice]
   );
 
   // MUTATOR: Record Collection (Telebirr, Chapa, CBE, Cash)
@@ -614,6 +1424,23 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  // MUTATOR: Add Employee
+  const addEmployee = useCallback((empData: Omit<Employee, 'id'>): Employee => {
+    const newEmp: Employee = {
+      ...empData,
+      id: `emp-${Date.now()}`,
+    };
+    setEmployees((prev) => [...prev, newEmp]);
+    return newEmp;
+  }, []);
+
+  // MUTATOR: Update Employee
+  const updateEmployee = useCallback((empId: string, updates: Partial<Employee>) => {
+    setEmployees((prev) =>
+      prev.map((e) => (e.id === empId ? { ...e, ...updates } : e))
+    );
+  }, []);
+
   // CALCULATION: Order Profitability Engine
   const calculateOrderProfitability = useCallback(
     (orderId: string): OrderProfitability | null => {
@@ -645,11 +1472,10 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         directLaborCost += wo.machineHours * 120 * numOps;
       });
 
-      // 3. Order-specific transport & site installation expenses
+      // 3. Order-specific direct expenses (transport, crane rental, permits, site installation, etc.)
       const linkedExpenses = expenses.filter((e) => e.orderId === orderId);
-      const orderTransportCost = linkedExpenses
-        .filter((e) => e.category === 'delivery_transport')
-        .reduce((sum, e) => sum + e.amountNet, 0);
+      const orderDirectExpensesCost = linkedExpenses.reduce((sum, e) => sum + e.amountNet, 0);
+      const orderTransportCost = orderDirectExpensesCost; // Kept for backwards compatibility
 
       // 4. Wastage cost attributed to this order
       const linkedWastage = wastages.filter((w) => w.orderId === orderId);
@@ -666,12 +1492,12 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         directLaborCost +
         machineCost +
         packagingCost +
-        orderTransportCost +
+        orderDirectExpensesCost +
         allocatedOverheadCost +
         wastageCost;
 
       // Profit calculations
-      const variableCosts = directMaterialCost + directLaborCost + machineCost + wastageCost;
+      const variableCosts = directMaterialCost + directLaborCost + machineCost + wastageCost + orderDirectExpensesCost;
       const grossProfit = orderRevenue - variableCosts;
       const orderProfit = orderRevenue - totalOrderCost;
       const profitMarginPct = orderRevenue > 0 ? (orderProfit / orderRevenue) * 100 : 0;
@@ -687,6 +1513,7 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         machineCost,
         packagingCost,
         orderTransportCost,
+        orderDirectExpensesCost,
         allocatedOverheadCost,
         wastageCost,
         totalOrderCost,
@@ -719,6 +1546,137 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       );
   }, [items]);
 
+  // CALCULATION: Store ledger -> Finance bridge
+  const storeFinancials = useMemo<StoreFinancials>(() => {
+    const sumMovements = (predicate: (m: StockMovement) => boolean) =>
+      stockMovements.filter(predicate).reduce((sum, m) => sum + m.totalCost, 0);
+
+    const purchaseReceipts = stockMovements.filter((m) => m.movementType === 'purchase_receipt');
+    const linkedReceipts = purchaseReceipts.filter((m) => m.referenceType === 'PO');
+    const unlinkedReceipts = purchaseReceipts.filter((m) => m.referenceType !== 'PO');
+
+    const productionIssueValue = sumMovements((m) => m.movementType === 'production_issue');
+    const salesIssueValue = sumMovements((m) => m.movementType === 'sales_issue');
+    const wastageValue = wastages.reduce((sum, w) => sum + w.totalCost, 0);
+    const unallocatedWastageValue = wastages
+      .filter((w) => !w.orderId)
+      .reduce((sum, w) => sum + w.totalCost, 0);
+
+    const storeValuations = stores.map((store) => {
+      const storeItems = items
+        .map((item) => ({ item, qty: item.storeBalances?.[store.id] || 0 }))
+        .filter(({ qty }) => qty > 0);
+      return {
+        storeId: store.id,
+        storeName: store.name,
+        storeType: store.storeType,
+        skuCount: storeItems.length,
+        totalUnits: storeItems.reduce((sum, { qty }) => sum + qty, 0),
+        totalValue: storeItems.reduce((sum, { item, qty }) => sum + qty * item.purchasePrice, 0),
+      };
+    });
+
+    const categoryMap = new Map<ItemType, { skuCount: number; totalValue: number }>();
+    items.forEach((item) => {
+      const current = categoryMap.get(item.type) || { skuCount: 0, totalValue: 0 };
+      categoryMap.set(item.type, {
+        skuCount: current.skuCount + 1,
+        totalValue: current.totalValue + item.currentStock * item.purchasePrice,
+      });
+    });
+
+    const recentPostings = [...stockMovements]
+      .sort((a, b) => b.date.localeCompare(a.date) || b.movementNumber.localeCompare(a.movementNumber))
+      .slice(0, 60)
+      .map((m) => {
+        let debitAccount = 'Inventory — Raw Materials';
+        let creditAccount = 'Inventory — Raw Materials';
+        if (m.movementType === 'purchase_receipt') {
+          debitAccount = 'Inventory — Raw Materials';
+          creditAccount = m.referenceType === 'PO' ? 'Accounts Payable — Suppliers' : 'Unreconciled Goods Received';
+        } else if (m.movementType === 'production_issue') {
+          debitAccount = 'Work in Progress — Direct Materials';
+          creditAccount = 'Inventory — Raw Materials';
+        } else if (m.movementType === 'production_receipt') {
+          debitAccount = 'Inventory — Finished Goods';
+          creditAccount = 'Work in Progress — Direct Materials';
+        } else if (m.movementType === 'sales_issue') {
+          debitAccount = 'Cost of Goods Sold';
+          creditAccount = 'Inventory — Finished Goods';
+        } else if (m.movementType === 'wastage') {
+          debitAccount = 'Wastage & Shrinkage Expense';
+          creditAccount = 'Inventory — Raw Materials';
+        } else if (m.movementType === 'return') {
+          if (m.referenceType === 'SUPPLIER_RETURN') {
+            debitAccount = 'Accounts Payable — Suppliers';
+            creditAccount = 'Inventory — Raw Materials';
+          } else {
+            debitAccount = 'Inventory — Raw Materials';
+            creditAccount = 'Work in Progress — Direct Materials';
+          }
+        } else if (m.movementType === 'adjustment') {
+          if (m.toStoreId && !m.fromStoreId) {
+            debitAccount = 'Inventory — Raw Materials';
+            creditAccount = 'Stock Adjustment Gain';
+          } else {
+            debitAccount = 'Stock Adjustment Loss';
+            creditAccount = 'Inventory — Raw Materials';
+          }
+        } else if (m.movementType === 'transfer') {
+          debitAccount = `Inventory — ${m.toStoreName || 'Destination Store'}`;
+          creditAccount = `Inventory — ${m.fromStoreName || 'Source Store'}`;
+        }
+
+        return {
+          id: m.id,
+          date: m.date,
+          movementNumber: m.movementNumber,
+          movementType: m.movementType,
+          reference: m.referenceNumber,
+          itemName: m.itemName,
+          storeName: m.fromStoreName || m.toStoreName || 'Store ledger',
+          quantity: m.quantity,
+          unit: m.unit,
+          value: m.totalCost,
+          debitAccount,
+          creditAccount,
+          reconciled: m.movementType !== 'purchase_receipt' || m.referenceType === 'PO',
+        };
+      });
+
+    return {
+      inventoryValuation: items.reduce((sum, item) => sum + item.currentStock * item.purchasePrice, 0),
+      productionIssueValue,
+      salesIssueValue,
+      purchaseReceiptValue: purchaseReceipts.reduce((sum, m) => sum + m.totalCost, 0),
+      wastageValue,
+      unallocatedWastageValue,
+      adjustmentLossValue: sumMovements(
+        (m) => m.movementType === 'adjustment' && !!m.fromStoreId && !m.toStoreId
+      ),
+      adjustmentGainValue: sumMovements(
+        (m) => m.movementType === 'adjustment' && !!m.toStoreId && !m.fromStoreId
+      ),
+      supplierReturnValue: sumMovements(
+        (m) => m.movementType === 'return' && m.referenceType === 'SUPPLIER_RETURN'
+      ),
+      staffReturnValue: sumMovements(
+        (m) => m.movementType === 'return' && m.referenceType !== 'SUPPLIER_RETURN'
+      ),
+      transferValue: sumMovements((m) => m.movementType === 'transfer'),
+      storeValuations,
+      categoryValuations: Array.from(categoryMap.entries()).map(([category, value]) => ({
+        category,
+        ...value,
+      })),
+      recentPostings,
+      linkedPurchaseReceipts: linkedReceipts.length,
+      unlinkedPurchaseReceipts: unlinkedReceipts.length,
+      linkedPurchaseReceiptValue: linkedReceipts.reduce((sum, m) => sum + m.totalCost, 0),
+      unlinkedPurchaseReceiptValue: unlinkedReceipts.reduce((sum, m) => sum + m.totalCost, 0),
+    };
+  }, [items, stores, stockMovements, wastages]);
+
   // CALCULATION: Company-level Financials
   const companyFinancials = useMemo(() => {
     // Net Revenue from all invoices
@@ -733,11 +1691,16 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
     const totalInputVat = poVat + expVat;
     const netVatPayable = Math.max(0, totalOutputVat - totalInputVat);
 
-    // Cost of goods sold (COGS) from all orders
-    const cogs = allOrderProfitability.reduce(
-      (sum, p) => sum + (p.directMaterialCost + p.directLaborCost + p.machineCost + p.wastageCost),
-      0
-    );
+    // Cost of goods sold (COGS) from all orders, plus unallocated store wastage
+    // and stock-count shrinkage posted directly by the Stores module.
+    const cogs =
+      allOrderProfitability.reduce(
+        (sum, p) => sum + (p.directMaterialCost + p.directLaborCost + p.machineCost + p.wastageCost),
+        0
+      ) +
+      storeFinancials.unallocatedWastageValue +
+      storeFinancials.adjustmentLossValue -
+      storeFinancials.adjustmentGainValue;
     const grossProfit = totalRevenueNet - cogs;
 
     // General Period Expenses (excluding direct order expenses to avoid double counting)
@@ -761,7 +1724,15 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
       totalCollected,
       totalReceivables,
     };
-  }, [invoices, purchaseOrders, expenses, allOrderProfitability, collections, customers]);
+  }, [
+    invoices,
+    purchaseOrders,
+    expenses,
+    allOrderProfitability,
+    collections,
+    customers,
+    storeFinancials,
+  ]);
 
   return (
     <ErpContext.Provider
@@ -769,9 +1740,11 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         items,
         stores,
         suppliers,
+        leads,
         customers,
         orders,
         workOrders,
+        designProofs,
         invoices,
         collections,
         employees,
@@ -781,21 +1754,55 @@ export function ErpDataProvider({ children }: { children: React.ReactNode }) {
         stockMovements,
         currentRole,
         setCurrentRole,
+        createLead,
+        updateLead,
+        markLeadAsLost,
+        reopenLead,
+        createCustomer,
+        updateCustomer,
+        convertLeadToCustomer,
+        addSiteSurveyToLead,
+        updateLeadSiteSurvey,
+        deleteLeadSiteSurvey,
+        addSiteSurveyToCustomer,
+        updateCustomerSiteSurvey,
+        deleteCustomerSiteSurvey,
+        addItem,
+        addSupplier,
+        updateSupplier,
         addStockMovement,
         recordWastage,
         createPurchaseOrder,
         receivePurchaseOrder,
+        approvePurchaseOrder,
+        updatePurchaseOrderStatus,
         createCustomerOrder,
         updateOrderStatus,
+        updateOrderSurveys,
+        createDesignProof,
+        updateDesignProof,
+        addDesignRevision,
+        approveDesignProof,
+        requestDesignRevision,
         createWorkOrder,
         updateWorkOrder,
+        advanceWorkOrderStatus,
+        recordWorkOrderScrap,
+        addBomItemToWorkOrder,
         createInvoice,
+        proformas,
+        createProforma,
+        updateProformaStatus,
+        convertProformaToInvoice,
         recordCollection,
         recordExpense,
+        addEmployee,
+        updateEmployee,
         calculateOrderProfitability,
         allOrderProfitability,
         lowStockItems,
         companyFinancials,
+        storeFinancials,
         resetDemoData,
         isHydrated,
       }}

@@ -32,7 +32,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
       title: 'Procure & Receive Raw Materials',
       icon: ShoppingCart,
       color: '#6366f1',
-      moduleLink: '/procurement',
+      moduleLink: '/dashboard/procurement',
       moduleName: 'Procurement & POs',
       summary:
         'Purchase orders are raised for items like Glossy Vinyl and Acrylic Sheets from local suppliers with TIN tracking.',
@@ -112,7 +112,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
       title: 'Collect Payment (Telebirr / Bank Transfer)',
       icon: Wallet,
       color: '#06b6d4',
-      moduleLink: '/collections',
+      moduleLink: '/dashboard/collections',
       moduleName: 'Collections & Credit',
       summary:
         'Cash is collected through modern payment channels: Telebirr, Chapa, or CBE Bank Transfer.',
@@ -128,7 +128,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
       title: 'Unveil Exact Order Profitability',
       icon: TrendingUp,
       color: '#10b981',
-      moduleLink: '/orders',
+      moduleLink: '/dashboard/orders',
       moduleName: 'Order Profitability',
       summary:
         'The ultimate destination: Factory management sees exactly what this job made down to the cent.',
@@ -147,25 +147,27 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
 
   return (
     <div className="modal-overlay" style={{ zIndex: 1100 }}>
-      <div className="modal-content" style={{ maxWidth: '820px' }}>
+      <div className="modal-content" style={{ maxWidth: '820px', background: '#ffffff', border: '1px solid var(--border-light)' }}>
         {/* Header */}
-        <div className="modal-header">
+        <div className="modal-header" style={{ borderBottom: '1px solid var(--border-light)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div
               style={{
                 width: '36px',
                 height: '36px',
                 borderRadius: '8px',
-                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                background: '#09090b',
+                border: '1px solid #facc15',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                boxShadow: '0 0 10px rgba(250, 204, 21, 0.25)',
               }}
             >
-              <Sparkles size={18} color="#ffffff" />
+              <Sparkles size={18} color="#facc15" />
             </div>
             <div>
-              <h3 style={{ fontSize: '1.15rem' }}>The Golden Demo Story</h3>
+              <h3 style={{ fontSize: '1.15rem', color: '#09090b', fontWeight: 800 }}>The Golden Demo Story</h3>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                 The complete end-to-end factory workflow from raw material to net order profit
               </p>
@@ -189,51 +191,55 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
         <div
           style={{
             display: 'flex',
-            padding: '16px 24px',
-            background: 'rgba(15, 23, 42, 0.4)',
-            borderBottom: '1px solid var(--border-subtle)',
+            padding: '14px 20px',
+            background: '#f8fafc',
+            borderBottom: '1px solid var(--border-light)',
             overflowX: 'auto',
             gap: '8px',
           }}
         >
-          {steps.map((s, idx) => (
-            <button
-              key={s.stepNumber}
-              onClick={() => setActiveStep(idx)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '8px 14px',
-                borderRadius: 'var(--radius-md)',
-                background: activeStep === idx ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-                border: activeStep === idx ? '1px solid #6366f1' : '1px solid transparent',
-                color: activeStep === idx ? '#ffffff' : 'var(--text-dim)',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              <span
+          {steps.map((s, idx) => {
+            const isActive = activeStep === idx;
+            return (
+              <button
+                key={s.stepNumber}
+                onClick={() => setActiveStep(idx)}
                 style={{
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  background: activeStep === idx ? '#6366f1' : '#1e293b',
-                  color: '#ffffff',
-                  fontSize: '0.7rem',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  gap: '8px',
+                  padding: '7px 12px',
+                  borderRadius: '8px',
+                  background: isActive ? '#fef9c3' : 'transparent',
+                  border: isActive ? '1px solid #ca8a04' : '1px solid transparent',
+                  color: isActive ? '#854d0e' : 'var(--text-muted)',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: isActive ? 700 : 500,
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.15s ease',
                 }}
               >
-                {s.stepNumber}
-              </span>
-              <span>{s.title.split(' ')[0]} {s.title.split(' ')[1] || ''}</span>
-            </button>
-          ))}
+                <span
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    background: isActive ? '#09090b' : '#e4e4e7',
+                    color: isActive ? '#facc15' : '#71717a',
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {s.stepNumber}
+                </span>
+                <span>{s.title.split(' ')[0]} {s.title.split(' ')[1] || ''}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Body */}
@@ -244,31 +250,32 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
                 width: '44px',
                 height: '44px',
                 borderRadius: '12px',
-                background: `${current.color}20`,
-                border: `1px solid ${current.color}40`,
+                background: '#09090b',
+                border: '1px solid #facc15',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                color: '#facc15',
               }}
             >
-              <StepIcon size={24} color={current.color} />
+              <StepIcon size={22} color="#facc15" />
             </div>
             <div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: current.color, textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#854d0e', textTransform: 'uppercase' }}>
                 Step {current.stepNumber} of 7
               </div>
-              <h2 style={{ fontSize: '1.25rem', marginTop: '2px' }}>{current.title}</h2>
+              <h2 style={{ fontSize: '1.25rem', marginTop: '2px', color: '#09090b', fontWeight: 800 }}>{current.title}</h2>
             </div>
           </div>
 
-          <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', lineHeight: 1.6, marginBottom: '20px' }}>
+          <p style={{ fontSize: '0.95rem', color: '#09090b', lineHeight: 1.6, marginBottom: '20px' }}>
             {current.summary}
           </p>
 
           <div
             style={{
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-subtle)',
+              background: '#f8fafc',
+              border: '1px solid var(--border-light)',
               borderRadius: 'var(--radius-lg)',
               padding: '16px 20px',
               marginBottom: '20px',
@@ -278,7 +285,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
               style={{
                 fontSize: '0.75rem',
                 fontWeight: 700,
-                color: 'var(--text-dim)',
+                color: 'var(--text-muted)',
                 textTransform: 'uppercase',
                 marginBottom: '10px',
                 letterSpacing: '0.05em',
@@ -295,11 +302,11 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
                     alignItems: 'flex-start',
                     gap: '10px',
                     fontSize: '0.85rem',
-                    color: 'var(--text-muted)',
+                    color: '#09090b',
                     lineHeight: 1.5,
                   }}
                 >
-                  <span style={{ color: current.color, fontWeight: 'bold' }}>•</span>
+                  <span style={{ color: '#ca8a04', fontWeight: 'bold' }}>•</span>
                   <span>{detail}</span>
                 </li>
               ))}
@@ -308,8 +315,8 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
 
           <div
             style={{
-              background: 'rgba(99, 102, 241, 0.08)',
-              border: '1px dashed rgba(99, 102, 241, 0.4)',
+              background: '#fef9c3',
+              border: '1px dashed #ca8a04',
               borderRadius: 'var(--radius-md)',
               padding: '12px 16px',
               display: 'flex',
@@ -318,10 +325,10 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
             }}
           >
             <div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#a5b4fc' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#854d0e' }}>
                 Mockup Demo Highlight:
               </div>
-              <div style={{ fontSize: '0.825rem', color: 'var(--text-main)', marginTop: '2px' }}>
+              <div style={{ fontSize: '0.825rem', color: '#09090b', marginTop: '2px' }}>
                 {current.mockupHighlight}
               </div>
             </div>
@@ -329,8 +336,19 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
             <Link
               href={current.moduleLink}
               onClick={onClose}
-              className="btn btn-secondary btn-sm"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '7px 14px',
+                background: '#09090b',
+                color: '#facc15',
+                border: '1px solid #facc15',
+                borderRadius: '8px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                textDecoration: 'none',
+              }}
             >
               <span>Explore {current.moduleName}</span>
               <ArrowRight size={13} />
@@ -339,7 +357,7 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
         </div>
 
         {/* Footer */}
-        <div className="modal-footer" style={{ justifyContent: 'space-between' }}>
+        <div className="modal-footer" style={{ justifyContent: 'space-between', borderTop: '1px solid var(--border-light)' }}>
           <button
             className="btn btn-secondary btn-sm"
             onClick={() => setActiveStep((prev) => Math.max(0, prev - 1))}
@@ -349,20 +367,44 @@ export default function GoldenStoryModal({ isOpen, onClose }: GoldenStoryModalPr
             Previous Step
           </button>
 
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>
             Step {activeStep + 1} of {steps.length}
           </div>
 
           {activeStep < steps.length - 1 ? (
             <button
-              className="btn btn-primary btn-sm"
               onClick={() => setActiveStep((prev) => prev + 1)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '7px 16px',
+                background: '#09090b',
+                color: '#facc15',
+                border: '1px solid #facc15',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
             >
               <span>Next: Step {activeStep + 2}</span>
               <ArrowRight size={14} />
             </button>
           ) : (
-            <button className="btn btn-primary btn-sm" onClick={onClose}>
+            <button
+              onClick={onClose}
+              style={{
+                padding: '7px 16px',
+                background: '#09090b',
+                color: '#facc15',
+                border: '1px solid #facc15',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
               Finish Walkthrough
             </button>
           )}

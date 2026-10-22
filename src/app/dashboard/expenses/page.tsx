@@ -73,6 +73,9 @@ export default function ExpensesPage() {
       security: 'Facility Security & Surveillance',
       office_supplies: 'Design Software & Office Supplies',
       order_direct_supplies: 'Order Direct Custom Hardware',
+      crane_scaffolding_rental: 'Hydraulic Crane & Boom Lift Hire',
+      installation_per_diem: 'Site Installation Team Daily Per-Diem',
+      permits_licensing: 'Municipal Signage Permits & Structural Certification',
     };
 
     recordExpense({

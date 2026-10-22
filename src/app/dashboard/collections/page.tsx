@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useErp } from '@/context/ErpDataContext';
 import {
   Wallet,
@@ -112,6 +113,38 @@ export default function CollectionsPage() {
 
   return (
     <div>
+      {/* Banner linking to integrated /sales?tab=collections */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.1) 100%)',
+          border: '1px solid rgba(16, 185, 129, 0.4)',
+          borderRadius: 'var(--radius-md)',
+          padding: '12px 18px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Wallet size={20} color="#10b981" />
+          <div style={{ fontSize: '0.85rem', color: '#a7f3d0' }}>
+            <strong>Collections Integrated into Sales Desk:</strong> Collection vouchers, customer credit limits & digital receipts are now directly managed inside the Sales Module at <strong>/sales?tab=collections</strong>.
+          </div>
+        </div>
+        <Link
+          href="/sales?tab=collections"
+          className="btn btn-primary btn-sm"
+          style={{
+            background: 'linear-gradient(135deg, #10b981, #059669)',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <span>Open Sales & Collections Desk →</span>
+        </Link>
+      </div>
+
       {/* Top Header */}
       <div
         style={{
