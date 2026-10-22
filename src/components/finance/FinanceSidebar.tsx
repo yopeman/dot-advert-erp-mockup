@@ -127,19 +127,9 @@ function FinanceSidebarContent() {
       icon: Users,
     },
     {
-      label: 'Procurement & POs',
-      href: '/dashboard/procurement',
-      icon: ShoppingCart,
-    },
-    {
       label: 'Inventory & Materials',
       href: '/inventory',
       icon: Layers,
-    },
-    {
-      label: 'Payroll & HR Labor',
-      href: '/dashboard/payroll',
-      icon: DollarSign,
     },
   ];
 

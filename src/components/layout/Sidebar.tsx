@@ -31,11 +31,6 @@ export default function Sidebar() {
 
   const navItems = [
     {
-      label: 'Executive Overview',
-      href: '/dashboard',
-      icon: LayoutDashboard,
-    },
-    {
       label: 'HR & Workforce Hub',
       href: '/hr',
       icon: Users,
@@ -55,11 +50,6 @@ export default function Sidebar() {
       icon: Boxes,
       badge: lowStockItems.length > 0 ? `${lowStockItems.length} Low` : 'Dedicated Hub',
       badgeType: 'amber',
-    },
-    {
-      label: 'Procurement & POs',
-      href: '/dashboard/procurement',
-      icon: ShoppingCart,
     },
     {
       label: 'Suppliers & Vendors',
@@ -83,21 +73,11 @@ export default function Sidebar() {
       badgeType: 'rose',
     },
     {
-      label: 'Collections & Credit',
-      href: '/dashboard/collections',
-      icon: Wallet,
-    },
-    {
       label: 'Payroll & Labor',
       href: '/hr?tab=payroll',
       icon: Users,
       badge: 'MoR Tax',
       badgeType: 'yellow',
-    },
-    {
-      label: 'Expenses & Overhead',
-      href: '/dashboard/expenses',
-      icon: PieChart,
     },
     {
       label: 'Finance & Profitability',

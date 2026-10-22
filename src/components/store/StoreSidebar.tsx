@@ -122,7 +122,6 @@ function StoreSidebarContent() {
   const crossNavItems = [
     { label: 'Finance & P&L', href: '/finance?tab=stores', icon: TrendingUp },
     { label: 'HR & Workforce Hub', href: '/hr', icon: Users },
-    { label: 'Procurement & POs', href: '/dashboard/procurement', icon: ShoppingCart },
     { label: 'Factory Work Orders', href: '/orders', icon: Cog },
   ];
 
@@ -366,34 +365,6 @@ function StoreSidebarContent() {
             {items.length} SKUs across {stores.length} warehouses
           </div>
         </div>
-
-        <Link
-          href="/dashboard"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            padding: '10px',
-            borderRadius: 8,
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid #27272a',
-            color: '#ffffff',
-            fontSize: '12px',
-            fontWeight: 600,
-            textDecoration: 'none',
-            transition: 'background 0.15s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-          }}
-        >
-          <ArrowLeft size={14} />
-          <span>Return to Main ERP</span>
-        </Link>
 
         <Link
           href="/"

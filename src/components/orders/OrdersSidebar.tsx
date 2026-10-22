@@ -87,11 +87,6 @@ function OrdersSidebarContent() {
       href: '/inventory',
       icon: Layers,
     },
-    {
-      label: 'Payment Collections',
-      href: '/dashboard/collections',
-      icon: Wallet,
-    },
   ];
 
   return (
@@ -354,22 +349,6 @@ function OrdersSidebarContent() {
           >
             <LayoutGrid size={14} />
             <span>All System Modules</span>
-          </Link>
-          <Link
-            href="/dashboard"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '8px 10px',
-              borderRadius: 'var(--radius-sm)',
-              color: '#71717a',
-              fontSize: '0.78rem',
-              transition: 'color 0.15s ease',
-            }}
-          >
-            <ArrowLeft size={14} />
-            <span>Executive Dashboard</span>
           </Link>
         </div>
       </div>

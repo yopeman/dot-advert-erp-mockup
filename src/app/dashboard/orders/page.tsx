@@ -973,7 +973,7 @@ export default function OrdersPage() {
 
               {/* Link to generate invoice in Sales */}
               <Link
-                href="/dashboard/sales"
+                href="/sales"
                 className="btn btn-primary btn-sm"
                 style={{ marginLeft: 'auto' }}
               >

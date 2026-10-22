@@ -114,7 +114,7 @@ export default function DashboardPage() {
               <Receipt size={14} color="#facc15" />
               <span>Generate Invoice</span>
             </Link>
-            <Link href="/dashboard/collections" className="btn btn-primary btn-sm">
+            <Link href="/collections" className="btn btn-primary btn-sm">
               <Wallet size={14} />
               <span>Record Collection</span>
             </Link>
@@ -142,7 +142,7 @@ export default function DashboardPage() {
               Purchase Order generated successfully! Sent to Procurement module for approval.
             </span>
           </div>
-          <Link href="/dashboard/procurement" style={{ fontSize: '0.8rem', color: '#34d399', textDecoration: 'underline' }}>
+          <Link href="/procurement" style={{ fontSize: '0.8rem', color: '#34d399', textDecoration: 'underline' }}>
             View POs
           </Link>
         </div>
@@ -333,7 +333,7 @@ export default function DashboardPage() {
               ★ 68.7% Net Margin Achieved
             </span>
             <Link
-              href="/dashboard/orders"
+              href="/orders"
               className="btn btn-secondary btn-sm"
               style={{ background: '#18181b', color: '#ffffff', borderColor: '#27272a', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
@@ -381,7 +381,7 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <Link href="/dashboard/orders" className="btn btn-outline btn-sm">
+          <Link href="/orders" className="btn btn-outline btn-sm">
             <span>Manage All Work Orders</span>
             <ChevronRight size={13} />
           </Link>
